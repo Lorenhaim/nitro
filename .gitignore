@@ -1,0 +1,14 @@
+/dist
+/node_modules
+.git
+.vs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+npm-debug.log
+ormconfig.js
+ormlogs.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,16 @@
+const OrmConfig = {
+    type: 'mysql',
+    host: 'localhost',
+    port: 3306,
+    username: 'root',
+    password: '',
+    database: 'emulator',
+    acquireTimeout: 10000,
+    entities: [ 'src/app/common/entities/*.ts' ], // development
+    // entities: [ 'dist/app/common/entities/*.js' ], // production
+    synchronize: false,
+    logging: false,
+    logger: 'file'
+};
+
+module.exports = OrmConfig;

@@ -1,0 +1,23 @@
+{
+  "name": "@habboapi/emulator",
+  "version": "0.0.1",
+  "description": "Habbo Emulator",
+  "main": "index.js",
+  "dependencies": {
+    "moment": "^2.23.0",
+    "mysql2": "^1.6.4",
+    "typeorm": "^0.2.10",
+    "typescript": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^10.12.0",
+    "nodemon": "^1.18.0",
+    "ts-node": "^7.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "watch": "nodemon"
+  },
+  "author": "Billsonnn",
+  "license": "ISC"
+}
