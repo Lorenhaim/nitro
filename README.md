@@ -1,1 +1,1 @@
-# habboapi-emulartor
+# habboapi-emulator
