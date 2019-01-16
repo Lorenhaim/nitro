@@ -3,25 +3,26 @@ import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
+import { OutgoingPacket } from '../OutgoingPacket';
 
 export class SecurityTicketComposer extends Outgoing
 {
-    constructor(user: User)
+    constructor(_user: User)
     {
-        super(OutgoingHeader.SECURITY_TICKET_OK, user);
-
-        if(!this.user.isAuthenticated) throw new Error('not_authenticated');
+        super(OutgoingHeader.SECURITY_TICKET_OK, _user);
     }
 
-    public async compose(): Promise<Buffer>
+    public async compose(): Promise<OutgoingPacket>
     {
         try
         {
+            if(!this.user.isAuthenticated) return this.cancel();
+
             this.packet.writeBoolean(true);
 
             this.packet.prepare();
 
-            return this.packet.buffer;
+            return this.packet;
         }
 
         catch(err)

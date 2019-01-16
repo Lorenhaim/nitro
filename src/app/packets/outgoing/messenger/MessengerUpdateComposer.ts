@@ -1,15 +1,15 @@
 import { Logger } from '../../../common';
-import { User } from '../../../game';
+import { User, MessengerFriend } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
-export class MessengerFriendsComposer extends Outgoing
+export class MessengerUpdateComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor(_user: User, private readonly _friends: MessengerFriend[])
     {
-        super(OutgoingHeader.MESSENGER_FRIENDS, _user);
+        super(OutgoingHeader.MESSENGER_UPDATE, _user);
     }
 
     public async compose(): Promise<OutgoingPacket>
@@ -18,20 +18,20 @@ export class MessengerFriendsComposer extends Outgoing
         {
             if(!this.user.isAuthenticated || !this.user.userMessenger()) return this.cancel();
 
-            this.packet.writeInt(300);
-            this.packet.writeInt(300);
+            this.packet.writeInt(0);
 
-            if(this.user.userMessenger().friends && this.user.userMessenger().friends.length > 0)
+            if(this._friends && this._friends.length > 0)
             {
-                this.packet.writeInt(this.user.userMessenger().friends.length);
+                this.packet.writeInt(this._friends.length);
 
-                for(const friend of this.user.userMessenger().friends)
+                for(const friend of this._friends)
                 {
-                    this.packet.writeInt(friend.friendId);
+                    this.packet.writeInt(0);
+                    this.packet.writeInt(friend.userId);
                     this.packet.writeString(friend.username);
-                    this.packet.writeInt(friend.gender === 'M' ? 0 : 1);
+                    this.packet.writeInt(friend.gender == 'M' ? 0 : 1);
                     this.packet.writeBoolean(friend.online);
-                    this.packet.writeBoolean(false); // inroom
+                    this.packet.writeBoolean(false); // in room
                     this.packet.writeString(friend.figure);
                     this.packet.writeInt(0);
                     this.packet.writeString(friend.motto);
@@ -40,7 +40,7 @@ export class MessengerFriendsComposer extends Outgoing
                     this.packet.writeBoolean(false);
                     this.packet.writeBoolean(false);
                     this.packet.writeBoolean(false);
-                    this.packet.writeShort(friend.relation); // friend relation
+                    this.packet.writeShort(friend.relation);
                 }
             }
             else

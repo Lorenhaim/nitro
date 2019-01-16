@@ -1,22 +1,21 @@
 import { Logger } from '../../../common';
 
-import { MessengerInitComposer, MessengerFriendsComposer } from '../../outgoing';
+import { MessengerRequestsComposer } from '../../outgoing';
 
 import { Incoming } from '../Incoming';
 import { IncomingHeader } from '../IncomingHeader';
 
-export class MessengerInitEvent extends Incoming
+export class MessengerRequestsEvent extends Incoming
 {
     public async process(): Promise<boolean>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.MESSENGER_INIT) throw new Error('invalid_header');
+            if(this.packet.header !== IncomingHeader.MESSENGER_REQUESTS) throw new Error('invalid_header');
 
             if(!this.user.userMessenger()) throw new Error('invalid_messenger');
 
-            await this.user.client().processComposer(new MessengerInitComposer(this.user));
-            await this.user.client().processComposer(new MessengerFriendsComposer(this.user));
+            await this.user.client().processComposer(new MessengerRequestsComposer(this.user));
 
             return true;
         }

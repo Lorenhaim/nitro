@@ -3,20 +3,21 @@ import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
+import { OutgoingPacket } from '../OutgoingPacket';
 
 export class UserInfoComposer extends Outgoing
 {
-    constructor(user: User)
+    constructor(_user: User)
     {
-        super(OutgoingHeader.USER_INFO, user);
-
-        if(!this.user.isAuthenticated) throw new Error('not_authenticated');
+        super(OutgoingHeader.USER_INFO, _user);
     }
 
-    public async compose(): Promise<Buffer>
+    public async compose(): Promise<OutgoingPacket>
     {
         try
         {
+            if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
+
             this.packet.writeInt(this.user.userId);
             this.packet.writeString(this.user.username);
             this.packet.writeString(this.user.figure);
@@ -24,20 +25,9 @@ export class UserInfoComposer extends Outgoing
             this.packet.writeString(this.user.motto);
             this.packet.writeString(this.user.username);
             this.packet.writeBoolean(false);
-
-            if(this.user.userInfo)
-            {
-                this.packet.writeInt(this.user.userInfo().respectsReceived);
-                this.packet.writeInt(this.user.userInfo().respectsRemaining);
-                this.packet.writeInt(this.user.userInfo().respectsPetRemaining);
-            }
-            else
-            {
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-            }
-
+            this.packet.writeInt(this.user.userInfo().respectsReceived || 0);
+            this.packet.writeInt(this.user.userInfo().respectsRemaining || 0);
+            this.packet.writeInt(this.user.userInfo().respectsPetRemaining || 0);
             this.packet.writeBoolean(false);
             this.packet.writeString(TimeHelper.formatDate(this.user.timestampCreated, 'YYYY-MM-DD HH:mm:ss'));
             this.packet.writeBoolean(false); // name change
@@ -45,7 +35,7 @@ export class UserInfoComposer extends Outgoing
 
             this.packet.prepare();
 
-            return this.packet.buffer;
+            return this.packet;
         }
 
         catch(err)

@@ -24,6 +24,7 @@ export class Emulator
             Emulator._gameServer    = new GameServer();
             Emulator._gameManager   = new GameManager();
 
+            await Emulator.gameManager().cleanup();
             await Emulator.gameManager().init();
             await Emulator.gameServer().init();
 

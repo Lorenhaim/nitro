@@ -25,8 +25,6 @@ export class User
 
     private _onlineStart: Date;
 
-    public _machineId: string;
-
     constructor(private _client: Client)
     {
         if(!(_client instanceof Client)) throw new Error('invalid_client');
@@ -41,8 +39,6 @@ export class User
         this._userInfo          = null;
         this._userStatistics    = null;
         this._userMessenger     = null;
-
-        this._machineId         = null;
     }
 
     public async checkTicket(ticket: string): Promise<boolean>
@@ -112,17 +108,44 @@ export class User
             this._entity.lastOnline = TimeHelper.now;
 
             this._userStatistics.updateLoginStreak('login');
+
+            if(this.userMessenger())
+            {
+                await this.userMessenger().updateAllFriends(this._entity);
+            }
         }
         else
         {
             this._entity.online = '0';
 
             this._userStatistics.updateLoginStreak('logout');
+
+            if(this.userMessenger())
+            {
+                await this.userMessenger().updateAllFriends(this._entity);
+            }
         }
 
         this._isPending = true;
 
         if(immediate) await this.save();
+
+        return Promise.resolve(true);
+    }
+
+    public async updateFigure(gender: 'M' | 'F', figure: string): Promise<boolean>
+    {
+        this._entity.gender = gender;
+        this._entity.figure = figure;
+
+        this._isPending = true;
+
+        await this.save();
+
+        if(this.userMessenger())
+        {
+            await this.userMessenger().updateAllFriends(this._entity);
+        }
 
         return Promise.resolve(true);
     }
@@ -165,6 +188,11 @@ export class User
         return this._isAuthenticated;
     }
 
+    public get entity(): UserEntity
+    {
+        return this._entity;
+    }
+
     public client(): Client
     {
         return this._client;
@@ -185,9 +213,23 @@ export class User
         return this._entity.gender;
     }
 
+    public set gender(gender: 'M' | 'F')
+    {
+        this._entity.gender = gender;
+
+        this._isPending = true;
+    }
+
     public get figure(): string
     {
         return this._entity.figure;
+    }
+
+    public set figure(figure: string)
+    {
+        this._entity.figure = figure;
+
+        this._isPending = true;
     }
 
     public get rankId(): number

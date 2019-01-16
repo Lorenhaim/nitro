@@ -5,23 +5,21 @@ import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
-export class MessengerInitComposer extends Outgoing
+export class UserFigureComposer extends Outgoing
 {
     constructor(_user: User)
     {
-        super(OutgoingHeader.MESSENGER_INIT, _user);
+        super(OutgoingHeader.USER_FIGURE, _user);
     }
 
     public async compose(): Promise<OutgoingPacket>
     {
         try
         {
-            if(!this.user.isAuthenticated || !this.user.userMessenger()) return this.cancel();
+            if(!this.user.isAuthenticated) return this.cancel();
 
-            this.packet.writeInt(300); // max friends
-            this.packet.writeInt(1337); // max friends
-            this.packet.writeInt(10000); // max friends
-            this.packet.writeInt(0); // categories
+            this.packet.writeString(this.user.figure);
+            this.packet.writeString(this.user.gender);
 
             this.packet.prepare();
 

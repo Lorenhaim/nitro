@@ -1,5 +1,6 @@
 export const enum IncomingHeader
 {
+    CROSS_DOMAIN        = 26979,
     RELEASE_VERSION     = 4000,
     CLIENT_VARIABLES    = 1868,
     CLIENT_PERFORMANCE  = 1037,
@@ -11,10 +12,17 @@ export const enum IncomingHeader
     USER_CLUB           = 1424,
     USER_PROFILE        = 1579,
     USER_CREDITS        = 1384,
+    USER_RELATIONSHIPS  = 1233,
+    USER_BADGES         = 2204,
+    USER_FIGURE         = 1220,
     MESSENGER_INIT      = 12,
     MESSENGER_SEARCH    = 1373,
+    MESSENGER_REQUEST   = 1030,
     MESSENGER_REQUESTS  = 2184,
     MESSENGER_UPDATE    = 1002,
+    MESSENGER_ACCEPT    = 3366,
+    MESSENGER_DELETE    = 893,
+    MESSENGER_DECLINE   = 2006,
     NAVIGATOR_INIT      = 1162,
     NAVIGATOR_SEARCH    = 1561,
     NAVIGATOR_WINDOW    = 254,
@@ -25,5 +33,6 @@ export const enum IncomingHeader
     FIND_FRIENDS        = 545,
     HOTELVIEW_CAMPAIGNS = 2366,
     HOTELVIEW_ARTICLES  = 2977,
+    GAMES_INIT          = 115,
     GAMES_LIST          = 48
 }

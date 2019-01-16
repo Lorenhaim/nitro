@@ -8,6 +8,8 @@ export const enum OutgoingHeader
     USER_CLUB           = 1360,
     USER_CLOTHING       = 1288,
     USER_PROFILE        = 2362,
+    USER_FIGURE         = 284,
+    USER_CREDITS        = 1240,
     NAVIGATOR_WINDOW    = 33,
     NAVIGATOR_METADATA  = 1831,
     NAVIGATOR_LIFTED    = 2637,
@@ -15,6 +17,7 @@ export const enum OutgoingHeader
     MESSENGER_INIT      = 388,
     MESSENGER_FRIENDS   = 3940,
     MESSENGER_SEARCH    = 2501,
+    MESSENGER_REQUEST   = 2442,
     MESSENGER_REQUESTS  = 1865,
     MESSENGER_UPDATE    = 2711,
     MOD_TOOL            = 1120

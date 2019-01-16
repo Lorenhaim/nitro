@@ -5,11 +5,13 @@ export class OutgoingPacket
 {
     private _bytes: number[];
     private _isPrepared: boolean;
+    private _isCancelled: boolean;
 
     constructor(private readonly _header: OutgoingHeader)
     {
         this._bytes         = [];
         this._isPrepared    = false;
+        this._isCancelled   = false;
 
         this.writeShort(_header);
     }
@@ -23,9 +25,15 @@ export class OutgoingPacket
         this._isPrepared = true;
     }
 
+    public cancel(): void
+    {
+        this._bytes         = [];
+        this._isCancelled   = true;
+    }
+
     private writeBytes(bytes: any[]): void
     {
-        if(this._isPrepared) return;
+        if(this._isPrepared || this._isCancelled) return;
 
         for(let i = 0; i < bytes.length; i++) this._bytes.push(bytes[i]);
     }
@@ -69,6 +77,11 @@ export class OutgoingPacket
     public get isPrepared(): boolean
     {
         return this._isPrepared;
+    }
+
+    public get isCancelled(): boolean
+    {
+        return this._isCancelled;
     }
 
     public get buffer(): Buffer

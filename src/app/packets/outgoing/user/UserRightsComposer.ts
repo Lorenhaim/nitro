@@ -3,27 +3,28 @@ import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
+import { OutgoingPacket } from '../OutgoingPacket';
 
 export class UserRightsComposer extends Outgoing
 {
-    constructor(user: User)
+    constructor(_user: User)
     {
-        super(OutgoingHeader.USER_RIGHTS, user);
-
-        if(!this.user.isAuthenticated) throw new Error('not_authenticated');
+        super(OutgoingHeader.USER_RIGHTS, _user);
     }
 
-    public async compose(): Promise<Buffer>
+    public async compose(): Promise<OutgoingPacket>
     {
         try
         {
+            if(!this.user.isAuthenticated) return this.cancel();
+
             this.packet.writeInt(2); // club level
             this.packet.writeInt(this.user.rankId); // rank id
             this.packet.writeBoolean(false); //is ambassador
 
             this.packet.prepare();
 
-            return this.packet.buffer;
+            return this.packet;
         }
 
         catch(err)

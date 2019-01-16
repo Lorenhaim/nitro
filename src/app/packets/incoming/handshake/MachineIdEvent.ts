@@ -17,7 +17,7 @@ export class MachineIdEvent extends Incoming
             const machineId     = this.packet.readString();
             const flashVersion  = this.packet.readString();
 
-            this.user._machineId = machineId;
+            this.user.client().machineId = machineId;
 
             await this.user.client().processComposer(new MachineIdComposer(this.user));
 

@@ -1,12 +1,12 @@
 import { User } from '../game';
 
 import { Incoming, IncomingHeader, IncomingPacket } from './incoming';
-import { ClientLatencyEvent, ClientReleaseVersionEvent, ClientVariablesEvent, EventTrackerEvent } from './incoming/client';
-import { GetGamesEvent } from './incoming/games';
+import { ClientLatencyEvent, ClientReleaseVersionEvent, ClientVariablesEvent, CrossDomainEvent, EventTrackerEvent } from './incoming/client';
+import { GamesInitEvent, GetGamesEvent } from './incoming/games';
 import { MachineIdEvent, SecurityTicketEvent } from './incoming/handshake';
 import { GetArticlesEvent, GetCampaignsEvent } from './incoming/hotelview';
-import { MessengerInitEvent } from './incoming/messenger';
-import { UserClubEvent, UserInfoEvent, UserProfileEvent } from './incoming/user';
+import { MessengerAcceptRequestEvent, MessengerDeleteEvent, MessengerInitEvent, MessengerRequestsEvent } from './incoming/messenger';
+import { UserClubEvent, UserCreditsEvent, UserFigureEvent, UserInfoEvent, UserProfileEvent, UserRelationshipsEvent } from './incoming/user';
 
 export class PacketManager
 {
@@ -22,23 +22,6 @@ export class PacketManager
         this.registerGames();
         this.registerMessenger();
         this.registerUser();
-    }
-
-    public getHandler(header: IncomingHeader): Incoming
-    {
-        let result = null;
-
-        for(const event of this._incomingEvents)
-        {
-            if(event.header === header)
-            {
-                result = event.handler;
-
-                break;
-            }
-        }
-
-        return result;
     }
 
     public addHandler(header: IncomingHeader, handler: any): boolean
@@ -70,6 +53,7 @@ export class PacketManager
     {
         this.addHandler(IncomingHeader.RELEASE_VERSION, ClientReleaseVersionEvent);
         this.addHandler(IncomingHeader.CLIENT_VARIABLES, ClientVariablesEvent);
+        this.addHandler(IncomingHeader.CROSS_DOMAIN, CrossDomainEvent);
         this.addHandler(IncomingHeader.CLIENT_LATENCY, ClientLatencyEvent);
         this.addHandler(IncomingHeader.EVENT_TRACKER, EventTrackerEvent);
     }
@@ -88,33 +72,31 @@ export class PacketManager
 
     private registerGames(): void
     {
+        this.addHandler(IncomingHeader.GAMES_INIT, GamesInitEvent);
         this.addHandler(IncomingHeader.GAMES_LIST, GetGamesEvent);
     }
 
     private registerMessenger(): void
     {
+        this.addHandler(IncomingHeader.MESSENGER_ACCEPT, MessengerAcceptRequestEvent);
+        this.addHandler(IncomingHeader.MESSENGER_DELETE, MessengerDeleteEvent);
         this.addHandler(IncomingHeader.MESSENGER_INIT, MessengerInitEvent);
+        this.addHandler(IncomingHeader.MESSENGER_REQUESTS, MessengerRequestsEvent);
     }
 
     private registerUser(): void
     {
-        this.addHandler(IncomingHeader.USER_INFO, UserInfoEvent);
         this.addHandler(IncomingHeader.USER_CLUB, UserClubEvent);
+        this.addHandler(IncomingHeader.USER_CREDITS, UserCreditsEvent);
+        this.addHandler(IncomingHeader.USER_FIGURE, UserFigureEvent);
+        this.addHandler(IncomingHeader.USER_INFO, UserInfoEvent);
         this.addHandler(IncomingHeader.USER_PROFILE, UserProfileEvent);
+        this.addHandler(IncomingHeader.USER_RELATIONSHIPS, UserRelationshipsEvent);
     }
 
     public async processPacket(user: User, buffer: Buffer)
     {
         const packet: IncomingPacket = new IncomingPacket(buffer);
-
-        if(packet.packetLength === 1014001516)
-        {
-            user.client().write(Buffer.from(`<?xml version=\"1.0\"?>\n<!DOCTYPE cross-domain-policy SYSTEM \"/xml/dtds/cross-domain-policy.dtd\">\n<cross-domain-policy>\n<allow-access-from domain=\"*\" to-ports=\"1-31111\" />\n</cross-domain-policy>`, 'utf8'));
-
-            await user.dispose();
-
-            return Promise.resolve(true);
-        }
 
         const realPacketLength = packet.packetLength + 4;
 
@@ -131,22 +113,29 @@ export class PacketManager
 
         if(!packet.header) return Promise.resolve(true);
 
-        const handler: any = this.getHandler(packet.header);
+        if(packet.header !== IncomingHeader.RELEASE_VERSION && packet.header !== IncomingHeader.CLIENT_VARIABLES && packet.header !== IncomingHeader.CROSS_DOMAIN && packet.header !== IncomingHeader.MACHINE_ID && packet.header !== IncomingHeader.SECURITY_TICKET && !user.isAuthenticated) throw new Error('invalid_authentication');
 
-        if(!handler)
+        let packetHandler: Incoming = null;
+
+        for(const event of this._incomingEvents)
         {
-            console.log(`Unhandled Packet -> ${ packet.header }`);
-            return Promise.resolve(true);
+            if(event.header === packet.header)
+            {
+                let getHandler: any     = event.handler;
+                let handler: Incoming   = new getHandler();
+
+                if(!(handler instanceof Incoming)) break;
+
+                handler.user    = user;
+                handler.packet  = packet;
+
+                packetHandler = handler;
+            }
         }
 
-        const handlerInstance = new handler();
+        if(!packetHandler) return Promise.reject(new Error(`Invalid Handler -> ${ packet.header }`));
 
-        handlerInstance.user    = user;
-        handlerInstance.packet  = packet;
-
-        if(!handlerInstance) return Promise.reject(new Error('invalid_handler'));
-
-        await handlerInstance.process();
+        await packetHandler.process();
 
         return Promise.resolve(true);
     }

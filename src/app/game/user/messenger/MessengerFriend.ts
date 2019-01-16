@@ -1,5 +1,3 @@
-import { getManager, RelationCount } from 'typeorm';
-
 import { MessengerFriendEntity, UserEntity } from '../../../common';
 
 export class MessengerFriend
@@ -12,9 +10,16 @@ export class MessengerFriend
     public update(_entity: UserEntity)
     {
         if(!(_entity instanceof UserEntity)) throw new Error('invalid_friend_info');
+
+        this._entity.friend = _entity;
     }
 
     public get userId(): number
+    {
+        return this._entity.userId;
+    }
+
+    public get friendId(): number
     {
         return this._entity.friendId;
     }

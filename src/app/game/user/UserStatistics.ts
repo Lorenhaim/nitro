@@ -46,6 +46,15 @@ export class UserStatistics
         {
             if(this.loginStreakLast)
             {
+                if(TimeHelper.isNextDay(TimeHelper.now, this.loginStreakLast))
+                {
+                    this._entity.loginStreak = this.loginStreak + 1;
+                }
+                else if(!TimeHelper.isToday(this.loginStreakLast))
+                {
+                    this._entity.loginStreak = 1;
+                }
+
                 this._entity.loginStreak = TimeHelper.isNextDay(TimeHelper.now, this.loginStreakLast) ? this.loginStreak + 1 : 1; 
             }
             else
@@ -60,6 +69,7 @@ export class UserStatistics
             if(this.loginStreakLast)
             {
                 const daysBetween = TimeHelper.between(TimeHelper.now, this.loginStreakLast, 'days');
+                // fix this
 
                 if(daysBetween > 0) this._entity.loginStreak = this.loginStreak + 1;
             }

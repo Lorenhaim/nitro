@@ -29,5 +29,12 @@ export abstract class Outgoing
         return this._user;
     }
 
-    public abstract async compose(): Promise<Buffer>;
+    public cancel(): OutgoingPacket
+    {
+        this._packet.cancel();
+
+        return this._packet;
+    }
+
+    public abstract async compose(): Promise<OutgoingPacket>;
 }

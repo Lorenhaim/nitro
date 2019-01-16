@@ -4,45 +4,40 @@ import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
+import { OutgoingPacket } from '../OutgoingPacket';
 
 export class UserClubComposer extends Outgoing
 {
-    constructor(user: User)
+    constructor(_user: User)
     {
-        super(OutgoingHeader.USER_CLUB, user);
-
-        if(!this.user.isAuthenticated) throw new Error('not_authenticated');
+        super(OutgoingHeader.USER_CLUB, _user);
     }
 
-    public async compose(): Promise<Buffer>
+    public async compose(): Promise<OutgoingPacket>
     {
         try
         {
-            this.packet.writeString('habbo_club');
+            if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
 
-            if(this.user.userInfo && Emulator.config().getBoolean('hotel.habbo.club.enabled', true))
+            this.packet.writeString('club_habbo');
+
+            const clubExpiration: Date = this.user.userInfo().clubExpiration;
+
+            if(clubExpiration != null && clubExpiration >= TimeHelper.now)
             {
-                const clubExpiration: Date = this.user.userInfo().clubExpiration;
+                const clubRemaining = TimeHelper.timeBetween(clubExpiration, TimeHelper.now);
 
-                if(clubExpiration != null && clubExpiration >= TimeHelper.now)
-                {
-                    const clubRemaining = TimeHelper.timeBetween(clubExpiration, TimeHelper.now);
-
-                    this.packet.writeInt(clubRemaining.days);
-                    this.packet.writeInt(1);
-                    this.packet.writeInt(clubRemaining.months);
-                    this.packet.writeInt(clubRemaining.years);
-                    this.packet.writeBoolean(true);
-                    this.packet.writeBoolean(true);
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(TimeHelper.until(clubExpiration, 'seconds'));
-
-                    this.packet.prepare();
-                }
+                this.packet.writeInt(clubRemaining.days);
+                this.packet.writeInt(1);
+                this.packet.writeInt(clubRemaining.months);
+                this.packet.writeInt(clubRemaining.years);
+                this.packet.writeBoolean(true);
+                this.packet.writeBoolean(true);
+                this.packet.writeInt(0);
+                this.packet.writeInt(0);
+                this.packet.writeInt(TimeHelper.until(clubExpiration, 'seconds'));
             }
-
-            if(!this.packet.isPrepared)
+            else
             {
                 this.packet.writeInt(0);
                 this.packet.writeInt(0);
@@ -53,11 +48,11 @@ export class UserClubComposer extends Outgoing
                 this.packet.writeInt(0);
                 this.packet.writeInt(0);
                 this.packet.writeInt(0);
-
-                this.packet.prepare();
             }
 
-            return this.packet.buffer;
+            this.packet.prepare();
+
+            return this.packet;
         }
 
         catch(err)

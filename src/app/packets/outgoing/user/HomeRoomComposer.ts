@@ -3,26 +3,27 @@ import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
+import { OutgoingPacket } from '../OutgoingPacket';
 
 export class HomeRoomComposer extends Outgoing
 {
-    constructor(user: User)
+    constructor(_user: User)
     {
-        super(OutgoingHeader.USER_HOME_ROOM, user);
-
-        if(!this.user.isAuthenticated) throw new Error('not_authenticated');
+        super(OutgoingHeader.USER_HOME_ROOM, _user);
     }
 
-    public async compose(): Promise<Buffer>
+    public async compose(): Promise<OutgoingPacket>
     {
         try
         {
-            this.packet.writeInt(this.user.userInfo ? this.user.userInfo().homeRoom : 0); // room id
+            if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
+
+            this.packet.writeInt(this.user.userInfo().homeRoom || 0);
             this.packet.writeInt(0);
 
             this.packet.prepare();
 
-            return this.packet.buffer;
+            return this.packet;
         }
 
         catch(err)

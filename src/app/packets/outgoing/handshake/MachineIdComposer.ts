@@ -3,27 +3,26 @@ import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
+import { OutgoingPacket } from '../OutgoingPacket';
 
 export class MachineIdComposer extends Outgoing
 {
-    constructor(user: User)
+    constructor(_user: User)
     {
-        super(OutgoingHeader.MACHINE_ID, user);
-
-        if(this.user.isAuthenticated) throw new Error('already_authenticated');
-
-        if(!this.user._machineId) throw new Error('invalid_machine_id');
+        super(OutgoingHeader.MACHINE_ID, _user);
     }
 
-    public async compose(): Promise<Buffer>
+    public async compose(): Promise<OutgoingPacket>
     {
         try
         {
-            this.packet.writeString(this.user._machineId);
+            if(this.user.isAuthenticated || !this.user.client().machineId) return this.cancel();
+
+            this.packet.writeString(this.user.client().machineId);
 
             this.packet.prepare();
 
-            return this.packet.buffer;
+            return this.packet;
         }
 
         catch(err)

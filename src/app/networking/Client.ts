@@ -4,7 +4,14 @@ import { Outgoing } from '../packets';
 
 export class Client
 {
-    constructor(private readonly _socket: Socket) {}
+    private _ip: string;
+    private _machineId: string;
+
+    constructor(private readonly _socket: Socket)
+    {
+        this._ip        = _socket.remoteAddress;
+        this._machineId = null;
+    }
 
     public write(buffer: Buffer): void
     {
@@ -15,7 +22,11 @@ export class Client
     {
         if(!(composer instanceof Outgoing)) return Promise.reject(new Error('invalid_composer'));
 
-        this.write(await composer.compose());
+        const result = await composer.compose();
+
+        if(!result.isPrepared) return Promise.resolve(true);
+
+        this.write(result.buffer);
         console.log(`Sent -> ${ composer.header }`);
 
         return Promise.resolve(true);
@@ -33,6 +44,16 @@ export class Client
 
     public get ip(): string
     {
-        return this._socket.remoteAddress;
+        return this._ip;
+    }
+
+    public get machineId(): string
+    {
+        return this._machineId;
+    }
+
+    public set machineId(machineId: string)
+    {
+        this._machineId = machineId;
     }
 }

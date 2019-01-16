@@ -3,20 +3,21 @@ import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
+import { OutgoingPacket } from '../OutgoingPacket';
 
 export class ModToolComposer extends Outgoing
 {
-    constructor(user: User)
+    constructor(_user: User)
     {
-        super(OutgoingHeader.MOD_TOOL, user);
-
-        if(!this.user.isAuthenticated) throw new Error('not_authenticated');
+        super(OutgoingHeader.MOD_TOOL, _user);
     }
 
-    public async compose(): Promise<Buffer>
+    public async compose(): Promise<OutgoingPacket>
     {
         try
         {
+            if(!this.user.isAuthenticated) return this.cancel(); // check perm
+            
             this.packet.writeInt(0); // tickets
             this.packet.writeInt(0); // presets
             this.packet.writeInt(0); // action presets
@@ -31,7 +32,7 @@ export class ModToolComposer extends Outgoing
 
             this.packet.prepare();
 
-            return this.packet.buffer;
+            return this.packet;
         }
 
         catch(err)

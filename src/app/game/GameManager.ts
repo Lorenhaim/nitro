@@ -1,3 +1,5 @@
+import { getManager } from 'typeorm';
+
 import { Logger } from '../common';
 
 import { SecurityManager } from './security';
@@ -30,6 +32,13 @@ export class GameManager
         {
             Logger.writeError(`GameManager Init Error -> ${ err.message || err }`);
         }
+    }
+
+    public async cleanup(): Promise<boolean>
+    {
+        await getManager().query(`UPDATE user SET online = '0'`);
+
+        return Promise.resolve(true);
     }
 
     public async dispose(): Promise<boolean>
