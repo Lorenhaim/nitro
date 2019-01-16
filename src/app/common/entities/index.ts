@@ -1,5 +1,5 @@
 export * from './MessengerFriendEntity';
-export * from './MessengerFriendRequestEntity';
+export * from './MessengerRequestEntity';
 export * from './SecurityPermissionEntity';
 export * from './SecurityRankEntity';
 export * from './SecurityTicketEntity';

@@ -2,13 +2,13 @@ import { getManager } from 'typeorm';
 
 import { Emulator } from '../../../Emulator';
 
-import { MessengerFriendRequestEntity, MessengerFriendEntity } from '../../../common';
+import { MessengerRequestEntity, MessengerFriendEntity } from '../../../common';
 
-export class MessengerFriendRequest
+export class MessengerRequest
 {
-    constructor(private _entity: MessengerFriendRequestEntity)
+    constructor(private _entity: MessengerRequestEntity)
     {
-        if(!(_entity instanceof MessengerFriendRequestEntity)) throw new Error('invalid_friend_request_info');
+        if(!(_entity instanceof MessengerRequestEntity)) throw new Error('invalid_friend_request_info');
     }
 
     public get userId(): number

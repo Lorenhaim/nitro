@@ -1,17 +1,18 @@
 import { getManager } from 'typeorm';
 
 import { Emulator } from '../../../Emulator';
-import { MessengerFriendEntity, MessengerFriendRequestEntity, UserEntity } from '../../../common';
-import { MessengerUpdateComposer, MessengerRemoveComposer } from '../../../packets';
+import { MessengerFriendEntity, MessengerRequestEntity, UserEntity } from '../../../common';
+import { MessengerUpdateComposer, MessengerRemoveComposer, MessengerRequestComposer } from '../../../packets';
 
 import { User } from '../User';
+import { MessengerRequestError } from './MessengerRequestError';
 import { MessengerFriend } from './MessengerFriend';
-import { MessengerFriendRequest } from './MessengerFriendRequest';
+import { MessengerRequest } from './MessengerRequest';
 
 export class Messenger
 {
     private _friends: MessengerFriend[];
-    private _requests: MessengerFriendRequest[];
+    private _requests: MessengerRequest[];
 
     constructor(private readonly _userId: number)
     {
@@ -48,7 +49,7 @@ export class Messenger
         return result;
     }
 
-    public getRequest(userId: number, username?: string): MessengerFriendRequest
+    public getRequest(userId: number, username?: string): MessengerRequest
     {
         if(!userId && !username) return null;
 
@@ -75,7 +76,7 @@ export class Messenger
 
         for(const [index, existing] of this._friends.entries())
         {
-            if(existing.userId === friend.userId)
+            if(existing.friendId === friend.friendId)
             {
                 result = true;
 
@@ -92,9 +93,9 @@ export class Messenger
         return true;
     }
 
-    public addRequest(request: MessengerFriendRequest): boolean
+    public addRequest(request: MessengerRequest): boolean
     {
-        if(!(request instanceof MessengerFriendRequest)) return false;
+        if(!(request instanceof MessengerRequest)) return false;
         
         let result = false;
 
@@ -121,7 +122,7 @@ export class Messenger
     {
         for(const [index, existing] of this._friends.entries())
         {
-            if(existing.userId === friendId)
+            if(existing.friendId === friendId)
             {
                 this._friends.splice(index, 1);
 
@@ -132,11 +133,11 @@ export class Messenger
         return true;
     }
 
-    public removeRequest(requestedId: number): boolean
+    public removeRequest(userId: number): boolean
     {
         for(const [index, existing] of this._requests.entries())
         {
-            if(existing.userId === requestedId)
+            if(existing.userId === userId)
             {
                 this._requests.splice(index, 1);
 
@@ -145,143 +146,6 @@ export class Messenger
         }
 
         return true;
-    }
-
-    public async updateAllFriends(entity: UserEntity): Promise<boolean>
-    {
-        for(const friend of this._friends)
-        {
-            const friendInstance = await Emulator.gameManager().userManager().getUser(friend.friendId);
-
-            if(friendInstance instanceof User && friendInstance.online && friendInstance.userMessenger())
-            {
-                const findSelf = friendInstance.userMessenger().getFriend(this.userId);
-
-                if(findSelf)
-                {
-                    findSelf.update(entity);
-
-                    await friendInstance.client().processComposer(new MessengerUpdateComposer(friendInstance, [ findSelf ])); 
-                }
-            }
-        }
-
-        return Promise.resolve(true);
-    }
-
-    public async acceptRequests(friendIds: number[]): Promise<boolean>
-    {
-        if(!friendIds || !friendIds.length) return Promise.reject(new Error('nothing_to_delete'));
-
-        const user = await Emulator.gameManager().userManager().getUser(this.userId);
-
-        if(!user) return Promise.reject(new Error('invalid_user'));
-
-        let acceptedFriends: MessengerFriend[] = [];
-
-        for(const friendId of friendIds)
-        {
-            for(const [index, request] of this._requests.entries())
-            {
-                if(request.userId === friendId)
-                {
-                    const myFriend = new MessengerFriendEntity();
-
-                    myFriend.userId   = this.userId;
-                    myFriend.friendId = friendId;
-
-                    const theirFriend = new MessengerFriendEntity();
-
-                    theirFriend.userId   = friendId;
-                    theirFriend.friendId = this.userId;
-
-                    await getManager().save([ myFriend, theirFriend ]);
-
-                    await getManager().delete(MessengerFriendRequestEntity, {
-                        userId: friendId,
-                        requestedId: this.userId
-                    });
-        
-                    const friend = await Emulator.gameManager().userManager().getUser(friendId);
-        
-                    if(friend instanceof User && friend.online && friend.userMessenger())
-                    {
-                        theirFriend.friend = user.entity;
-
-                        const theirFriendInstance = new MessengerFriend(theirFriend);
-
-                        friend.userMessenger().addFriend(theirFriendInstance);
-        
-                        await friend.client().processComposer(new MessengerUpdateComposer(friend, [ theirFriendInstance ]));
-                    }
-
-                    myFriend.friend = friend.entity;
-
-                    acceptedFriends.push(new MessengerFriend(myFriend));
-
-                    this._requests.splice(index, 1);
-                }
-            }
-        }
-
-        if(acceptedFriends && acceptedFriends.length > 0)
-        {
-            if(user instanceof User && user.online && user.userMessenger())
-            {
-                for(const friend of acceptedFriends) this.addFriend(friend);
-
-                await user.client().processComposer(new MessengerUpdateComposer(user, acceptedFriends));
-            }
-        }
-
-        return Promise.resolve(true);
-    }
-
-    public async deleteFriends(friendIds: number[]): Promise<boolean>
-    {
-        if(!friendIds || !friendIds.length) return Promise.reject(new Error('nothing_to_delete'));
-
-        let results = 0;
-
-        for(const friendId of friendIds)
-        {
-            for(const friend of this._friends)
-            {
-                if(friend.friendId === friendId)
-                {
-                    await getManager().delete(MessengerFriendEntity, {
-                        userId: this.userId,
-                        friendId: friendId
-                    });
-            
-                    await getManager().delete(MessengerFriendEntity, {
-                        userId: friendId,
-                        friendId: this.userId
-                    });
-        
-                    const friend = await Emulator.gameManager().userManager().getUser(friendId);
-        
-                    if(friend instanceof User && friend.online && friend.userMessenger())
-                    {
-                        friend.userMessenger().removeFriend(this.userId);
-        
-                        await friend.client().processComposer(new MessengerRemoveComposer(friend, [ this.userId ]));
-                    }
-
-                    this.removeFriend(friendId);
-                    results++;
-                }
-            }
-        }
-
-        if(results > 0)
-        {
-            const user = await Emulator.gameManager().userManager().getUser(this.userId);
-
-            if(user instanceof User && user.online && user.userMessenger()) await user.client().processComposer(new MessengerRemoveComposer(user, friendIds));
-        }
-
-        return Promise.resolve(true);
     }
 
     public async loadFriends(): Promise<boolean>
@@ -306,7 +170,7 @@ export class Messenger
     {
         this._requests = [];
 
-        const results = await getManager().find(MessengerFriendRequestEntity, {
+        const results = await getManager().find(MessengerRequestEntity, {
             where: {
                 requestedId: this._userId
             },
@@ -315,9 +179,187 @@ export class Messenger
 
         if(!results) return Promise.resolve(true);
 
-        for(const request of results) this.addRequest(new MessengerFriendRequest(request));
+        for(const request of results) this.addRequest(new MessengerRequest(request));
 
         return Promise.resolve(true);
+    }
+
+    public async updateAllFriends(entity: UserEntity): Promise<boolean>
+    {
+        for(const friend of this._friends)
+        {
+            const friendInstance = await Emulator.gameManager().userManager().getUser(friend.friendId);
+
+            if(friendInstance instanceof User && friendInstance.userMessenger())
+            {
+                const findFriend = friendInstance.userMessenger().getFriend(this.userId);
+
+                if(findFriend)
+                {
+                    findFriend.update(entity);
+
+                    if(friendInstance.online && friendInstance.client()) await friendInstance.client().processComposer(new MessengerUpdateComposer(friendInstance, [ findFriend ])); 
+                }
+            }
+        }
+
+        return Promise.resolve(true);
+    }
+
+    public async sendRequest(requestedId: number): Promise<boolean>
+    {
+        if(!requestedId) return Promise.reject(new Error('nothing_to_add'));
+
+        const user = await this.getUser();
+
+        if(user instanceof User && user.userMessenger())
+        {
+            if(this.getFriend(requestedId)) return Promise.reject(new Error('already_friends'));
+
+            const pending = await Emulator.gameManager().userManager().getUser(requestedId);
+    
+            if(pending && pending.userMessenger())
+            {
+                if(pending.userMessenger().getRequest(this._userId)) return Promise.reject(new Error('already_requested'));
+    
+                const request = new MessengerRequestEntity();
+    
+                request.userId      = this._userId;
+                request.requestedId = requestedId;
+    
+                await getManager().insert(MessengerRequestEntity, request);
+
+                request.user = user.entity;
+
+                const newRequest = new MessengerRequest(request);
+
+                pending.userMessenger().addRequest(newRequest);
+
+                if(pending.online && pending.client()) await pending.client().processComposer(new MessengerRequestComposer(pending, newRequest));
+            }
+        }
+        
+        return Promise.resolve(true);
+    }
+
+    public async acceptRequests(friendIds: number[]): Promise<boolean>
+    {
+        if(!friendIds || !friendIds.length) return Promise.reject(new Error('nothing_to_accept'));
+
+        const user = await this.getUser();
+
+        if(user instanceof User && user.userMessenger())
+        {
+            let acceptedFriends: MessengerFriend[] = [];
+
+            for(const friendId of friendIds)
+            {
+                for(const [index, request] of this._requests.entries())
+                {
+                    if(request.userId === friendId)
+                    {
+                        const myFriend = new MessengerFriendEntity();
+
+                        myFriend.userId   = this.userId;
+                        myFriend.friendId = friendId;
+
+                        const theirFriend = new MessengerFriendEntity();
+
+                        theirFriend.userId   = friendId;
+                        theirFriend.friendId = this.userId;
+
+                        await getManager().save([ myFriend, theirFriend ]);
+
+                        await getManager().delete(MessengerRequestEntity, {
+                            userId: friendId,
+                            requestedId: this.userId
+                        });
+
+                        const friend = await Emulator.gameManager().userManager().getUser(friendId);
+
+                        if(friend instanceof User && friend.userMessenger())
+                        {
+                            theirFriend.friend = user.entity;
+
+                            const newFriend = new MessengerFriend(theirFriend);
+
+                            friend.userMessenger().addFriend(newFriend);
+        
+                            if(friend.online && friend.client()) await friend.client().processComposer(new MessengerUpdateComposer(friend, [ newFriend ]));
+
+                            myFriend.friend = friend.entity;
+
+                            acceptedFriends.push(new MessengerFriend(myFriend));
+
+                            this._requests.splice(index, 1);
+                        }
+                    }
+                }
+            }
+
+            if(!acceptedFriends || acceptedFriends.length < 0) return Promise.reject(new Error('nothing_accepted'));
+
+            if(user instanceof User && user.userMessenger())
+            {
+                for(const friend of acceptedFriends) this.addFriend(friend);
+
+                if(user.online && user.client()) await user.client().processComposer(new MessengerUpdateComposer(user, acceptedFriends));
+            }
+        }
+
+        return Promise.resolve(true);
+    }
+
+    public async deleteFriends(friendIds: number[]): Promise<boolean>
+    {
+        if(!friendIds || !friendIds.length) return Promise.reject(new Error('nothing_to_delete'));
+
+        const user = await this.getUser();
+
+        if(user instanceof User && user.userMessenger())
+        {
+            let results = 0;
+
+            for(const friendId of friendIds)
+            {
+                for(const friend of this._friends)
+                {
+                    if(friend.friendId === friendId)
+                    {
+                        await getManager().delete(MessengerFriendEntity, {
+                            userId: this.userId,
+                            friendId: friendId
+                        });
+                
+                        await getManager().delete(MessengerFriendEntity, {
+                            userId: friendId,
+                            friendId: this.userId
+                        });
+            
+                        const friend = await Emulator.gameManager().userManager().getUser(friendId);
+            
+                        if(friend instanceof User && friend.userMessenger())
+                        {
+                            friend.userMessenger().removeFriend(this.userId);
+            
+                            if(friend.online && friend.client()) await friend.client().processComposer(new MessengerRemoveComposer(friend, [ this.userId ]));
+                        }
+    
+                        this.removeFriend(friendId);
+                        results++;
+                    }
+                }
+            }
+
+            if(results > 0 && user instanceof User && user.online && user.userMessenger()) await user.client().processComposer(new MessengerRemoveComposer(user, friendIds));
+        }
+
+        return Promise.resolve(true);
+    }
+
+    public async getUser(): Promise<User>
+    {
+        return await Emulator.gameManager().userManager().getUser(this._userId);
     }
 
     public get userId(): number
@@ -330,7 +372,7 @@ export class Messenger
         return this._friends;
     }
 
-    public get requests(): MessengerFriendRequest[]
+    public get requests(): MessengerRequest[]
     {
         return this._requests;
     }

@@ -15,6 +15,7 @@ export class User
     private _isPending: boolean;
     private _isSaving: boolean;
 
+    private _client: Client;
     private _userId: number;
     private _isAuthenticated: boolean;
     private _entity: UserEntity;
@@ -25,14 +26,17 @@ export class User
 
     private _onlineStart: Date;
 
-    constructor(private _client: Client)
+    constructor(_client: Client, _userId?: number)
     {
-        if(!(_client instanceof Client)) throw new Error('invalid_client');
+        if(_client instanceof Client) this._client = _client;
+        else this._client = null;
+        
+        if(!_client && _userId) this._userId = _userId;
+        else this._userId = 0;
 
         this._isDisposed    = false;
         this._isDisposing   = false;
 
-        this._userId            = 0;
         this._isAuthenticated   = false;
         this._entity            = null;
 
@@ -43,6 +47,8 @@ export class User
 
     public async checkTicket(ticket: string): Promise<boolean>
     {
+        if(!this._client) return Promise.reject(new Error('authentication_disabled'));
+
         if(this._userId || this._isAuthenticated) return Promise.reject(new Error('already_authenticated'));
 
         const userId = await Emulator.gameManager().securityManager().ticketManager().checkTicket(ticket);
@@ -56,7 +62,7 @@ export class User
 
     public async loadUser(): Promise<boolean>
     {
-        if(!this._userId || this.isAuthenticated) return Promise.reject(new Error('already_authenticated_or_invalid_user'));
+        if(this._client && !this._userId || this._isAuthenticated) return Promise.reject(new Error('invalid_authentication'));
 
         const result = await getManager().findOne(UserEntity, this._userId, {
             relations: ['info', 'statistics']
@@ -77,8 +83,9 @@ export class User
 
         await this._userMessenger.init();
 
-        this._entity            = result;
-        this._isAuthenticated   = true;
+        this._entity = result;
+
+        if(this._client) this._isAuthenticated = true;
 
         return Promise.resolve(true);
     }
@@ -102,6 +109,8 @@ export class User
 
     public async setOnline(flag: boolean, immediate: boolean = true): Promise<boolean>
     {
+        if(!this._client) return Promise.reject(new Error('invalid_client'));
+        
         if(flag)
         {
             this._entity.online     = '1';

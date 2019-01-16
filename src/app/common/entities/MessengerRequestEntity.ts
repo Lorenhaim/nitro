@@ -2,9 +2,9 @@ import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne, Unique }
 
 import { UserEntity } from './UserEntity';
 
-@Entity('messenger_friend_request')
+@Entity('messenger_request')
 @Unique(['userId', 'requestedId'])
-export class MessengerFriendRequestEntity
+export class MessengerRequestEntity
 {
     @PrimaryGeneratedColumn({ name: 'id' })
     public id: number;

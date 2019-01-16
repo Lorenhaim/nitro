@@ -20,5 +20,6 @@ export const enum OutgoingHeader
     MESSENGER_REQUEST   = 2442,
     MESSENGER_REQUESTS  = 1865,
     MESSENGER_UPDATE    = 2711,
+    MESSENGER_ERROR     = 2948,
     MOD_TOOL            = 1120
 }

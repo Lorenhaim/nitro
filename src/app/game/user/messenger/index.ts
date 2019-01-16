@@ -1,3 +1,4 @@
 export * from './Messenger';
 export * from './MessengerFriend';
-export * from './MessengerFriendRequest';
+export * from './MessengerRequest';
+export * from './MessengerRequestError';

@@ -27,7 +27,7 @@ export class MessengerUpdateComposer extends Outgoing
                 for(const friend of this._friends)
                 {
                     this.packet.writeInt(0);
-                    this.packet.writeInt(friend.userId);
+                    this.packet.writeInt(friend.friendId);
                     this.packet.writeString(friend.username);
                     this.packet.writeInt(friend.gender == 'M' ? 0 : 1);
                     this.packet.writeBoolean(friend.online);

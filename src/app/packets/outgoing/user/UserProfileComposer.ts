@@ -35,10 +35,10 @@ export class UserProfileComposer extends Outgoing
             if(profile.userMessenger()) this.packet.writeInt(profile.userMessenger().friends.length || 0);
             else this.packet.writeInt(0);
 
-            if(this.user.userMessenger())
+            if(this.user.userMessenger() && profile.userMessenger())
             {
                 this.packet.writeBoolean(this.user.userMessenger().getFriend(profile.userId) ? true : false);
-                this.packet.writeBoolean(this.user.userMessenger().getRequest(profile.userId) ? true : false);
+                this.packet.writeBoolean(profile.userMessenger().getRequest(this.user.userId) || this.user.userMessenger().getRequest(profile.userId) ? true : false);
             }
             else
             {

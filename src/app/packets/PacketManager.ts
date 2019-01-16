@@ -5,7 +5,7 @@ import { ClientLatencyEvent, ClientReleaseVersionEvent, ClientVariablesEvent, Cr
 import { GamesInitEvent, GetGamesEvent } from './incoming/games';
 import { MachineIdEvent, SecurityTicketEvent } from './incoming/handshake';
 import { GetArticlesEvent, GetCampaignsEvent } from './incoming/hotelview';
-import { MessengerAcceptRequestEvent, MessengerDeleteEvent, MessengerInitEvent, MessengerRequestsEvent } from './incoming/messenger';
+import { MessengerAcceptEvent, MessengerInitEvent, MessengerRemoveEvent, MessengerRequestEvent, MessengerRequestsEvent, MessengerSearchEvent } from './incoming/messenger';
 import { UserClubEvent, UserCreditsEvent, UserFigureEvent, UserInfoEvent, UserProfileEvent, UserRelationshipsEvent } from './incoming/user';
 
 export class PacketManager
@@ -78,10 +78,12 @@ export class PacketManager
 
     private registerMessenger(): void
     {
-        this.addHandler(IncomingHeader.MESSENGER_ACCEPT, MessengerAcceptRequestEvent);
-        this.addHandler(IncomingHeader.MESSENGER_DELETE, MessengerDeleteEvent);
+        this.addHandler(IncomingHeader.MESSENGER_ACCEPT, MessengerAcceptEvent);
         this.addHandler(IncomingHeader.MESSENGER_INIT, MessengerInitEvent);
+        this.addHandler(IncomingHeader.MESSENGER_REMOVE, MessengerRemoveEvent);
+        this.addHandler(IncomingHeader.MESSENGER_REQUEST, MessengerRequestEvent);
         this.addHandler(IncomingHeader.MESSENGER_REQUESTS, MessengerRequestsEvent);
+        this.addHandler(IncomingHeader.MESSENGER_SEARCH, MessengerSearchEvent);
     }
 
     private registerUser(): void

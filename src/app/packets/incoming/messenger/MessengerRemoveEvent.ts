@@ -3,13 +3,13 @@ import { Logger } from '../../../common';
 import { Incoming } from '../Incoming';
 import { IncomingHeader } from '../IncomingHeader';
 
-export class MessengerAcceptRequestEvent extends Incoming
+export class MessengerRemoveEvent extends Incoming
 {
     public async process(): Promise<boolean>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.MESSENGER_ACCEPT) throw new Error('invalid_header');
+            if(this.packet.header !== IncomingHeader.MESSENGER_REMOVE) throw new Error('invalid_header');
 
             if(!this.user.userMessenger()) throw new Error('invalid_messenger');
 
@@ -21,7 +21,7 @@ export class MessengerAcceptRequestEvent extends Incoming
 
             for(let i = 0; i < total; i++) friendIds.push(this.packet.readInt());
 
-            await this.user.userMessenger().acceptRequests(friendIds);
+            await this.user.userMessenger().deleteFriends(friendIds);
 
             return true;
         }
