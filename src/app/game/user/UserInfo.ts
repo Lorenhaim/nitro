@@ -1,15 +1,14 @@
 import { getManager } from 'typeorm';
 
-import { Logger, UserInfoEntity } from '../../common';
+import { UserInfoEntity, TimeHelper } from '../../common';
 
 export class UserInfo
 {
     private _isDisposed: boolean;
     private _isDisposing: boolean;
+
     private _isPending: boolean;
     private _isSaving: boolean;
-
-    private _userId: number;
 
     constructor(private _entity: UserInfoEntity)
     {
@@ -17,10 +16,9 @@ export class UserInfo
 
         this._isDisposed    = false;
         this._isDisposing   = false;
+
         this._isPending     = false;
         this._isSaving      = false;
-
-        this._userId = _entity.userId;
     }
 
     public async save(): Promise<boolean>
@@ -31,7 +29,7 @@ export class UserInfo
         {
             this._isSaving = true;
 
-            await getManager().save(this._entity);
+            await getManager().update(UserInfoEntity, this._entity.id, this._entity);
         }
 
         this._isPending = false;
@@ -42,37 +40,34 @@ export class UserInfo
 
     public async dispose(): Promise<boolean>
     {
-        try
+        if(this._isDisposed) return Promise.resolve(true);
+
+        if(!this._isDisposing)
         {
-            if(this._isDisposed) return true;
+            this._isDisposing = true;
 
-            if(!this._isDisposing)
-            {
-                this._isDisposing = true;
-
-                await this.save();
-            }
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-
-            return true;
+            await this.save();
         }
 
-        catch(err)
-        {
-            Logger.writeError(`User Info Dispose Error [${ this.userId }] -> ${ err.message || err }`);
-        }
+        this._isDisposed    = true;
+        this._isDisposing   = false;
+
+        return Promise.resolve(true);
     }
 
     public get userId(): number
     {
-        return this._userId;
+        return this._entity.userId;
     }
 
     public get homeRoom(): number
     {
-        return this._entity.homeRoom;
+        return this._entity.homeRoom || 0;
+    }
+
+    public get clubActive(): boolean
+    {
+        return TimeHelper.between(this._entity.clubExpiration, TimeHelper.now, 'seconds') > 0;
     }
 
     public get clubExpiration(): Date
@@ -82,21 +77,31 @@ export class UserInfo
 
     public get respectsReceived(): number
     {
-        return this._entity.respectsReceived;
+        return this._entity.respectsReceived || 0;
     }
 
     public get respectsRemaining(): number
     {
-        return this._entity.respectsRemaining;
+        return this._entity.respectsRemaining || 0;
     }
 
     public get respectsPetRemaining(): number
     {
-        return this._entity.respectsPetRemaining;
+        return this._entity.respectsPetRemaining || 0;
     }
 
     public get achievementScore(): number
     {
-        return this._entity.achievementScore;
+        return this._entity.achievementScore || 0;
+    }
+
+    public get messengerDisabled(): boolean
+    {
+        return this._entity.messengerDisabled === '1';
+    }
+
+    public get friendRequestsDisabled(): boolean
+    {
+        return this._entity.friendRequestsDisabled === '1';
     }
 }

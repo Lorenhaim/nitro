@@ -32,18 +32,30 @@ export class UserProfileComposer extends Outgoing
             if(profile.userInfo()) this.packet.writeInt(profile.userInfo().achievementScore);
             else this.packet.writeInt(0);
 
-            if(profile.userMessenger()) this.packet.writeInt(profile.userMessenger().friends.length || 0);
-            else this.packet.writeInt(0);
-
-            if(this.user.userMessenger() && profile.userMessenger())
+            if(profile.userMessenger())
             {
-                this.packet.writeBoolean(this.user.userMessenger().getFriend(profile.userId) ? true : false);
-                this.packet.writeBoolean(profile.userMessenger().getRequest(this.user.userId) || this.user.userMessenger().getRequest(profile.userId) ? true : false);
+                this.packet.writeInt(profile.userMessenger().friends.length || 0);
+
+                if(this.user.userMessenger())
+                {
+                    if(this.user.userMessenger().getFriend(profile.userId)) this.packet.writeBoolean(true);
+                    else this.packet.writeBoolean(false);
+
+                    if(profile.userMessenger().getRequest(this.user.userId) || this.user.userMessenger().getRequest(profile.userId)) this.packet.writeBoolean(true);
+                    else this.packet.writeBoolean(false);
+                }
+                else
+                {
+                    this.packet.writeBoolean(false);
+                    this.packet.writeBoolean(false);
+                }
             }
             else
             {
+                this.packet.writeInt(0);
                 this.packet.writeBoolean(false);
                 this.packet.writeBoolean(false);
+
             }
 
             this.packet.writeBoolean(profile.online);

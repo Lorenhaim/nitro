@@ -21,7 +21,7 @@ export class MessengerAcceptEvent extends Incoming
 
             for(let i = 0; i < total; i++) friendIds.push(this.packet.readInt());
 
-            await this.user.userMessenger().acceptRequests(friendIds);
+            await this.user.userMessenger().acceptRequest(friendIds);
 
             return true;
         }

@@ -5,3 +5,5 @@ export * from './UserFigureEvent';
 export * from './UserInfoEvent';
 export * from './UserProfileEvent';
 export * from './UserRelationshipsEvent';
+export * from './UserSanctionStatusEvent';
+export * from './UserSettingsEvent';

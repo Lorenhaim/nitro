@@ -1,5 +1,5 @@
 import { Logger } from '../../../common';
-import { User, MessengerFriend } from '../../../game';
+import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
@@ -20,19 +20,21 @@ export class MessengerRemoveComposer extends Outgoing
 
             this.packet.writeInt(0);
 
-            if(this._userIds && this._userIds.length > 0)
-            {
-                this.packet.writeInt(this._userIds.length);
+            const totalUsers = this._userIds.length;
 
-                for(const userId of this._userIds)
-                {
-                    this.packet.writeInt(-1);
-                    this.packet.writeInt(userId);
-                }
+            if(!totalUsers)
+            {
+                this.packet.writeInt(0);
             }
             else
             {
-                this.packet.writeInt(0);
+                this.packet.writeInt(totalUsers);
+
+                for(let i = 0; i < totalUsers; i++)
+                {
+                    this.packet.writeInt(-1);
+                    this.packet.writeInt(this._userIds[i]);
+                }
             }
 
             this.packet.prepare();

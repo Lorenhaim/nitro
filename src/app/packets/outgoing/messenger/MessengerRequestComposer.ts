@@ -1,5 +1,5 @@
 import { Logger } from '../../../common';
-import { User, MessengerRequest } from '../../../game';
+import { User, FriendRequest } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
@@ -7,7 +7,7 @@ import { OutgoingPacket } from '../OutgoingPacket';
 
 export class MessengerRequestComposer extends Outgoing
 {
-    constructor(_user: User, private readonly _request: MessengerRequest)
+    constructor(_user: User, private readonly _request: FriendRequest)
     {
         super(OutgoingHeader.MESSENGER_REQUEST, _user);
     }

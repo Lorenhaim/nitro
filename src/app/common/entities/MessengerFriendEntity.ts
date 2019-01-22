@@ -16,7 +16,7 @@ export class MessengerFriendEntity
     public friendId: number;
 
     @Column({ name: 'relation', type: 'enum', enum: ['0', '1', '2', '3'], default: '0' })
-    public relation: 0 | 1 | 2 | 3;
+    public relation: '0' | '1' | '2' | '3';
 
     @Column({ name: 'timestamp_created', default: () => "CURRENT_TIMESTAMP" })
     public timestampCreated: Date;

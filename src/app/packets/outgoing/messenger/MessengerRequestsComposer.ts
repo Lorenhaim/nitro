@@ -18,22 +18,26 @@ export class MessengerRequestsComposer extends Outgoing
         {
             if(!this.user.isAuthenticated || !this.user.userMessenger()) return this.cancel();
 
-            if(this.user.userMessenger().requests && this.user.userMessenger().requests.length > 0)
-            {
-                this.packet.writeInt(this.user.userMessenger().requests.length);
-                this.packet.writeInt(this.user.userMessenger().requests.length);
+            const totalRequests = this.user.userMessenger().requests.length;
 
-                for(const request of this.user.userMessenger().requests)
-                {
-                    this.packet.writeInt(request.userId);
-                    this.packet.writeString(request.username);
-                    this.packet.writeString('');
-                }
+            if(!totalRequests)
+            {
+                this.packet.writeInt(0);
+                this.packet.writeInt(0);
             }
             else
             {
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
+                this.packet.writeInt(totalRequests);
+                this.packet.writeInt(totalRequests);
+
+                for(let i = 0; i < totalRequests; i++)
+                {
+                    const request = this.user.userMessenger().requests[i];
+
+                    this.packet.writeInt(request.userId);
+                    this.packet.writeString(request.username);
+                    this.packet.writeString(request.figure);
+                }
             }
 
             this.packet.prepare();

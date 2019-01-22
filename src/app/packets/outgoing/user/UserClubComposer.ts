@@ -19,16 +19,28 @@ export class UserClubComposer extends Outgoing
         {
             if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
 
-            this.packet.writeString('club_habbo');
+            this.packet.writeString('habbo_club');
 
             const clubExpiration: Date = this.user.userInfo().clubExpiration;
 
-            if(clubExpiration != null && clubExpiration >= TimeHelper.now)
+            if(clubExpiration == null || clubExpiration <= TimeHelper.now)
+            {
+                this.packet.writeInt(0);
+                this.packet.writeInt(0);
+                this.packet.writeInt(0);
+                this.packet.writeInt(0);
+                this.packet.writeBoolean(true);
+                this.packet.writeBoolean(true);
+                this.packet.writeInt(0);
+                this.packet.writeInt(0);
+                this.packet.writeInt(0);
+            }
+            else
             {
                 const clubRemaining = TimeHelper.timeBetween(clubExpiration, TimeHelper.now);
 
                 this.packet.writeInt(clubRemaining.days);
-                this.packet.writeInt(1);
+                this.packet.writeInt(2);
                 this.packet.writeInt(clubRemaining.months);
                 this.packet.writeInt(clubRemaining.years);
                 this.packet.writeBoolean(true);
@@ -36,18 +48,6 @@ export class UserClubComposer extends Outgoing
                 this.packet.writeInt(0);
                 this.packet.writeInt(0);
                 this.packet.writeInt(TimeHelper.until(clubExpiration, 'seconds'));
-            }
-            else
-            {
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeBoolean(true);
-                this.packet.writeBoolean(true);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
             }
 
             this.packet.prepare();

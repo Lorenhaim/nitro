@@ -1,26 +1,24 @@
 import { getManager } from 'typeorm';
 
-import { Logger, TimeHelper, UserStatisticsEntity } from '../../common';
+import { UserStatisticsEntity, TimeHelper } from '../../common';
 
 export class UserStatistics
 {
     private _isDisposed: boolean;
     private _isDisposing: boolean;
+
     private _isPending: boolean;
     private _isSaving: boolean;
 
-    private _userId: number;
-
     constructor(private _entity: UserStatisticsEntity)
     {
-        if(!(_entity instanceof UserStatisticsEntity)) throw new Error('invalid_user_statistics');
+        if(!(_entity instanceof UserStatisticsEntity)) throw new Error('invalid_user_info');
 
         this._isDisposed    = false;
         this._isDisposing   = false;
+
         this._isPending     = false;
         this._isSaving      = false;
-
-        this._userId = _entity.userId;
     }
 
     public async save(): Promise<boolean>
@@ -31,11 +29,28 @@ export class UserStatistics
         {
             this._isSaving = true;
 
-            await getManager().save(this._entity);
+            await getManager().update(UserStatisticsEntity, this._entity.id, this._entity);
         }
 
         this._isPending = false;
         this._isSaving  = false;
+
+        return Promise.resolve(true);
+    }
+
+    public async dispose(): Promise<boolean>
+    {
+        if(this._isDisposed) return Promise.resolve(true);
+
+        if(!this._isDisposing)
+        {
+            this._isDisposing = true;
+
+            await this.save();
+        }
+
+        this._isDisposed    = true;
+        this._isDisposing   = false;
 
         return Promise.resolve(true);
     }
@@ -69,7 +84,6 @@ export class UserStatistics
             if(this.loginStreakLast)
             {
                 const daysBetween = TimeHelper.between(TimeHelper.now, this.loginStreakLast, 'days');
-                // fix this
 
                 if(daysBetween > 0) this._entity.loginStreak = this.loginStreak + 1;
             }
@@ -81,34 +95,9 @@ export class UserStatistics
         this._isPending = true;
     }
 
-    public async dispose(): Promise<boolean>
-    {
-        try
-        {
-            if(this._isDisposed) return true;
-
-            if(!this._isDisposing)
-            {
-                this._isDisposing = true;
-
-                await this.save();
-            }
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-
-            return true;
-        }
-
-        catch(err)
-        {
-            Logger.writeError(`User Statistics Dispose Error [${ this.userId }] -> ${ err.message || err }`);
-        }
-    }
-
     public get userId(): number
     {
-        return this._userId;
+        return this._entity.userId;
     }
 
     public get loginStreak(): number

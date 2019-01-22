@@ -16,7 +16,7 @@ export class UserInfoComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
+            if(!this.user.isAuthenticated || !this.user.userInfo()) return this.cancel();
 
             this.packet.writeInt(this.user.userId);
             this.packet.writeString(this.user.username);
@@ -25,9 +25,9 @@ export class UserInfoComposer extends Outgoing
             this.packet.writeString(this.user.motto);
             this.packet.writeString(this.user.username);
             this.packet.writeBoolean(false);
-            this.packet.writeInt(this.user.userInfo().respectsReceived || 0);
-            this.packet.writeInt(this.user.userInfo().respectsRemaining || 0);
-            this.packet.writeInt(this.user.userInfo().respectsPetRemaining || 0);
+            this.packet.writeInt(this.user.userInfo().respectsReceived);
+            this.packet.writeInt(this.user.userInfo().respectsRemaining);
+            this.packet.writeInt(this.user.userInfo().respectsPetRemaining);
             this.packet.writeBoolean(false);
             this.packet.writeString(TimeHelper.formatDate(this.user.timestampCreated, 'YYYY-MM-DD HH:mm:ss'));
             this.packet.writeBoolean(false); // name change

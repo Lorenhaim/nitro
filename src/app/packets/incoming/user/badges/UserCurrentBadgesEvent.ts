@@ -11,7 +11,7 @@ export class UserCurrentBadgesEvent extends Incoming
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_BADGES) throw new Error('invalid_header');
+            if(this.packet.header !== IncomingHeader.USER_CURRENT_BADGES) throw new Error('invalid_header');
 
             const userId = this.packet.readInt();
 

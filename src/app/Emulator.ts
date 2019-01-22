@@ -28,9 +28,16 @@ export class Emulator
             await Emulator.gameManager().init();
             await Emulator.gameServer().init();
 
-            Logger.writeLine(`Emulator -> Ready`);
+            if(Emulator.gameManager().isReady)
+            {
+                Logger.writeLine(`Emulator -> Ready`);
 
-            await Emulator.gameServer().listen(Emulator.config().getString('emulator.ip', '0.0.0.0'), Emulator.config().getNumber('emulator.port', 1242));
+                await Emulator.gameServer().listen(Emulator.config().getString('emulator.ip', '0.0.0.0'), Emulator.config().getNumber('emulator.port', 1242));
+            }
+            else
+            {
+                throw new Error('something went wrong');
+            }
         }
 
         catch(err)

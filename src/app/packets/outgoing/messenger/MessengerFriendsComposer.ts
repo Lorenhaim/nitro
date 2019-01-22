@@ -21,13 +21,21 @@ export class MessengerFriendsComposer extends Outgoing
             this.packet.writeInt(300);
             this.packet.writeInt(300);
 
-            if(this.user.userMessenger().friends && this.user.userMessenger().friends.length > 0)
-            {
-                this.packet.writeInt(this.user.userMessenger().friends.length);
+            const totalFriends = this.user.userMessenger().friends.length;
 
-                for(const friend of this.user.userMessenger().friends)
+            if(!totalFriends)
+            {
+                this.packet.writeInt(0);
+            }
+            else
+            {
+                this.packet.writeInt(totalFriends);
+
+                for(let i = 0; i < totalFriends; i++)
                 {
-                    this.packet.writeInt(friend.friendId);
+                    const friend = this.user.userMessenger().friends[i];
+
+                    this.packet.writeInt(friend.userId);
                     this.packet.writeString(friend.username);
                     this.packet.writeInt(friend.gender === 'M' ? 0 : 1);
                     this.packet.writeBoolean(friend.online);
@@ -37,15 +45,11 @@ export class MessengerFriendsComposer extends Outgoing
                     this.packet.writeString(friend.motto);
                     this.packet.writeString('');
                     this.packet.writeString('');
+                    this.packet.writeBoolean(false); // allow offline messaging
                     this.packet.writeBoolean(false);
                     this.packet.writeBoolean(false);
-                    this.packet.writeBoolean(false);
-                    this.packet.writeShort(friend.relation); // friend relation
+                    this.packet.writeShort(parseInt(friend.relation));
                 }
-            }
-            else
-            {
-                this.packet.writeInt(0);
             }
 
             this.packet.prepare();

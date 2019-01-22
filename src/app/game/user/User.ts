@@ -1,55 +1,62 @@
 import { getManager } from 'typeorm';
 
 import { Emulator } from '../../Emulator';
-import { UserEntity, TimeHelper, Logger } from '../../common';
+import { UserEntity, TimeHelper } from '../../common';
 import { Client } from '../../networking';
 
 import { UserInfo } from './UserInfo';
+import { UserMessenger } from './UserMessenger';
 import { UserStatistics } from './UserStatistics';
-import { Messenger} from './messenger';
 
 export class User
 {
+    private _userId: number;
+    private _client: Client;
+    private _isAuthenticated: boolean;
+
+    private _entity: UserEntity;
+    private _userInfo: UserInfo;
+    private _userMessenger: UserMessenger;
+    private _userStatistics: UserStatistics;
+
     private _isDisposed: boolean;
     private _isDisposing: boolean;
     private _isPending: boolean;
     private _isSaving: boolean;
 
-    private _client: Client;
-    private _userId: number;
-    private _isAuthenticated: boolean;
-    private _entity: UserEntity;
-
-    private _userInfo: UserInfo;
-    private _userStatistics: UserStatistics;
-    private _userMessenger: Messenger;
-
-    private _onlineStart: Date;
-
-    constructor(_client: Client, _userId?: number)
+    constructor(_userId: number, _client?: Client)
     {
-        if(_client instanceof Client) this._client = _client;
-        else this._client = null;
-        
-        if(!_client && _userId) this._userId = _userId;
-        else this._userId = 0;
+        if(_userId && _client) throw new Error('invalid_construction');
 
-        this._isDisposed    = false;
-        this._isDisposing   = false;
-
+        this._userId            = 0;
+        this._client            = null;
         this._isAuthenticated   = false;
-        this._entity            = null;
 
+        this._entity            = null;
         this._userInfo          = null;
-        this._userStatistics    = null;
         this._userMessenger     = null;
+        this._userStatistics    = null;
+
+        this._isDisposed        = false;
+        this._isDisposing       = false;
+        this._isPending         = false;
+        this._isSaving          = false;
+
+        if(_userId && !_client)
+        {
+            this._userId = _userId;
+        }
+
+        if(!_userId && _client)
+        {
+            if(!(_client instanceof Client)) throw new Error('invalid_client');
+            this._client = _client;
+        }
     }
 
     public async checkTicket(ticket: string): Promise<boolean>
     {
-        if(!this._client) return Promise.reject(new Error('authentication_disabled'));
-
-        if(this._userId || this._isAuthenticated) return Promise.reject(new Error('already_authenticated'));
+        if(this._userId || !this._client || this._isAuthenticated) return Promise.reject(new Error('authentication_disabled'));
 
         const userId = await Emulator.gameManager().securityManager().ticketManager().checkTicket(ticket);
 
@@ -62,13 +69,13 @@ export class User
 
     public async loadUser(): Promise<boolean>
     {
-        if(this._client && !this._userId || this._isAuthenticated) return Promise.reject(new Error('invalid_authentication'));
+        if(!this._userId || this._isAuthenticated) return Promise.reject(new Error('invalid_user'));
 
         const result = await getManager().findOne(UserEntity, this._userId, {
             relations: ['info', 'statistics']
         });
 
-        if(!result) return Promise.reject(new Error('invalid_user'));
+        if(!result) return Promise.reject(new Error('invalid_user5'));
 
         if(!result.info) return Promise.reject(new Error('invalid_user_info'));
 
@@ -76,16 +83,20 @@ export class User
 
         this._userInfo          = new UserInfo(result.info);
         this._userStatistics    = new UserStatistics(result.statistics);
-        this._userMessenger     = new Messenger(this._userId);
 
         delete result.info;
         delete result.statistics;
 
-        await this._userMessenger.init();
-
         this._entity = result;
 
-        if(this._client) this._isAuthenticated = true;
+        this._isAuthenticated = true;
+
+        if(!this._userInfo.messengerDisabled)
+        {
+            this._userMessenger = new UserMessenger(this);
+
+            await this._userMessenger.init();
+        }
 
         return Promise.resolve(true);
     }
@@ -94,22 +105,16 @@ export class User
     {
         if(!this._isPending) return Promise.resolve(true);
 
-        if(!this._isSaving)
-        {
-            this._isSaving = true;
-
-            await getManager().save(this._entity);
-        }
+        await getManager().update(UserEntity, this._userId, this._entity);
 
         this._isPending = false;
-        this._isSaving  = false;
 
         return Promise.resolve(true);
     }
 
     public async setOnline(flag: boolean, immediate: boolean = true): Promise<boolean>
     {
-        if(!this._client) return Promise.reject(new Error('invalid_client'));
+        if(!this._isAuthenticated) return Promise.reject(new Error('invalid_user'));
         
         if(flag)
         {
@@ -118,10 +123,14 @@ export class User
 
             this._userStatistics.updateLoginStreak('login');
 
-            if(this.userMessenger())
-            {
-                await this.userMessenger().updateAllFriends(this._entity);
-            }
+            if(this._userMessenger) await this._userMessenger.updateAllFriends({
+                userId: this._entity.id,
+                username: this._entity.username,
+                motto: this._entity.motto,
+                gender: this._entity.gender,
+                figure: this._entity.figure,
+                online: true
+            });
         }
         else
         {
@@ -129,10 +138,14 @@ export class User
 
             this._userStatistics.updateLoginStreak('logout');
 
-            if(this.userMessenger())
-            {
-                await this.userMessenger().updateAllFriends(this._entity);
-            }
+            if(this._userMessenger) await this._userMessenger.updateAllFriends({
+                userId: this._entity.id,
+                username: this._entity.username,
+                motto: this._entity.motto,
+                gender: this._entity.gender,
+                figure: this._entity.figure,
+                online: false
+            });
         }
 
         this._isPending = true;
@@ -153,7 +166,14 @@ export class User
 
         if(this.userMessenger())
         {
-            await this.userMessenger().updateAllFriends(this._entity);
+            await this.userMessenger().updateAllFriends({
+                userId: this.userId,
+                username: this.username,
+                motto: this.motto,
+                gender: this.gender,
+                figure: this.figure,
+                online: this.online
+            });
         }
 
         return Promise.resolve(true);
@@ -195,16 +215,6 @@ export class User
     public get isAuthenticated(): boolean
     {
         return this._isAuthenticated;
-    }
-
-    public get entity(): UserEntity
-    {
-        return this._entity;
-    }
-
-    public client(): Client
-    {
-        return this._client;
     }
 
     public get username(): string
@@ -261,6 +271,11 @@ export class User
         return this._entity.timestampCreated;
     }
 
+    public client(): Client
+    {
+        return this._client;
+    }
+
     public userInfo(): UserInfo
     {
         return this._userInfo;
@@ -271,7 +286,7 @@ export class User
         return this._userStatistics;
     }
 
-    public userMessenger(): Messenger
+    public userMessenger(): UserMessenger
     {
         return this._userMessenger;
     }

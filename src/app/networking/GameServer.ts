@@ -5,7 +5,7 @@ import { Logger } from '../common';
 import { User } from '../game';
 
 import { Client } from './Client';
-import { PacketManager } from '../packets';
+import { PacketManager, IncomingPacket, Incoming } from '../packets';
 
 export class GameServer
 {
@@ -22,13 +22,43 @@ export class GameServer
     {
         this._socketServer = new Server(async socket =>
         {
-            const user: User = new User(new Client(socket));
+            const user: User = new User(null, new Client(socket));
 
             socket.on('data', async data =>
             {
                 try
                 {
-                    await this._packetManager.processPacket(user, data);
+                    const packets: IncomingPacket[] = [];
+
+                    const originalPacket        = new IncomingPacket(data);
+                    const originalBufferLength  = originalPacket.bufferLength;
+
+                    let packetLength    = originalPacket.packetLength + 4;
+                    let completedLength = 0;
+
+                    if(originalBufferLength > packetLength)
+                    {
+                        for(let i = 0; i < originalBufferLength; i += packetLength)
+                        {
+                            const packet = new IncomingPacket(data.slice(i, i + packetLength));
+
+                            if(packet.header !== 0) packets.push(packet);
+
+                            packetLength    = packet.packetLength + 4;
+                            completedLength = completedLength + packetLength;
+                        }
+
+                        if(completedLength === originalBufferLength)
+                        {
+                            const totalPackets = packets.length;
+                            
+                            for(let i = 0; i < totalPackets; i++) await this._packetManager.processPacket(user, packets[i]);
+                        }
+                    }
+                    else
+                    {
+                        await this._packetManager.processPacket(user, originalPacket);
+                    }
                 }
 
                 catch(err)

@@ -1,4 +1,5 @@
 export * from './MessengerAcceptEvent';
+export * from './MessengerChatEvent';
 export * from './MessengerInitEvent';
 export * from './MessengerRemoveEvent';
 export * from './MessengerRequestEvent';

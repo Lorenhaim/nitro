@@ -18,26 +18,44 @@ export class MessengerSearchComposer extends Outgoing
         {
             if(!this.user.isAuthenticated || !this.user.userMessenger()) return this.cancel();
 
-            if(this._results && this._results.length > 0)
+            const totalResults = this._results.length;
+
+            if(!totalResults)
+            {
+                this.packet.writeInt(0);
+                this.packet.writeInt(0);
+            }
+            else
             {
                 const friends   = [];
                 const users     = [];
 
-                for(const user of this._results)
+                for(let i = 0; i < totalResults; i++)
                 {
-                    if(user instanceof User)
+                    const result = this._results[i];
+
+                    if(result instanceof User && result.userId !== this.user.userId)
                     {
-                        if(this.user.userMessenger().getFriend(user.userId)) friends.push(user);
-                        else users.push(user);
+                        if(this.user.userMessenger().getFriend(result.userId)) friends.push(result);
+                        else users.push(result);
                     }
                 }
 
-                if(friends.length > 0)
-                {
-                    this.packet.writeInt(friends.length);
+                const friendsLength = friends.length;
+                const usersLength   = users.length;
 
-                    for(const friend of friends)
+                if(!friendsLength)
+                {
+                    this.packet.writeInt(0);
+                }
+                else
+                {
+                    this.packet.writeInt(friendsLength);
+
+                    for(let i = 0; i < friendsLength; i++)
                     {
+                        const friend = friends[i];
+
                         this.packet.writeInt(friend.userId);
                         this.packet.writeString(friend.username);
                         this.packet.writeString(friend.motto);
@@ -45,21 +63,23 @@ export class MessengerSearchComposer extends Outgoing
                         this.packet.writeBoolean(false);
                         this.packet.writeString('');
                         this.packet.writeInt(1);
-                        this.packet.writeString(friend.online ? friend.figure : '');
+                        this.packet.writeString(friend.figure);
                         this.packet.writeString('');
                     }
                 }
-                else
+
+                if(!usersLength)
                 {
                     this.packet.writeInt(0);
                 }
-
-                if(users.length > 0)
+                else
                 {
-                    this.packet.writeInt(users.length);
+                    this.packet.writeInt(usersLength);
 
-                    for(const user of users)
+                    for(let i = 0; i < usersLength; i++)
                     {
+                        const user = users[i];
+
                         this.packet.writeInt(user.userId);
                         this.packet.writeString(user.username);
                         this.packet.writeString(user.motto);
@@ -67,19 +87,10 @@ export class MessengerSearchComposer extends Outgoing
                         this.packet.writeBoolean(false);
                         this.packet.writeString('');
                         this.packet.writeInt(1);
-                        this.packet.writeString(user.online ? user.figure : '');
+                        this.packet.writeString(user.figure);
                         this.packet.writeString('');
                     }
                 }
-                else
-                {
-                    this.packet.writeInt(0);
-                }
-            }
-            else
-            {
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
             }
 
             this.packet.prepare();

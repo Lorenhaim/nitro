@@ -5,3 +5,5 @@ export * from './UserFigureComposer';
 export * from './UserInfoComposer';
 export * from './UserProfileComposer';
 export * from './UserRightsComposer';
+export * from './UserSanctionStatusComposer';
+export * from './UserSettingsComposer';

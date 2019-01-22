@@ -1,3 +1,4 @@
+import { Emulator } from '../../../Emulator';
 import { Logger } from '../../../common';
 import { User } from '../../../game';
 
@@ -18,9 +19,9 @@ export class MessengerInitComposer extends Outgoing
         {
             if(!this.user.isAuthenticated || !this.user.userMessenger()) return this.cancel();
 
-            this.packet.writeInt(300); // max friends
-            this.packet.writeInt(1337); // max friends
-            this.packet.writeInt(10000); // max friends
+            this.packet.writeInt(Emulator.config().getNumber('game.user.messenger.maxFriends', 300));
+            this.packet.writeInt(Emulator.config().getNumber('game.user.messenger.maxFriends', 300));
+            this.packet.writeInt(Emulator.config().getNumber('game.user.messenger.maxFriends.habboClub', 500));
             this.packet.writeInt(0); // categories
 
             this.packet.prepare();

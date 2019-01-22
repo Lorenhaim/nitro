@@ -22,6 +22,11 @@ export class IncomingPacket
         if(this._header < 1) this._header = 0;
     }
 
+    public get buffer(): Buffer
+    {
+        return this._buffer;
+    }
+
     public get bufferLength(): number
     {
         return this._bufferLength;

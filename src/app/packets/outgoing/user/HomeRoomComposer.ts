@@ -18,7 +18,7 @@ export class HomeRoomComposer extends Outgoing
         {
             if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
 
-            this.packet.writeInt(this.user.userInfo().homeRoom || 0);
+            this.packet.writeInt(this.user.userInfo().homeRoom);
             this.packet.writeInt(0);
 
             this.packet.prepare();

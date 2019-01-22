@@ -29,6 +29,12 @@ export class UserInfoEntity
     @Column({ name: 'achievement_score', default: '0' })
     public achievementScore: number;
 
+    @Column({ name: 'messenger_disabled', type: 'enum', enum: ['0', '1'], default: '0' })
+    public messengerDisabled: '0' | '1';
+
+    @Column({ name: 'friendrequests_disabled', type: 'enum', enum: ['0', '1'], default: '0' })
+    public friendRequestsDisabled: '0' | '1';
+
     @OneToOne(type => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     public user: UserEntity;

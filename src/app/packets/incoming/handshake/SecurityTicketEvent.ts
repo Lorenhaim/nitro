@@ -22,19 +22,19 @@ export class SecurityTicketEvent extends Incoming
 
             if(!this.user.userId) throw new Error('invalid_authentication');
 
-            await Emulator.gameManager().userManager().addUser(this.user);
-
             await this.user.loadUser();
 
-            if(!this.user.isAuthenticated) throw new Error('invalid_authentication');
+            await Emulator.gameManager().userManager().addUser(this.user);
 
-            await this.user.setOnline(true);
+            if(!this.user.isAuthenticated) throw new Error('invalid_authentication');
 
             await this.user.client().processComposer(new SecurityTicketComposer(this.user));
             await this.user.client().processComposer(new HomeRoomComposer(this.user));
             await this.user.client().processComposer(new UserRightsComposer(this.user));
 
             await this.user.client().processComposer(new ModToolComposer(this.user));
+
+            await this.user.setOnline(true);
 
             return true;
         }

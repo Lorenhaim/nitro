@@ -16,10 +16,7 @@ export class MessengerRequestEvent extends Incoming
 
             const user = await Emulator.gameManager().userManager().getUser(0, this.packet.readString());
 
-            if(user)
-            {
-                await this.user.userMessenger().sendRequest(user.userId);
-            }
+            if(user) await this.user.userMessenger().sendRequest(user.userId);
 
             return true;
         }
