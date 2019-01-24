@@ -5,22 +5,22 @@ import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
-export class UserRightsComposer extends Outgoing
+export class UserPermissionsComposer extends Outgoing
 {
     constructor(_user: User)
     {
-        super(OutgoingHeader.USER_RIGHTS, _user);
+        super(OutgoingHeader.USER_PERMISSIONS, _user);
     }
 
     public async compose(): Promise<OutgoingPacket>
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
+            if(!this.user.isAuthenticated || !this.user.userInfo()) return this.cancel();
 
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
+            this.packet.writeInt(this.user.userInfo().clubActive ? 2 : 0); // club level
+            this.packet.writeInt(this.user.rankId); // rank id
+            this.packet.writeBoolean(false); //is ambassador
 
             this.packet.prepare();
 

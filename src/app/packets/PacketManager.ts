@@ -1,13 +1,13 @@
 import { User } from '../game';
 
 import { Incoming, IncomingHeader, IncomingPacket } from './incoming';
-import { ClientLatencyEvent, ClientReleaseVersionEvent, ClientVariablesEvent, CrossDomainEvent, EventTrackerEvent } from './incoming/client';
+import { ClientLatencyEvent, ClientPingEvent, ClientReleaseVersionEvent, ClientVariablesEvent, CrossDomainEvent, EventTrackerEvent } from './incoming/client';
 import { GamesInitEvent, GetGamesEvent } from './incoming/games';
 import { MachineIdEvent, SecurityTicketEvent } from './incoming/handshake';
 import { GetArticlesEvent, GetCampaignsEvent } from './incoming/hotelview';
-import { MessengerAcceptEvent, MessengerChatEvent, MessengerInitEvent, MessengerRemoveEvent, MessengerRequestEvent, MessengerRequestsEvent, MessengerSearchEvent } from './incoming/messenger';
+import { MessengerAcceptEvent, MessengerChatEvent, MessengerFriendsEvent, MessengerInitEvent, MessengerRemoveEvent, MessengerRequestEvent, MessengerRequestsEvent, MessengerSearchEvent } from './incoming/messenger';
 import { NavigatorInitEvent, NavigatorRoomsEvent, NavigatorSettingsEvent } from './incoming/navigator';
-import { UserClubEvent, UserCreditsEvent, UserFigureEvent, UserInfoEvent, UserProfileEvent, UserRelationshipsEvent, UserSanctionStatusEvent, UserSettingsEvent } from './incoming/user';
+import { UserClubEvent, UserCreditsEvent, UserCurrentBadgesEvent, UserFigureEvent, UserIgnoredEvent, UserInfoEvent, UserOnlineEvent, UserProfileEvent, UserRelationshipsEvent, UserSanctionStatusEvent, UserSettingsEvent } from './incoming/user';
 
 export class PacketManager
 {
@@ -59,6 +59,7 @@ export class PacketManager
     private registerClient(): void
     {
         this.addHandler(IncomingHeader.RELEASE_VERSION, ClientReleaseVersionEvent);
+        this.addHandler(IncomingHeader.CLIENT_PING, ClientPingEvent);
         this.addHandler(IncomingHeader.CLIENT_VARIABLES, ClientVariablesEvent);
         this.addHandler(IncomingHeader.CROSS_DOMAIN, CrossDomainEvent);
         this.addHandler(IncomingHeader.CLIENT_LATENCY, ClientLatencyEvent);
@@ -87,6 +88,7 @@ export class PacketManager
     {
         this.addHandler(IncomingHeader.MESSENGER_ACCEPT, MessengerAcceptEvent);
         this.addHandler(IncomingHeader.MESSENGER_CHAT, MessengerChatEvent);
+        this.addHandler(IncomingHeader.MESSENGER_FRIENDS, MessengerFriendsEvent);
         this.addHandler(IncomingHeader.MESSENGER_INIT, MessengerInitEvent);
         this.addHandler(IncomingHeader.MESSENGER_REMOVE, MessengerRemoveEvent);
         this.addHandler(IncomingHeader.MESSENGER_REQUEST, MessengerRequestEvent);
@@ -105,8 +107,11 @@ export class PacketManager
     {
         this.addHandler(IncomingHeader.USER_CLUB, UserClubEvent);
         this.addHandler(IncomingHeader.USER_CREDITS, UserCreditsEvent);
+        this.addHandler(IncomingHeader.USER_CURRENT_BADGES, UserCurrentBadgesEvent);
         this.addHandler(IncomingHeader.USER_FIGURE, UserFigureEvent);
+        this.addHandler(IncomingHeader.USER_IGNORED, UserIgnoredEvent);
         this.addHandler(IncomingHeader.USER_INFO, UserInfoEvent);
+        this.addHandler(IncomingHeader.USER_ONLINE, UserOnlineEvent);
         this.addHandler(IncomingHeader.USER_PROFILE, UserProfileEvent);
         this.addHandler(IncomingHeader.USER_RELATIONSHIPS, UserRelationshipsEvent);
         this.addHandler(IncomingHeader.USER_SANCTION_STATUS, UserSanctionStatusEvent);
@@ -148,6 +153,8 @@ export class PacketManager
         }
 
         await packetHandler.process();
+
+        console.log(`Handled -> ${ packet.header }`);
 
         return Promise.resolve(true);
     }

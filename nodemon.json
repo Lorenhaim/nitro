@@ -1,5 +1,5 @@
 {
   "watch": ["src"],
   "ext": "ts",
-  "exec": "node ./index.js --dev"
+  "exec": "ts-node ./src/main.ts"
 }

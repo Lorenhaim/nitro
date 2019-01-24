@@ -1,9 +1,9 @@
-import { Logger } from '../../../../common';
+import { Logger } from '../../../common';
 
-import { UserProfileComposer } from '../../../outgoing';
+import { UserBadgesComposer } from '../../outgoing';
 
-import { Incoming } from '../../Incoming';
-import { IncomingHeader } from '../../IncomingHeader';
+import { Incoming } from '../Incoming';
+import { IncomingHeader } from '../IncomingHeader';
 
 export class UserCurrentBadgesEvent extends Incoming
 {
@@ -15,7 +15,7 @@ export class UserCurrentBadgesEvent extends Incoming
 
             const userId = this.packet.readInt();
 
-            await this.user.client().processComposer(new UserProfileComposer(this.user, userId));
+            await this.user.client().processComposer(new UserBadgesComposer(this.user));
 
             return true;
         }

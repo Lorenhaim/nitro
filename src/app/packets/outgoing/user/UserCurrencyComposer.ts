@@ -5,21 +5,24 @@ import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
-export class HomeRoomComposer extends Outgoing
+export class UserCurrencyComposer extends Outgoing
 {
     constructor(_user: User)
     {
-        super(OutgoingHeader.USER_HOME_ROOM, _user);
+        super(OutgoingHeader.USER_CURRENCY, _user);
     }
 
     public async compose(): Promise<OutgoingPacket>
     {
         try
         {
-            if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
+            if(!this.user.isAuthenticated) return this.cancel();
 
-            this.packet.writeInt(this.user.userInfo().homeRoom);
-            this.packet.writeInt(0);
+            this.packet.writeInt(0); // total point types to send
+            
+            //foreach
+            // this.packet.writeInt(0); // point type
+            // this.packet.writeInt(0); // point amount
 
             this.packet.prepare();
 

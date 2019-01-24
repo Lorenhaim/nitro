@@ -23,7 +23,7 @@ export class UserSettingsComposer extends Outgoing
             this.packet.writeInt(100); // volume trax
             this.packet.writeBoolean(false); // old chat
             this.packet.writeBoolean(false); // block room invites
-            this.packet.writeBoolean(false); // block (cameara) follow
+            this.packet.writeBoolean(false); // block (camera) follow
             this.packet.writeInt(1);
             this.packet.writeInt(0); // chat style
 

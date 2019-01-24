@@ -1,21 +1,21 @@
 import { Logger } from '../../../common';
 
-import { MessengerInitComposer } from '../../outgoing';
+import { ClientPongComposer } from '../../outgoing';
 
 import { Incoming } from '../Incoming';
 import { IncomingHeader } from '../IncomingHeader';
 
-export class MessengerInitEvent extends Incoming
+export class ClientPingEvent extends Incoming
 {
     public async process(): Promise<boolean>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.MESSENGER_INIT) throw new Error('invalid_header');
+            if(this.packet.header !== IncomingHeader.CLIENT_PING) throw new Error('invalid_header');
 
-            if(!this.user.userMessenger()) throw new Error('invalid_messenger');
+            const pingCount: number = this.packet.readInt();
 
-            await this.user.client().processComposer(new MessengerInitComposer(this.user));
+            await this.user.client().processComposer(new ClientPongComposer(this.user));
 
             return true;
         }

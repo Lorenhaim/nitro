@@ -5,11 +5,11 @@ import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
-export class UserRightsComposer extends Outgoing
+export class UserBadgesComposer extends Outgoing
 {
     constructor(_user: User)
     {
-        super(OutgoingHeader.USER_RIGHTS, _user);
+        super(OutgoingHeader.USER_BADGES, _user);
     }
 
     public async compose(): Promise<OutgoingPacket>
@@ -18,10 +18,13 @@ export class UserRightsComposer extends Outgoing
         {
             if(!this.user.isAuthenticated) return this.cancel();
 
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
+            this.packet.writeInt(this.user.userId);
+            this.packet.writeInt(0); // total badges
 
+            //foreach
+            //this.packet.writeInt(0); // slot number 1-5
+            //this.packet.writeString(''); // badge code
+            
             this.packet.prepare();
 
             return this.packet;

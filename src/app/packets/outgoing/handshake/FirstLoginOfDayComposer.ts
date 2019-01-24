@@ -5,22 +5,20 @@ import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
-export class UserRightsComposer extends Outgoing
+export class FirstLoginOfDayComposer extends Outgoing
 {
     constructor(_user: User)
     {
-        super(OutgoingHeader.USER_RIGHTS, _user);
+        super(OutgoingHeader.FIRST_LOGIN_OF_DAY, _user);
     }
 
     public async compose(): Promise<OutgoingPacket>
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
+            if(this.user.isAuthenticated || !this.user.userStatistics()) return this.cancel();
 
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
+            this.packet.writeBoolean(this.user.userStatistics().isFirstLoginOfDay);
 
             this.packet.prepare();
 

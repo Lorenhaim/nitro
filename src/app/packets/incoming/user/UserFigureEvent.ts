@@ -13,8 +13,8 @@ export class UserFigureEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.USER_FIGURE) throw new Error('invalid_header');
 
-            const gender: 'M' | 'F' = this.packet.readString() === 'M' ? 'M' : 'F';
-            const figure            = this.packet.readString();
+            const gender    = this.packet.readString() === 'M' ? 'M' : 'F';
+            const figure    = this.packet.readString();
 
             await this.user.updateFigure(gender, figure);
             

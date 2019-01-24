@@ -1,26 +1,25 @@
-import { Logger } from '../../../common';
+import { Emulator } from '../../../Emulator';
+import { Logger, TimeHelper } from '../../../common';
 import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
-export class UserRightsComposer extends Outgoing
+export class UserEffectsComposer extends Outgoing
 {
     constructor(_user: User)
     {
-        super(OutgoingHeader.USER_RIGHTS, _user);
+        super(OutgoingHeader.USER_EFFECTS, _user);
     }
 
     public async compose(): Promise<OutgoingPacket>
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
+            if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
 
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
+            this.packet.writeInt(0);
 
             this.packet.prepare();
 

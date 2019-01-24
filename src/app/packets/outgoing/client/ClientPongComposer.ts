@@ -5,11 +5,11 @@ import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
-export class UserRightsComposer extends Outgoing
+export class ClientPongComposer extends Outgoing
 {
     constructor(_user: User)
     {
-        super(OutgoingHeader.USER_RIGHTS, _user);
+        super(OutgoingHeader.CLIENT_PONG, _user);
     }
 
     public async compose(): Promise<OutgoingPacket>
@@ -18,10 +18,8 @@ export class UserRightsComposer extends Outgoing
         {
             if(!this.user.isAuthenticated) return this.cancel();
 
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
-
+            this.packet.writeInt(this.user.userId); // should increment
+            
             this.packet.prepare();
 
             return this.packet;

@@ -10,6 +10,8 @@ export class UserStatistics
     private _isPending: boolean;
     private _isSaving: boolean;
 
+    private _isFirstLoginOfDay: boolean;
+
     constructor(private _entity: UserStatisticsEntity)
     {
         if(!(_entity instanceof UserStatisticsEntity)) throw new Error('invalid_user_info');
@@ -19,6 +21,8 @@ export class UserStatistics
 
         this._isPending     = false;
         this._isSaving      = false;
+
+        this._isFirstLoginOfDay = false;
     }
 
     public async save(): Promise<boolean>
@@ -63,14 +67,18 @@ export class UserStatistics
             {
                 if(TimeHelper.isNextDay(TimeHelper.now, this.loginStreakLast))
                 {
+                    this._isFirstLoginOfDay = true;
+
                     this._entity.loginStreak = this.loginStreak + 1;
                 }
                 else if(!TimeHelper.isToday(this.loginStreakLast))
                 {
                     this._entity.loginStreak = 1;
                 }
-
-                this._entity.loginStreak = TimeHelper.isNextDay(TimeHelper.now, this.loginStreakLast) ? this.loginStreak + 1 : 1; 
+                else
+                {
+                    this._isFirstLoginOfDay = true;
+                }
             }
             else
             {
@@ -128,5 +136,10 @@ export class UserStatistics
     public get totalPacketsProcessed(): number
     {
         return this._entity.totalPacketsProcessed;
+    }
+
+    public get isFirstLoginOfDay(): boolean
+    {
+        return this._isFirstLoginOfDay;
     }
 }

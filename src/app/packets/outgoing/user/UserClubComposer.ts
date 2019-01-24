@@ -19,7 +19,7 @@ export class UserClubComposer extends Outgoing
         {
             if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
 
-            this.packet.writeString('habbo_club');
+            this.packet.writeString('club_habbo');
 
             const clubExpiration: Date = this.user.userInfo().clubExpiration;
 
@@ -40,7 +40,7 @@ export class UserClubComposer extends Outgoing
                 const clubRemaining = TimeHelper.timeBetween(clubExpiration, TimeHelper.now);
 
                 this.packet.writeInt(clubRemaining.days);
-                this.packet.writeInt(2);
+                this.packet.writeInt(1);
                 this.packet.writeInt(clubRemaining.months);
                 this.packet.writeInt(clubRemaining.years);
                 this.packet.writeBoolean(true);

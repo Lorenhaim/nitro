@@ -1,6 +1,6 @@
 import { Logger } from '../../../common';
 
-import { UserCreditsComposer } from '../../outgoing';
+import { UserCreditsComposer, UserCurrencyComposer } from '../../outgoing';
 
 import { Incoming } from '../Incoming';
 import { IncomingHeader } from '../IncomingHeader';
@@ -16,6 +16,7 @@ export class UserCreditsEvent extends Incoming
             const userId = this.packet.readInt();
 
             await this.user.client().processComposer(new UserCreditsComposer(this.user));
+            await this.user.client().processComposer(new UserCurrencyComposer(this.user));
 
             return true;
         }

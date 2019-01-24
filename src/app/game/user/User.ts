@@ -50,13 +50,14 @@ export class User
         if(!_userId && _client)
         {
             if(!(_client instanceof Client)) throw new Error('invalid_client');
+
             this._client = _client;
         }
     }
 
     public async checkTicket(ticket: string): Promise<boolean>
     {
-        if(this._userId || !this._client || this._isAuthenticated) return Promise.reject(new Error('authentication_disabled'));
+        if(this._isAuthenticated) return Promise.reject(new Error('authentication_disabled'));
 
         const userId = await Emulator.gameManager().securityManager().ticketManager().checkTicket(ticket);
 

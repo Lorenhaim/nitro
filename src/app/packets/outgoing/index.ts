@@ -1,4 +1,5 @@
 export * from './alerts';
+export * from './client';
 export * from './handshake';
 export * from './messenger';
 export * from './moderation';
