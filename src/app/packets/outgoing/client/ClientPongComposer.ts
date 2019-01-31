@@ -16,13 +16,18 @@ export class ClientPongComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
-
-            this.packet.writeInt(this.user.userId); // should increment
+            if(this.user.isAuthenticated)
+            {
+                this.packet.writeInt(this.user.client()._pingCount);
             
-            this.packet.prepare();
+                this.packet.prepare();
 
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

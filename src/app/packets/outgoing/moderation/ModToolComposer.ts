@@ -16,23 +16,28 @@ export class ModToolComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel(); // check perm
-            
-            this.packet.writeInt(0); // tickets
-            this.packet.writeInt(0); // presets
-            this.packet.writeInt(0); // action presets
-            this.packet.writeBoolean(true); // tickets
-            this.packet.writeBoolean(true); // chatlogs
-            this.packet.writeBoolean(true); // user actions
-            this.packet.writeBoolean(true); // kick users
-            this.packet.writeBoolean(true); // ban users
-            this.packet.writeBoolean(true); // room info
-            this.packet.writeBoolean(true); // room chatlog
-            this.packet.writeInt(0); // room presets
+            if(this.user.isAuthenticated)
+            {
+                this.packet.writeInt(0); // tickets
+                this.packet.writeInt(0); // presets
+                this.packet.writeInt(0); // action presets
+                this.packet.writeBoolean(true); // tickets
+                this.packet.writeBoolean(true); // chatlogs
+                this.packet.writeBoolean(true); // user actions
+                this.packet.writeBoolean(true); // kick users
+                this.packet.writeBoolean(true); // ban users
+                this.packet.writeBoolean(true); // room info
+                this.packet.writeBoolean(true); // room chatlog
+                this.packet.writeInt(0); // room presets
 
-            this.packet.prepare();
+                this.packet.prepare();
 
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

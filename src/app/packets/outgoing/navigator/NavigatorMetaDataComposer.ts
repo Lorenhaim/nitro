@@ -1,3 +1,4 @@
+import { Emulator } from '../../../Emulator';
 import { Logger } from '../../../common';
 import { User } from '../../../game';
 
@@ -16,21 +17,35 @@ export class NavigatorMetaDataComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
+            if(this.user.isAuthenticated)
+            {
+                const totalTabs = Emulator.gameManager().navigatorManager().tabs.length;
 
-            this.packet.writeInt(4);
-            this.packet.writeString('official_view');
-            this.packet.writeInt(0);
-            this.packet.writeString('hotel_view');
-            this.packet.writeInt(0);
-            this.packet.writeString('roomads_view');
-            this.packet.writeInt(0);
-            this.packet.writeString('myworld_view');
-            this.packet.writeInt(0);
+                if(totalTabs)
+                {
+                    this.packet.writeInt(totalTabs);
 
-            this.packet.prepare();
+                    for(let i = 0; i < totalTabs; i++)
+                    {
+                        const tab = Emulator.gameManager().navigatorManager().tabs[i];
 
-            return this.packet;
+                        this.packet.writeString(tab.name);
+                        this.packet.writeInt(0); // ??
+                    }
+                }
+                else
+                {
+                    this.packet.writeInt(0);
+                }
+
+                this.packet.prepare();
+
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

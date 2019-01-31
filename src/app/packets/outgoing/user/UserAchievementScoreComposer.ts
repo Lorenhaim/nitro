@@ -1,5 +1,4 @@
-import { Emulator } from '../../../Emulator';
-import { Logger, TimeHelper } from '../../../common';
+import { Logger } from '../../../common';
 import { User } from '../../../game';
 
 import { Outgoing } from '../Outgoing';
@@ -17,13 +16,18 @@ export class UserAchievementScoreComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
+            if(this.user.isAuthenticated)
+            {
+                this.packet.writeInt(this.user.info().achievementScore);
 
-            this.packet.writeInt(this.user.userInfo().achievementScore);
+                this.packet.prepare();
 
-            this.packet.prepare();
-
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

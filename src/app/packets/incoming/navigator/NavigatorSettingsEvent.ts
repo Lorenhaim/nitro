@@ -14,7 +14,7 @@ export class NavigatorSettingsEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.NAVIGATOR_SETTINGS) throw new Error('invalid_header');
 
-            await this.user.client().processComposer(new NavigatorSettingsComposer(this.user));
+            if(this.user.isAuthenticated) await this.user.client().processComposer(new NavigatorSettingsComposer(this.user));
 
             return true;
         }

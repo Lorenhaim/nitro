@@ -1,5 +1,6 @@
 export const enum OutgoingHeader
 {
+    CLIENT_PONG                = 10,
     FIRST_LOGIN_OF_DAY         = 793,
     GENERIC_ALERT              = 3801,
     MACHINE_ID                 = 1488,
@@ -13,6 +14,7 @@ export const enum OutgoingHeader
     MESSENGER_SEARCH           = 973,
     MESSENGER_UPDATE           = 2800,
     MOD_TOOL                   = 2696,
+    NAVIGATOR_CATEGORIES       = 1562,
     NAVIGATOR_COLLAPSED        = 1543,
     NAVIGATOR_EVENT_CATEGORIES = 3244,
     NAVIGATOR_LIFTED           = 3104,
@@ -22,20 +24,21 @@ export const enum OutgoingHeader
     NAVIGATOR_SETTINGS         = 518,
     SECURITY_TICKET_OK         = 2491,
     USER_ACHIEVEMENT_SCORE     = 1968,
-    USER_BADGES                = 1087,
-    USER_CLOTHING              = 1450,
+    USER_BADGES                = 717,
+    USER_BADGES_ADD            = 2493,
+    USER_BADGES_CURRENT        = 1087,
     USER_CLUB                  = 954,
     USER_CREDITS               = 3475,
     USER_CURRENCY              = 2018,
     USER_EFFECTS               = 340,
     USER_FIGURE                = 2429,
     USER_HOME_ROOM             = 2875,
+    USER_IGNORED               = 126,
     USER_INFO                  = 2725,
+    USER_OUTFITS               = 1450,
     USER_PERMISSIONS           = 411,
     USER_PROFILE               = 3898,
     USER_RIGHTS                = 2033,
     USER_SANCTION_STATUS       = 3679,
-    USER_SETTINGS              = 513,
-    USER_IGNORED               = 126,
-    CLIENT_PONG                = 10
+    USER_SETTINGS              = 513
 }

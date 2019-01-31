@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne, Unique }
 
 import { UserEntity } from './UserEntity';
 
-@Entity('messenger_request')
+@Entity('messenger_requests')
 @Unique(['userId', 'requestedId'])
 export class MessengerRequestEntity
 {
@@ -15,7 +15,7 @@ export class MessengerRequestEntity
     @Column({ name: 'requested_id' })
     public requestedId: number;
 
-    @Column({ name: 'timestamp_created', default: () => "CURRENT_TIMESTAMP" })
+    @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })
     public timestampCreated: Date;
 
     @ManyToOne(type => UserEntity, { onDelete: 'CASCADE' })

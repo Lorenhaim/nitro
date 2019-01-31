@@ -11,7 +11,10 @@ export class UserOnlineEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.USER_ONLINE) throw new Error('invalid_header');
 
-            await this.user.setOnline(true);
+            if(this.user.isAuthenticated)
+            {
+                if(this.user.messenger()) await this.user.messenger().composeUpdates(true);
+            }
 
             return true;
         }

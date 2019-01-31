@@ -13,7 +13,7 @@ export class UserSettingsEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.USER_SETTINGS) throw new Error('invalid_header');
 
-            await this.user.client().processComposer(new UserSettingsComposer(this.user));
+            if(this.user.isAuthenticated) await this.user.client().processComposer(new UserSettingsComposer(this.user));
 
             return true;
         }

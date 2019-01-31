@@ -16,14 +16,19 @@ export class UserHomeRoomComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
+            if(this.user.isAuthenticated && this.user.info())
+            {
+                this.packet.writeInt(this.user.info().homeRoom || 0);
+                this.packet.writeInt(0);
 
-            this.packet.writeInt(this.user.userInfo().homeRoom);
-            this.packet.writeInt(0);
+                this.packet.prepare();
 
-            this.packet.prepare();
-
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

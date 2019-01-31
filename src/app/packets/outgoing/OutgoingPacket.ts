@@ -4,12 +4,16 @@ import { PacketEncoder } from './PacketEncoder';
 export class OutgoingPacket
 {
     private _bytes: number[];
+    private _encoded: { type: 'int' | 'short' | 'boolean' | 'string', value: number | boolean | string }[];
+
     private _isPrepared: boolean;
     private _isCancelled: boolean;
 
     constructor(private readonly _header: OutgoingHeader)
     {
         this._bytes         = [];
+        this._encoded       = [];
+
         this._isPrepared    = false;
         this._isCancelled   = false;
 
@@ -42,6 +46,7 @@ export class OutgoingPacket
     {
         const bytes = PacketEncoder.encodeInt(number);
 
+        this._encoded.push({ type: 'int', value: number });
         this.writeBytes(bytes);
     }
 
@@ -49,12 +54,15 @@ export class OutgoingPacket
     {
         const bytes = PacketEncoder.encodeShort(number);
 
+        this._encoded.push({ type: 'short', value: number });
         this.writeBytes(bytes);
     }
 
     public writeBoolean(flag: boolean): void
     {
         const bytes = PacketEncoder.encodeBoolean(flag);
+
+        this._encoded.push({ type: 'boolean', value: flag });
 
         this.writeBytes([bytes]);
     }
@@ -66,6 +74,8 @@ export class OutgoingPacket
         const bytes = PacketEncoder.encodeString(string);
 
         this.writeShort(string.length);
+
+        this._encoded.push({ type: 'string', value: string });
         this.writeBytes(bytes);
     }
 
@@ -82,6 +92,11 @@ export class OutgoingPacket
     public get isCancelled(): boolean
     {
         return this._isCancelled;
+    }
+
+    public get encoded()
+    {
+        return this._encoded;
     }
 
     public get buffer(): Buffer

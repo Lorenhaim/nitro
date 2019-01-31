@@ -16,13 +16,18 @@ export class NavigatorLiftedRoomsComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
-            
-            this.packet.writeInt(0);
+            if(this.user.isAuthenticated)
+            {
+                this.packet.writeInt(0);
 
-            this.packet.prepare();
+                this.packet.prepare();
 
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

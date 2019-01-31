@@ -16,15 +16,20 @@ export class UserPermissionsComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated || !this.user.userInfo()) return this.cancel();
+            if(this.user.isAuthenticated && this.user.info())
+            {
+                this.packet.writeInt(2); // club level
+                this.packet.writeInt(this.user.rankId); // rank id
+                this.packet.writeBoolean(false); //is ambassador
 
-            this.packet.writeInt(this.user.userInfo().clubActive ? 2 : 0); // club level
-            this.packet.writeInt(this.user.rankId); // rank id
-            this.packet.writeBoolean(false); //is ambassador
+                this.packet.prepare();
 
-            this.packet.prepare();
-
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

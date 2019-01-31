@@ -11,6 +11,8 @@ export class GetCampaignsEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.HOTELVIEW_CAMPAIGNS) throw new Error('invalid_header');
 
+            if(!this.user.isAuthenticated) throw new Error('invalid_authentication');
+
             const something: string = this.packet.readString();
 
             return true;

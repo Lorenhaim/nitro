@@ -1,13 +1,13 @@
 import { User } from '../game';
 
 import { Incoming, IncomingHeader, IncomingPacket } from './incoming';
-import { ClientLatencyEvent, ClientPingEvent, ClientReleaseVersionEvent, ClientVariablesEvent, CrossDomainEvent, EventTrackerEvent } from './incoming/client';
-import { GamesInitEvent, GetGamesEvent } from './incoming/games';
-import { MachineIdEvent, SecurityTicketEvent } from './incoming/handshake';
-import { GetArticlesEvent, GetCampaignsEvent } from './incoming/hotelview';
-import { MessengerAcceptEvent, MessengerChatEvent, MessengerFriendsEvent, MessengerInitEvent, MessengerRemoveEvent, MessengerRequestEvent, MessengerRequestsEvent, MessengerSearchEvent } from './incoming/messenger';
-import { NavigatorInitEvent, NavigatorRoomsEvent, NavigatorSettingsEvent } from './incoming/navigator';
-import { UserClubEvent, UserCreditsEvent, UserCurrentBadgesEvent, UserFigureEvent, UserIgnoredEvent, UserInfoEvent, UserOnlineEvent, UserProfileEvent, UserRelationshipsEvent, UserSanctionStatusEvent, UserSettingsEvent } from './incoming/user';
+
+import * as IncomingClient from './incoming/client';
+import * as IncomingGames from './incoming/games';
+import * as IncomingSecurity from './incoming/security';
+import * as IncomingHotelView from './incoming/hotelview';
+import * as IncomingNavigator from './incoming/navigator';
+import * as IncomingUser from './incoming/user';
 
 export class PacketManager
 {
@@ -19,10 +19,10 @@ export class PacketManager
 
         this.registerClient();
         this.registerGames();
-        this.registerHandshake();
+        this.registerSecurity();
         this.registerHotelView();
-        this.registerMessenger();
         this.registerNavigator();
+        this.registerMessenger();
         this.registerUser();
     }
 
@@ -58,71 +58,76 @@ export class PacketManager
 
     private registerClient(): void
     {
-        this.addHandler(IncomingHeader.RELEASE_VERSION, ClientReleaseVersionEvent);
-        this.addHandler(IncomingHeader.CLIENT_PING, ClientPingEvent);
-        this.addHandler(IncomingHeader.CLIENT_VARIABLES, ClientVariablesEvent);
-        this.addHandler(IncomingHeader.CROSS_DOMAIN, CrossDomainEvent);
-        this.addHandler(IncomingHeader.CLIENT_LATENCY, ClientLatencyEvent);
-        this.addHandler(IncomingHeader.EVENT_TRACKER, EventTrackerEvent);
+        this.addHandler(IncomingHeader.CLIENT_LATENCY, IncomingClient.ClientLatencyEvent);
+        this.addHandler(IncomingHeader.CLIENT_PING, IncomingClient.ClientPingEvent);
+        this.addHandler(IncomingHeader.RELEASE_VERSION, IncomingClient.ClientReleaseVersionEvent);
+        this.addHandler(IncomingHeader.CLIENT_VARIABLES, IncomingClient.ClientVariablesEvent);
+        this.addHandler(IncomingHeader.CROSS_DOMAIN, IncomingClient.ClientPolicyEvent);
+        this.addHandler(IncomingHeader.EVENT_TRACKER, IncomingClient.ClientEventTrackerEvent);
     }
 
     private registerGames(): void
     {
-        this.addHandler(IncomingHeader.GAMES_INIT, GamesInitEvent);
-        this.addHandler(IncomingHeader.GAMES_LIST, GetGamesEvent);
+        this.addHandler(IncomingHeader.GAMES_INIT, IncomingGames.GamesInitEvent);
+        this.addHandler(IncomingHeader.GAMES_LIST, IncomingGames.GamesListEvent);
     }
 
-    private registerHandshake(): void
+    private registerSecurity(): void
     {
-        this.addHandler(IncomingHeader.MACHINE_ID, MachineIdEvent);
-        this.addHandler(IncomingHeader.SECURITY_TICKET, SecurityTicketEvent);
+        this.addHandler(IncomingHeader.MACHINE_ID, IncomingSecurity.SecurityMachineIdEvent);
+        this.addHandler(IncomingHeader.SECURITY_TICKET, IncomingSecurity.SecurityTicketEvent);
     }
 
     private registerHotelView(): void
     {
-        this.addHandler(IncomingHeader.HOTELVIEW_CAMPAIGNS, GetCampaignsEvent);
-        this.addHandler(IncomingHeader.HOTELVIEW_ARTICLES, GetArticlesEvent);
+        this.addHandler(IncomingHeader.HOTELVIEW_ARTICLES, IncomingHotelView.GetArticlesEvent);
+        this.addHandler(IncomingHeader.HOTELVIEW_CAMPAIGNS, IncomingHotelView.GetCampaignsEvent);
+    }
+    
+    private registerNavigator(): void
+    {
+        this.addHandler(IncomingHeader.NAVIGATOR_CATEGORIES, IncomingNavigator.NavigatorCategoriesEvent);
+        this.addHandler(IncomingHeader.NAVIGATOR_INIT, IncomingNavigator.NavigatorInitEvent);
+        this.addHandler(IncomingHeader.NAVIGATOR_ROOMS, IncomingNavigator.NavigatorRoomsEvent);
+        this.addHandler(IncomingHeader.NAVIGATOR_SETTINGS, IncomingNavigator.NavigatorSettingsEvent);
+        this.addHandler(IncomingHeader.NAVIGATOR_SETTINGS_SAVE, IncomingNavigator.NavigatorSettingsSaveEvent);
     }
 
     private registerMessenger(): void
     {
-        this.addHandler(IncomingHeader.MESSENGER_ACCEPT, MessengerAcceptEvent);
-        this.addHandler(IncomingHeader.MESSENGER_CHAT, MessengerChatEvent);
-        this.addHandler(IncomingHeader.MESSENGER_FRIENDS, MessengerFriendsEvent);
-        this.addHandler(IncomingHeader.MESSENGER_INIT, MessengerInitEvent);
-        this.addHandler(IncomingHeader.MESSENGER_REMOVE, MessengerRemoveEvent);
-        this.addHandler(IncomingHeader.MESSENGER_REQUEST, MessengerRequestEvent);
-        this.addHandler(IncomingHeader.MESSENGER_REQUESTS, MessengerRequestsEvent);
-        this.addHandler(IncomingHeader.MESSENGER_SEARCH, MessengerSearchEvent);
-    }
-
-    private registerNavigator(): void
-    {
-        this.addHandler(IncomingHeader.NAVIGATOR_INIT, NavigatorInitEvent);
-        this.addHandler(IncomingHeader.NAVIGATOR_ROOMS, NavigatorRoomsEvent);
-        this.addHandler(IncomingHeader.NAVIGATOR_SETTINGS, NavigatorSettingsEvent);
+        this.addHandler(IncomingHeader.MESSENGER_ACCEPT, IncomingUser.MessengerAcceptEvent);
+        this.addHandler(IncomingHeader.MESSENGER_CHAT, IncomingUser.MessengerChatEvent);
+        this.addHandler(IncomingHeader.MESSENGER_DECLINE, IncomingUser.MessengerDeclineEvent);
+        this.addHandler(IncomingHeader.MESSENGER_FRIENDS, IncomingUser.MessengerFriendsEvent);
+        this.addHandler(IncomingHeader.MESSENGER_INIT, IncomingUser.MessengerInitEvent);
+        this.addHandler(IncomingHeader.MESSENGER_REMOVE, IncomingUser.MessengerRemoveEvent);
+        this.addHandler(IncomingHeader.MESSENGER_REQUEST, IncomingUser.MessengerRequestEvent);
+        this.addHandler(IncomingHeader.MESSENGER_REQUESTS, IncomingUser.MessengerRequestsEvent);
+        this.addHandler(IncomingHeader.MESSENGER_SEARCH, IncomingUser.MessengerSearchEvent);
+        this.addHandler(IncomingHeader.MESSENGER_UPDATE, IncomingUser.MessengerUpdateEvent);
+        this.addHandler(IncomingHeader.MESSENGER_UPDATES, IncomingUser.MessengerUpdatesEvent);
     }
 
     private registerUser(): void
     {
-        this.addHandler(IncomingHeader.USER_CLUB, UserClubEvent);
-        this.addHandler(IncomingHeader.USER_CREDITS, UserCreditsEvent);
-        this.addHandler(IncomingHeader.USER_CURRENT_BADGES, UserCurrentBadgesEvent);
-        this.addHandler(IncomingHeader.USER_FIGURE, UserFigureEvent);
-        this.addHandler(IncomingHeader.USER_IGNORED, UserIgnoredEvent);
-        this.addHandler(IncomingHeader.USER_INFO, UserInfoEvent);
-        this.addHandler(IncomingHeader.USER_ONLINE, UserOnlineEvent);
-        this.addHandler(IncomingHeader.USER_PROFILE, UserProfileEvent);
-        this.addHandler(IncomingHeader.USER_RELATIONSHIPS, UserRelationshipsEvent);
-        this.addHandler(IncomingHeader.USER_SANCTION_STATUS, UserSanctionStatusEvent);
-        this.addHandler(IncomingHeader.USER_SETTINGS, UserSettingsEvent);
+        this.addHandler(IncomingHeader.USER_BADGES, IncomingUser.BadgesEvent);
+        this.addHandler(IncomingHeader.USER_BADGES_CURRENT, IncomingUser.BadgesCurrentEvent);
+        this.addHandler(IncomingHeader.USER_BADGES_CURRENT_UPDATE, IncomingUser.BadgesCurrentUpdateEvent);
+
+        this.addHandler(IncomingHeader.USER_CLUB, IncomingUser.UserClubEvent);
+        this.addHandler(IncomingHeader.USER_CURRENCY, IncomingUser.UserCurrencyEvent);
+        this.addHandler(IncomingHeader.USER_FIGURE, IncomingUser.UserFigureEvent);
+        this.addHandler(IncomingHeader.USER_IGNORED, IncomingUser.UserIgnoredEvent);
+        this.addHandler(IncomingHeader.USER_INFO, IncomingUser.UserInfoEvent);
+        this.addHandler(IncomingHeader.USER_ONLINE, IncomingUser.UserOnlineEvent);
+        this.addHandler(IncomingHeader.USER_PROFILE, IncomingUser.UserProfileEvent);
+        this.addHandler(IncomingHeader.USER_RELATIONSHIPS, IncomingUser.UserRelationshipsEvent);
+        this.addHandler(IncomingHeader.USER_SETTINGS, IncomingUser.UserSettingsEvent);
     }
 
     public async processPacket(user: User, packet: IncomingPacket)
     {
         if(!packet.header) return Promise.resolve(true);
-
-        //if(packet.header !== IncomingHeader.RELEASE_VERSION && packet.header !== IncomingHeader.CLIENT_VARIABLES && packet.header !== IncomingHeader.CROSS_DOMAIN && packet.header !== IncomingHeader.MACHINE_ID && packet.header !== IncomingHeader.SECURITY_TICKET && !user.isAuthenticated) throw new Error('invalid_authentication');
 
         let packetHandler: Incoming = null;
 
@@ -153,8 +158,6 @@ export class PacketManager
         }
 
         await packetHandler.process();
-
-        console.log(`Handled -> ${ packet.header }`);
 
         return Promise.resolve(true);
     }

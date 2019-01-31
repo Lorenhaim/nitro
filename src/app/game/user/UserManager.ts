@@ -7,20 +7,13 @@ import { User } from './User';
 export class UserManager
 {
     private _users: User[];
-    private _offlineUsers: User[];
 
     constructor()
     {
-        this._users         = [];
-        this._offlineUsers  = [];
+        this._users = [];
     }
 
-    public async init(): Promise<boolean>
-    {
-        Logger.writeLine(`UserManager -> Loaded`);
-            
-        return Promise.resolve(true);
-    }
+    public async init(): Promise<void> {}
 
     public async getUser(userId: number, username?: string): Promise<User>
     {
@@ -28,8 +21,7 @@ export class UserManager
 
         let result: User = null;
 
-        const totalUsers        = this._users.length;
-        const totalOfflineUsers = this._offlineUsers.length;
+        const totalUsers = this._users.length;
 
         for(let i = 0; i < totalUsers; i++)
         {
@@ -45,22 +37,8 @@ export class UserManager
 
         if(result) return Promise.resolve(result);
 
-        for(let i = 0; i < totalOfflineUsers; i++)
-        {
-            const user = this._offlineUsers[i];
-
-            if(user.userId === userId || user.username === username)
-            {
-                result = user;
-
-                break;
-            }
-        }
-
-        if(result) return Promise.resolve(result);
-
         if(!userId && username)
-        {
+        {            
             const findUser = await getManager().findOne(UserEntity, {
                 select: ['id'],
                 where: { username }
@@ -75,9 +53,30 @@ export class UserManager
         
             await user.loadUser();
 
-            this._offlineUsers.push(user);
-
             result = user;
+        }
+        
+        return Promise.resolve(result);
+    }
+
+    public async getOnlineUser(userId: number, username?: string): Promise<User>
+    {
+        if(!userId && !username) return null;
+
+        let result: User = null;
+
+        const totalUsers = this._users.length;
+
+        for(let i = 0; i < totalUsers; i++)
+        {
+            const user = this._users[i];
+
+            if(user.userId === userId || user.username === username)
+            {
+                result = user;
+
+                break;
+            }
         }
         
         return Promise.resolve(result);
@@ -93,22 +92,10 @@ export class UserManager
         let userIds: number[]   = [0];
 
         const totalUsers        = this._users.length;
-        const totalOfflineUsers = this._offlineUsers.length;
 
         for(let i = 0; i < totalUsers; i++)
         {
             const user = this._users[i];
-
-            if(username.startsWith(user.username.toLowerCase()))
-            {
-                results.push(user);
-                userIds.push(user.userId);
-            }
-        }
-
-        for(let i = 0; i < totalOfflineUsers; i++)
-        {
-            const user = this._offlineUsers[i];
 
             if(username.startsWith(user.username.toLowerCase()))
             {
@@ -137,8 +124,6 @@ export class UserManager
 
                     await newInstance.loadUser();
 
-                    this._offlineUsers.push(newInstance);
-
                     results.push(newInstance);
                 }
             }
@@ -152,19 +137,6 @@ export class UserManager
         if(!(user instanceof User) || !user.client()) return Promise.reject(new Error('invalid_user'));
         
         const totalUsers        = this._users.length;
-        const totalOfflineUsers = this._offlineUsers.length;
-
-        for(let i = 0; i < totalOfflineUsers; i++)
-        {
-            const offlineUser = this._offlineUsers[i];
-
-            if(offlineUser.userId === user.userId)
-            {
-                this._offlineUsers.splice(i, 1);
-
-                break;
-            }
-        }
 
         for(let i = 0; i < totalUsers; i++)
         {
@@ -218,8 +190,6 @@ export class UserManager
 
             this._users.splice(i, 1);
         }
-
-        this._offlineUsers = [];
 
         if(totalUsers > 0) return Promise.reject(new Error('user_manager_dispose_error'));
 

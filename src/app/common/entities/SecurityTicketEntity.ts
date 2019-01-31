@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 't
 
 import { UserEntity } from './UserEntity';
 
-@Entity('security_ticket')
+@Entity('security_tickets')
 export class SecurityTicketEntity
 {
     @PrimaryGeneratedColumn({ name: 'id' })

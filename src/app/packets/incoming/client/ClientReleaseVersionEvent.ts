@@ -12,9 +12,9 @@ export class ClientReleaseVersionEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.RELEASE_VERSION) throw new Error('invalid_header');
 
-            const releaseVersion: string = this.packet.readString();
+            const releaseVersion = this.packet.readString();
 
-            if(releaseVersion !== Emulator.config().getString('client.releaseVersion', 'PRODUCTION-201812272209-984739530')) throw new Error('invalid_release_version');
+            if(releaseVersion !== Emulator.config().getString('client.releaseVersion', 'PRODUCTION-201611291003-338511768')) throw new Error('invalid_release_version');
 
             return true;
         }

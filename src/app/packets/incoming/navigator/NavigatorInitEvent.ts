@@ -14,12 +14,15 @@ export class NavigatorInitEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.NAVIGATOR_INIT) throw new Error('invalid_header');
 
-            await this.user.client().processComposer(new NavigatorSettingsComposer(this.user));
-            await this.user.client().processComposer(new NavigatorMetaDataComposer(this.user));
-            await this.user.client().processComposer(new NavigatorLiftedRoomsComposer(this.user));
-            await this.user.client().processComposer(new NavigatorCollapsedComposer(this.user));
-            await this.user.client().processComposer(new NavigatorSavedSearchesComposer(this.user));
-            await this.user.client().processComposer(new NavigatorEventCategoriesComposer(this.user));
+            if(this.user.isAuthenticated)
+            {
+                await this.user.client().processComposer(new NavigatorSettingsComposer(this.user));
+                await this.user.client().processComposer(new NavigatorMetaDataComposer(this.user));
+                await this.user.client().processComposer(new NavigatorLiftedRoomsComposer(this.user));
+                await this.user.client().processComposer(new NavigatorCollapsedComposer(this.user));
+                await this.user.client().processComposer(new NavigatorSavedSearchesComposer(this.user));
+                await this.user.client().processComposer(new NavigatorEventCategoriesComposer(this.user));
+            }
 
             return true;
         }

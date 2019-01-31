@@ -1,9 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Unique } from 'typeorm';
 
 import { UserEntity } from './UserEntity';
 
-@Entity('user_badge')
-@Unique(['userId', 'slotNumber'])
+@Entity('user_badges')
+@Unique(['userId', 'badgeCode'])
 export class UserBadgeEntity
 {
     @PrimaryGeneratedColumn({ name: 'id' })
@@ -15,10 +15,13 @@ export class UserBadgeEntity
     @Column({ name: 'badge_code' })
     public badgeCode: string;
 
-    @Column({ name: 'slot_number', enum: ['1', '2', '3', '4', '5'], nullable: true })
-    public slotNumber: null | '1' | '2' | '3' | '4' | '5';
+    @Column({ name: 'slot_number', type: 'enum', enum: ['0', '1', '2', '3', '4', '5'], default: '0' })
+    public slotNumber: 0 | 1 | 2 | 3 | 4 | 5;
 
-    @OneToOne(type => UserEntity, { onDelete: 'CASCADE' })
+    @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })
+    public timestampCreated: Date;
+
+    @ManyToOne(type => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     public user: UserEntity;
 }

@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, JoinColumn } from 't
 
 import { SecurityRankEntity } from './SecurityRankEntity';
 
-@Entity('security_permission')
+@Entity('security_permissions')
 export class SecurityPermissionEntity
 {
     @PrimaryGeneratedColumn({ name: 'id' })

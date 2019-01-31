@@ -1,1 +1,1 @@
-export * from './GenericAlertComposer';
+export * from './AlertGenericComposer';

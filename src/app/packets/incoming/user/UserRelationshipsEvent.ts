@@ -13,9 +13,10 @@ export class UserRelationshipsEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.USER_RELATIONSHIPS) throw new Error('invalid_header');
 
-            const userId = this.packet.readInt();
-
-            //await this.user.client().processComposer(new UserProfileComposer(this.user, userId));
+            if(this.user.isAuthenticated)
+            {
+                const userId = this.packet.readInt();
+            }
 
             return true;
         }

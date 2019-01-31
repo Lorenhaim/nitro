@@ -11,6 +11,8 @@ export class GamesInitEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.GAMES_INIT) throw new Error('invalid_header');
 
+            if(!this.user.isAuthenticated) throw new Error('invalid_authentication');
+
             return true;
         }
 

@@ -16,21 +16,21 @@ export class Emulator
         {
             Logger.writeLine(`Starting HabboAPI`);
 
-            Emulator._database      = await createConnection();
-            Emulator._config        = new Config();
+            Emulator._database  = await createConnection();
+            Emulator._config    = new Config();
 
             await Emulator.config().loadConfig();
 
-            Emulator._gameServer    = new GameServer();
-            Emulator._gameManager   = new GameManager();
+            Emulator._gameManager = new GameManager();
 
             await Emulator.gameManager().cleanup();
             await Emulator.gameManager().init();
-            await Emulator.gameServer().init();
 
             if(Emulator.gameManager().isReady)
             {
-                Logger.writeLine(`Emulator -> Ready`);
+                Emulator._gameServer = new GameServer();
+
+                await Emulator.gameServer().init();
 
                 await Emulator.gameServer().listen(Emulator.config().getString('emulator.ip', '0.0.0.0'), Emulator.config().getNumber('emulator.port', 1242));
             }
@@ -43,6 +43,8 @@ export class Emulator
         catch(err)
         {
             Logger.writeError(err.message || err);
+
+            await Emulator.dispose();
         }
     }
 
@@ -52,9 +54,8 @@ export class Emulator
         {
             Logger.writeLine(`Disposing HabboAPI`);
 
-            await Emulator._gameManager.dispose();
-
-            Emulator.gameServer().socketServer().close();
+            if(Emulator._gameManager) await Emulator._gameManager.dispose();
+            if(Emulator._gameServer && Emulator) Emulator.gameServer().socketServer().close();
 
             Logger.writeLine(`Emulator -> Disposed`);
         }

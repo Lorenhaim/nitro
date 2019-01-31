@@ -1,4 +1,3 @@
-import { Emulator } from '../../../Emulator';
 import { Logger, TimeHelper } from '../../../common';
 import { User } from '../../../game';
 
@@ -17,42 +16,47 @@ export class UserClubComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated || !this.user.userInfo) return this.cancel();
-
-            this.packet.writeString('club_habbo');
-
-            const clubExpiration: Date = this.user.userInfo().clubExpiration;
-
-            if(clubExpiration == null || clubExpiration <= TimeHelper.now)
+            if(this.user.isAuthenticated)
             {
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeBoolean(true);
-                this.packet.writeBoolean(true);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
+                this.packet.writeString('club_habbo');
+
+                const clubExpiration: Date = this.user.info().clubExpiration;
+
+                if(clubExpiration == null || clubExpiration <= TimeHelper.now)
+                {
+                    this.packet.writeInt(0);
+                    this.packet.writeInt(0);
+                    this.packet.writeInt(0);
+                    this.packet.writeInt(0);
+                    this.packet.writeBoolean(true);
+                    this.packet.writeBoolean(true);
+                    this.packet.writeInt(0);
+                    this.packet.writeInt(0);
+                    this.packet.writeInt(0);
+                }
+                else
+                {
+                    const clubRemaining = TimeHelper.timeBetween(clubExpiration, TimeHelper.now);
+
+                    this.packet.writeInt(clubRemaining.days);
+                    this.packet.writeInt(1);
+                    this.packet.writeInt(clubRemaining.months);
+                    this.packet.writeInt(clubRemaining.years);
+                    this.packet.writeBoolean(true);
+                    this.packet.writeBoolean(true);
+                    this.packet.writeInt(0);
+                    this.packet.writeInt(0);
+                    this.packet.writeInt(TimeHelper.until(clubExpiration, 'seconds'));
+                }
+
+                this.packet.prepare();
+
+                return this.packet;
             }
             else
             {
-                const clubRemaining = TimeHelper.timeBetween(clubExpiration, TimeHelper.now);
-
-                this.packet.writeInt(clubRemaining.days);
-                this.packet.writeInt(1);
-                this.packet.writeInt(clubRemaining.months);
-                this.packet.writeInt(clubRemaining.years);
-                this.packet.writeBoolean(true);
-                this.packet.writeBoolean(true);
-                this.packet.writeInt(0);
-                this.packet.writeInt(0);
-                this.packet.writeInt(TimeHelper.until(clubExpiration, 'seconds'));
+                return this.cancel();
             }
-
-            this.packet.prepare();
-
-            return this.packet;
         }
 
         catch(err)

@@ -16,15 +16,20 @@ export class UserRightsComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
+            if(this.user.isAuthenticated)
+            {
+                this.packet.writeBoolean(true);
+                this.packet.writeBoolean(true);
+                this.packet.writeBoolean(true);
 
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
-            this.packet.writeBoolean(true);
+                this.packet.prepare();
 
-            this.packet.prepare();
-
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

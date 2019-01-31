@@ -17,55 +17,50 @@ export class UserProfileComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated || !this._userId) return this.cancel();
-
-            const profile = await Emulator.gameManager().userManager().getUser(this._userId);
-
-            if(!profile) return this.cancel();
-
-            this.packet.writeInt(profile.userId);
-            this.packet.writeString(profile.username);
-            this.packet.writeString(profile.figure);
-            this.packet.writeString(profile.motto);
-            this.packet.writeString(TimeHelper.formatDate(profile.timestampCreated, 'MMMM DD, YYYY'));
-
-            if(profile.userInfo()) this.packet.writeInt(profile.userInfo().achievementScore);
-            else this.packet.writeInt(0);
-
-            if(profile.userMessenger())
+            if(this.user.isAuthenticated && this._userId)
             {
-                this.packet.writeInt(profile.userMessenger().friends.length || 0);
+                const profile = await Emulator.gameManager().userManager().getUser(this._userId);
 
-                if(this.user.userMessenger())
+                if(profile)
                 {
-                    if(this.user.userMessenger().getFriend(profile.userId)) this.packet.writeBoolean(true);
-                    else this.packet.writeBoolean(false);
+                    this.packet.writeInt(profile.userId);
+                    this.packet.writeString(profile.username);
+                    this.packet.writeString(profile.figure);
+                    this.packet.writeString(profile.motto);
+                    this.packet.writeString(TimeHelper.formatDate(profile.timestampCreated, 'MMMM DD, YYYY'));
+                    this.packet.writeInt(profile.info().achievementScore);
 
-                    if(profile.userMessenger().getRequest(this.user.userId) || this.user.userMessenger().getRequest(profile.userId)) this.packet.writeBoolean(true);
-                    else this.packet.writeBoolean(false);
+                    if(profile.messenger() && this.user.messenger())
+                    {
+                        this.packet.writeInt(profile.messenger().friends.length); // get offline total
+                        this.packet.writeBoolean(await this.user.messenger().hasFriend(profile.userId));
+                        this.packet.writeBoolean(await profile.messenger().hasRequest(this.user.userId));
+                    }
+                    else
+                    {
+                        this.packet.writeInt(0);
+                        this.packet.writeBoolean(false);
+                        this.packet.writeBoolean(false);
+                    }
+
+                    this.packet.writeBoolean(profile.online);
+                    this.packet.writeInt(0); // total groups
+                    this.packet.writeInt(TimeHelper.between(profile.lastOnline, TimeHelper.now, 'seconds'));
+                    this.packet.writeBoolean(true);
+
+                    this.packet.prepare();
+
+                    return this.packet;
                 }
                 else
                 {
-                    this.packet.writeBoolean(false);
-                    this.packet.writeBoolean(false);
+                    return this.cancel();
                 }
             }
             else
             {
-                this.packet.writeInt(0);
-                this.packet.writeBoolean(false);
-                this.packet.writeBoolean(false);
-
+                return this.cancel();
             }
-
-            this.packet.writeBoolean(profile.online);
-            this.packet.writeInt(0); // total groups
-            this.packet.writeInt(TimeHelper.between(profile.lastOnline, TimeHelper.now, 'seconds'));
-            this.packet.writeBoolean(true);
-
-            this.packet.prepare();
-
-            return this.packet;
         }
 
         catch(err)

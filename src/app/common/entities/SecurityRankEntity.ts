@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, JoinColumn, ManyToOn
 import { UserEntity } from './UserEntity';
 import { SecurityPermissionEntity } from './SecurityPermissionEntity';
 
-@Entity('security_rank')
+@Entity('security_ranks')
 export class SecurityRankEntity
 {
     @PrimaryGeneratedColumn({ name: 'id' })

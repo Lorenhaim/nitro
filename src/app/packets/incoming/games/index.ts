@@ -1,2 +1,2 @@
 export * from './GamesInitEvent';
-export * from './GetGamesEvent';
+export * from './GamesListEvent';

@@ -13,7 +13,7 @@ export class UserClubEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.USER_CLUB) throw new Error('invalid_header');
 
-            await this.user.client().processComposer(new UserClubComposer(this.user));
+            if(this.user.isAuthenticated) await this.user.client().processComposer(new UserClubComposer(this.user));
 
             return true;
         }

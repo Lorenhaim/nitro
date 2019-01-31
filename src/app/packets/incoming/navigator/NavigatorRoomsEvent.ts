@@ -1,7 +1,7 @@
 import { Emulator } from '../../../Emulator';
 import { Logger } from '../../../common';
 
-import { NavigatorSettingsComposer } from '../../outgoing';
+import { NavigatorSearchComposer } from '../../outgoing';
 
 import { Incoming } from '../Incoming';
 import { IncomingHeader } from '../IncomingHeader';
@@ -14,13 +14,13 @@ export class NavigatorRoomsEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.NAVIGATOR_ROOMS) throw new Error('invalid_header');
 
-            const view  = this.packet.readString();
-            const query = this.packet.readString();
+            if(this.user.isAuthenticated)
+            {
+                const view  = this.packet.readString();
+                const query = this.packet.readString();
 
-            console.log(view);
-            console.log(query);
-
-            //await this.user.client().processComposer(new NavigatorSettingsComposer(this.user));
+                await this.user.client().processComposer(new NavigatorSearchComposer(this.user));
+            }
 
             return true;
         }

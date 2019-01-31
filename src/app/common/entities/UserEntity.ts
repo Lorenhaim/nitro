@@ -1,11 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
 
+import { RoomEntity } from './RoomEntity';
 import { SecurityRankEntity } from './SecurityRankEntity';
 import { SecurityTicketEntity } from './SecurityTicketEntity';
+import { UserBadgeEntity } from './UserBadgeEntity';
+import { UserEffectEntity } from './UserEffectEntity';
 import { UserInfoEntity } from './UserInfoEntity';
 import { UserStatisticsEntity } from './UserStatisticsEntity';
 
-@Entity('user')
+@Entity('users')
 export class UserEntity
 {
     @PrimaryGeneratedColumn({ name: 'id' })
@@ -47,6 +50,12 @@ export class UserEntity
     @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })
     public timestampCreated: Date;
 
+    @OneToMany(type => UserBadgeEntity, badge => badge.user)
+    public badges: UserBadgeEntity[];
+
+    @OneToMany(type => UserEffectEntity, effect => effect.user)
+    public effects: UserEffectEntity[];
+
     @ManyToOne(type => SecurityRankEntity, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'rank_id' })
     public rank: SecurityRankEntity;
@@ -59,4 +68,7 @@ export class UserEntity
 
     @OneToMany(type => SecurityTicketEntity, ticket => ticket.user)
     public securityTickets: SecurityTicketEntity[];
+
+    @OneToMany(type => RoomEntity, room => room.user)
+    public rooms: RoomEntity[];
 }

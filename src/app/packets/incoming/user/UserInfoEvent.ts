@@ -12,8 +12,8 @@ export class UserInfoEvent extends Incoming
         try
         {
             if(this.packet.header !== IncomingHeader.USER_INFO) throw new Error('invalid_header');
-
-            await this.user.client().processComposer(new UserInfoComposer(this.user));
+            
+            if(this.user.isAuthenticated) await this.user.client().processComposer(new UserInfoComposer(this.user));
 
             return true;
         }

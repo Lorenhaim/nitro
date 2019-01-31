@@ -11,6 +11,8 @@ export class GetArticlesEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.HOTELVIEW_ARTICLES) throw new Error('invalid_header');
 
+            if(!this.user.isAuthenticated) throw new Error('invalid_authentication');
+
             return true;
         }
 

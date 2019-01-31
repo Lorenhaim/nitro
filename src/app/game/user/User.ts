@@ -3,10 +3,11 @@ import { getManager } from 'typeorm';
 import { Emulator } from '../../Emulator';
 import { UserEntity, TimeHelper } from '../../common';
 import { Client } from '../../networking';
+import { UserFigureComposer } from '../../packets';
 
-import { UserInfo } from './UserInfo';
-import { UserMessenger } from './UserMessenger';
-import { UserStatistics } from './UserStatistics';
+import { Info, Statistics } from './data';
+import { Inventory } from './inventory';
+import { Messenger } from './messenger';
 
 export class User
 {
@@ -15,14 +16,16 @@ export class User
     private _isAuthenticated: boolean;
 
     private _entity: UserEntity;
-    private _userInfo: UserInfo;
-    private _userMessenger: UserMessenger;
-    private _userStatistics: UserStatistics;
+    private _info: Info;
+    private _statistics: Statistics;
+    private _inventory: Inventory;
+    private _messenger: Messenger;
 
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
+    private _isLoaded: boolean;
     private _isPending: boolean;
     private _isSaving: boolean;
+    private _isDisposed: boolean;
+    private _isDisposing: boolean;
 
     constructor(_userId: number, _client?: Client)
     {
@@ -32,15 +35,17 @@ export class User
         this._client            = null;
         this._isAuthenticated   = false;
 
-        this._entity            = null;
-        this._userInfo          = null;
-        this._userMessenger     = null;
-        this._userStatistics    = null;
+        this._entity        = null;
+        this._info          = null;
+        this._statistics    = null;
+        this._inventory     = null;
+        this._messenger     = null;
 
-        this._isDisposed        = false;
-        this._isDisposing       = false;
+        this._isLoaded          = false;
         this._isPending         = false;
         this._isSaving          = false;
+        this._isDisposed        = false;
+        this._isDisposing       = false;
 
         if(_userId && !_client)
         {
@@ -55,157 +60,124 @@ export class User
         }
     }
 
-    public async checkTicket(ticket: string): Promise<boolean>
+    public async checkTicket(ticket: string): Promise<void>
     {
-        if(this._isAuthenticated) return Promise.reject(new Error('authentication_disabled'));
+        if(this._userId || this._isAuthenticated || !this._client) return Promise.reject(new Error('invalid_authentication'));
 
         const userId = await Emulator.gameManager().securityManager().ticketManager().checkTicket(ticket);
 
-        if(!userId) return Promise.reject(new Error('invalid_ticket'));
-
-        this._userId = userId;
-
-        return Promise.resolve(true);
+        this._userId            = userId;
+        this._isAuthenticated   = true;
     }
 
     public async loadUser(): Promise<boolean>
     {
-        if(!this._userId || this._isAuthenticated) return Promise.reject(new Error('invalid_user'));
-
-        const result = await getManager().findOne(UserEntity, this._userId, {
-            relations: ['info', 'statistics']
-        });
-
-        if(!result) return Promise.reject(new Error('invalid_user5'));
-
-        if(!result.info) return Promise.reject(new Error('invalid_user_info'));
-
-        if(!result.statistics) return Promise.reject(new Error('invalid_user_statistics'));
-
-        this._userInfo          = new UserInfo(result.info);
-        this._userStatistics    = new UserStatistics(result.statistics);
-
-        delete result.info;
-        delete result.statistics;
-
-        this._entity = result;
-
-        this._isAuthenticated = true;
-
-        if(!this._userInfo.messengerDisabled)
+        if(this._userId && !this._isLoaded)
         {
-            this._userMessenger = new UserMessenger(this);
+            const result = await getManager().findOne(UserEntity, this._userId, {
+                relations: ['info', 'statistics']
+            });
 
-            await this._userMessenger.init();
+            if(!result) return Promise.reject(new Error('invalid_user'));
+
+            if(!result.info) return Promise.reject(new Error('invalid_user_info'));
+
+            if(!result.statistics) return Promise.reject(new Error('invalid_user_statistics'));
+
+            this._info          = new Info(result.info);
+            this._statistics    = new Statistics(result.statistics);
+
+            delete result.info;
+            delete result.statistics;
+
+            this._entity = result;
+            
+            this._inventory = new Inventory(this);
+            this._messenger = new Messenger(this);
+
+            if(this._client) await this._messenger.init();
+
+            this._isLoaded = true;
         }
 
         return Promise.resolve(true);
     }
 
-    public async save(): Promise<boolean>
+    public async save(): Promise<void>
     {
-        if(!this._isPending) return Promise.resolve(true);
+        if(this._isPending && !this._isSaving)
+        {
+            this._isSaving = true;
 
-        await getManager().update(UserEntity, this._userId, this._entity);
+            await getManager().update(UserEntity, this._userId, this._entity);
 
-        this._isPending = false;
-
-        return Promise.resolve(true);
+            this._isPending = false;
+            this._isSaving  = false;
+        }
     }
 
-    public async setOnline(flag: boolean, immediate: boolean = true): Promise<boolean>
+    public async setOnline(flag: boolean, immediate: boolean = true): Promise<void>
     {
-        if(!this._isAuthenticated) return Promise.reject(new Error('invalid_user'));
-        
-        if(flag)
+        if(this._isAuthenticated && this._isLoaded)
         {
-            this._entity.online     = '1';
-            this._entity.lastOnline = TimeHelper.now;
+            if(flag)
+            {
+                this._entity.online     = '1';
+                this._entity.lastOnline = TimeHelper.now;
 
-            this._userStatistics.updateLoginStreak('login');
+                this._statistics.updateLoginStreak('login');
+            }
+            else
+            {
+                this._entity.online = '0';
 
-            if(this._userMessenger) await this._userMessenger.updateAllFriends({
-                userId: this._entity.id,
-                username: this._entity.username,
-                motto: this._entity.motto,
-                gender: this._entity.gender,
-                figure: this._entity.figure,
-                online: true
-            });
-        }
-        else
-        {
-            this._entity.online = '0';
-
-            this._userStatistics.updateLoginStreak('logout');
-
-            if(this._userMessenger) await this._userMessenger.updateAllFriends({
-                userId: this._entity.id,
-                username: this._entity.username,
-                motto: this._entity.motto,
-                gender: this._entity.gender,
-                figure: this._entity.figure,
-                online: false
-            });
+                this._statistics.updateLoginStreak('logout');
+            }
         }
 
         this._isPending = true;
 
         if(immediate) await this.save();
 
-        return Promise.resolve(true);
+        if(this._messenger) await this._messenger.updateAllFriends();
     }
 
-    public async updateFigure(gender: 'M' | 'F', figure: string): Promise<boolean>
+    public async updateFigure(gender: 'M' | 'F', figure: string): Promise<void>
     {
-        this._entity.gender = gender;
+        this._entity.gender = gender === 'M' ? 'M' : 'F';
         this._entity.figure = figure;
 
         this._isPending = true;
 
         await this.save();
 
-        if(this.userMessenger())
-        {
-            await this.userMessenger().updateAllFriends({
-                userId: this.userId,
-                username: this.username,
-                motto: this.motto,
-                gender: this.gender,
-                figure: this.figure,
-                online: this.online
-            });
-        }
+        if(this._isAuthenticated && this._client) await this._client.processComposer(new UserFigureComposer(this));
 
-        return Promise.resolve(true);
+        if(this._messenger) await this._messenger.updateAllFriends();
     }
 
-    public async dispose(): Promise<boolean>
+    public async dispose(): Promise<void>
     {
-        if(this._isDisposed) return Promise.resolve(true);
-
-        if(!this._isDisposing)
+        if(!this._isDisposed && !this._isDisposing)
         {
             this._isDisposing = true;
 
-            if(this._isAuthenticated)
+            if(this._isLoaded)
             {
-                await this.setOnline(false, false);
+                if(this._isAuthenticated && this.online) await this.setOnline(false, false);
 
-                if(this._userInfo instanceof UserInfo) await this._userInfo.dispose();
-                if(this._userStatistics instanceof UserStatistics) await this._userStatistics.dispose();
+                if(this._info instanceof Info) await this._info.dispose();
+                if(this._statistics instanceof Statistics) await this._statistics.dispose();
 
                 await this.save();
             }
+
+            this._isAuthenticated   = false;
+            this._isDisposed        = true;
+            this._isDisposing       = false;
+
+            this._client.dispose();
         }
-
-        this._isDisposed        = true;
-        this._isDisposing       = false;
-        this._isAuthenticated   = false;
-
-        this._client.dispose();
-
-        return Promise.resolve(true);
     }
 
     public get userId(): number
@@ -216,6 +188,11 @@ export class User
     public get isAuthenticated(): boolean
     {
         return this._isAuthenticated;
+    }
+
+    public get isLoaded(): boolean
+    {
+        return this._isLoaded;
     }
 
     public get username(): string
@@ -277,18 +254,23 @@ export class User
         return this._client;
     }
 
-    public userInfo(): UserInfo
+    public info(): Info
     {
-        return this._userInfo;
+        return this._info;
     }
 
-    public userStatistics(): UserStatistics
+    public statistics(): Statistics
     {
-        return this._userStatistics;
+        return this._statistics;
     }
 
-    public userMessenger(): UserMessenger
+    public messenger(): Messenger
     {
-        return this._userMessenger;
+        return this._messenger;
+    }
+
+    public inventory(): Inventory
+    {
+        return this._inventory;
     }
 }

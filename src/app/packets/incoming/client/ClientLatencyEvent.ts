@@ -11,7 +11,10 @@ export class ClientLatencyEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.CLIENT_LATENCY) throw new Error('invalid_header');
 
-            const latency: number = this.packet.readInt();
+            if(this.user.isAuthenticated)
+            {
+                const latency = this.packet.readInt();
+            }
 
             return true;
         }

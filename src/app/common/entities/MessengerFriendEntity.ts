@@ -1,8 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne, Unique } from 'typeorm';
 
+import { MessengerCategoryEntity } from './MessengerCategoryEntity';
 import { UserEntity } from './UserEntity';
 
-@Entity('messenger_friend')
+@Entity('messenger_friends')
 @Unique(['userId', 'friendId'])
 export class MessengerFriendEntity
 {
@@ -15,10 +16,13 @@ export class MessengerFriendEntity
     @Column({ name: 'friend_id' })
     public friendId: number;
 
-    @Column({ name: 'relation', type: 'enum', enum: ['0', '1', '2', '3'], default: '0' })
-    public relation: '0' | '1' | '2' | '3';
+    @Column({ name: 'category_id', nullable: true })
+    public categoryId: number;
 
-    @Column({ name: 'timestamp_created', default: () => "CURRENT_TIMESTAMP" })
+    @Column({ name: 'relation', type: 'enum', enum: ['0', '1', '2', '3'], default: '0' })
+    public relation: 0 | 1 | 2 | 3;
+
+    @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })
     public timestampCreated: Date;
 
     @ManyToOne(type => UserEntity, { onDelete: 'CASCADE' })
@@ -28,4 +32,8 @@ export class MessengerFriendEntity
     @ManyToOne(type => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'friend_id' })
     public friend: UserEntity;
+
+    @ManyToOne(type => MessengerCategoryEntity, { onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'category_id' })
+    public category: MessengerCategoryEntity;
 }

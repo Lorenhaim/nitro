@@ -16,29 +16,34 @@ export class NavigatorSavedSearchesComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
+            if(this.user.isAuthenticated)
+            {
+                this.packet.writeInt(4);
+                this.packet.writeInt(1);
+                this.packet.writeString('official');
+                this.packet.writeString('');
+                this.packet.writeString('');
+                this.packet.writeInt(2);
+                this.packet.writeString('recommended');
+                this.packet.writeString('');
+                this.packet.writeString('');
+                this.packet.writeInt(3);
+                this.packet.writeString('my');
+                this.packet.writeString('');
+                this.packet.writeString('');
+                this.packet.writeInt(4);
+                this.packet.writeString('favorites');
+                this.packet.writeString('');
+                this.packet.writeString('');
 
-            this.packet.writeInt(4);
-            this.packet.writeInt(1);
-            this.packet.writeString('official');
-            this.packet.writeString('');
-            this.packet.writeString('');
-            this.packet.writeInt(2);
-            this.packet.writeString('recommended');
-            this.packet.writeString('');
-            this.packet.writeString('');
-            this.packet.writeInt(3);
-            this.packet.writeString('my');
-            this.packet.writeString('');
-            this.packet.writeString('');
-            this.packet.writeInt(4);
-            this.packet.writeString('favorites');
-            this.packet.writeString('');
-            this.packet.writeString('');
+                this.packet.prepare();
 
-            this.packet.prepare();
-
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

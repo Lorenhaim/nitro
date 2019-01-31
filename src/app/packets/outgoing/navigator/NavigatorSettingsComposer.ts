@@ -16,18 +16,23 @@ export class NavigatorSettingsComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel(); // check perm
-            
-            this.packet.writeInt(100); // x
-            this.packet.writeInt(100); // y
-            this.packet.writeInt(435); // width
-            this.packet.writeInt(535); // height
-            this.packet.writeBoolean(false); // open searches
-            this.packet.writeInt(0); // ??
+            if(this.user.isAuthenticated)
+            {
+                this.packet.writeInt(this.user.info().navigatorX);
+                this.packet.writeInt(this.user.info().navigatorY);
+                this.packet.writeInt(this.user.info().navigatorWidth);
+                this.packet.writeInt(this.user.info().navigatorHeight);
+                this.packet.writeBoolean(this.user.info().navigatorSearchOpen);
+                this.packet.writeInt(0); // ??
 
-            this.packet.prepare();
+                this.packet.prepare();
 
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

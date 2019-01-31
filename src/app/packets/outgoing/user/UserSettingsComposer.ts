@@ -16,20 +16,25 @@ export class UserSettingsComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
+            if(this.user.isAuthenticated)
+            {
+                this.packet.writeInt(100); //volume system
+                this.packet.writeInt(100); //volume furni
+                this.packet.writeInt(100); // volume trax
+                this.packet.writeBoolean(false); // old chat
+                this.packet.writeBoolean(false); // block room invites
+                this.packet.writeBoolean(false); // block (camera) follow
+                this.packet.writeInt(1);
+                this.packet.writeInt(0); // chat style
 
-            this.packet.writeInt(100); //volume system
-            this.packet.writeInt(100); //volume furni
-            this.packet.writeInt(100); // volume trax
-            this.packet.writeBoolean(false); // old chat
-            this.packet.writeBoolean(false); // block room invites
-            this.packet.writeBoolean(false); // block (camera) follow
-            this.packet.writeInt(1);
-            this.packet.writeInt(0); // chat style
+                this.packet.prepare();
 
-            this.packet.prepare();
-
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

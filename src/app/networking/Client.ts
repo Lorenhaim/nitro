@@ -7,10 +7,13 @@ export class Client
     private _ip: string;
     private _machineId: string;
 
+    public _pingCount: number;
+
     constructor(private readonly _socket: Socket)
     {
         this._ip        = _socket.remoteAddress;
         this._machineId = null;
+        this._pingCount = null;
     }
 
     public write(buffer: Buffer): void

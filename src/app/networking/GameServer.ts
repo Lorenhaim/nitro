@@ -10,7 +10,6 @@ import { PacketManager, IncomingPacket, Incoming } from '../packets';
 export class GameServer
 {
     private _socketServer: Server;
-
     private _packetManager: PacketManager;
 
     constructor()

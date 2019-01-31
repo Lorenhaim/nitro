@@ -16,14 +16,19 @@ export class UserFigureComposer extends Outgoing
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel();
+            if(this.user.isAuthenticated)
+            {
+                this.packet.writeString(this.user.figure);
+                this.packet.writeString(this.user.gender);
 
-            this.packet.writeString(this.user.figure);
-            this.packet.writeString(this.user.gender);
+                this.packet.prepare();
 
-            this.packet.prepare();
-
-            return this.packet;
+                return this.packet;
+            }
+            else
+            {
+                return this.cancel();
+            }
         }
 
         catch(err)

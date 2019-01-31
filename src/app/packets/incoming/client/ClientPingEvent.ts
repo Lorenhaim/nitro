@@ -13,9 +13,14 @@ export class ClientPingEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.CLIENT_PING) throw new Error('invalid_header');
 
-            const pingCount: number = this.packet.readInt();
+            if(this.user.isAuthenticated)
+            {
+                const pingCount = this.packet.readInt();
 
-            await this.user.client().processComposer(new ClientPongComposer(this.user));
+                this.user.client()._pingCount = this.user.client()._pingCount === null ? 0 : this.user.client()._pingCount + 1;
+
+                await this.user.client().processComposer(new ClientPongComposer(this.user));
+            }
 
             return true;
         }

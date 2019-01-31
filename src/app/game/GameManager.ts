@@ -1,6 +1,6 @@
 import { getManager } from 'typeorm';
 
-import { Logger } from '../common';
+import { Logger, UserEntity } from '../common';
 
 import { NavigatorManager } from './navigator';
 import { SecurityManager } from './security';
@@ -16,59 +16,29 @@ export class GameManager
 
     constructor()
     {
-        this._isReady = false;
-
         this._navigatorManager  = new NavigatorManager();
         this._securityManager   = new SecurityManager();
         this._userManager       = new UserManager();
     }
 
-    public async init(): Promise<boolean>
+    public async init(): Promise<void>
     {
-        try
-        {
-            await this._navigatorManager.init();
-            await this._securityManager.init();
-            await this._userManager.init();
+        await this._navigatorManager.init();
+        await this._securityManager.init();
+        await this._userManager.init();
 
-            Logger.writeLine(`GameManager -> Loaded`);
-
-            this._isReady = true;
-
-            return true;
-        }
-
-        catch(err)
-        {
-            Logger.writeError(`GameManager Init Error -> ${ err.message || err }`);
-
-            await this.dispose();
-        }
+        this._isReady = true;
     }
 
-    public async cleanup(): Promise<boolean>
+    public async cleanup(): Promise<void>
     {
-        await getManager().query(`UPDATE user SET online = '0'`);
-
-        return Promise.resolve(true);
+        await getManager().query(`UPDATE users SET online = '0'`);
     }
 
-    public async dispose(): Promise<boolean>
+    public async dispose(): Promise<void>
     {
-        try
-        {
-            await this._securityManager.dispose();
-            await this._userManager.dispose();
-
-            Logger.writeLine(`GameManager -> Disposed`);
-
-            return true;
-        }
-
-        catch(err)
-        {
-            Logger.writeError(`GameManager Dispose Error -> ${ err.message || err }`);
-        }
+        await this._securityManager.dispose();
+        await this._userManager.dispose();
     }
 
     public get isReady(): boolean

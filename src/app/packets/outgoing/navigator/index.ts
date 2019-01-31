@@ -1,3 +1,4 @@
+export * from './NavigatorCategoriesComposer';
 export * from './NavigatorCollapsedComposer';
 export * from './NavigatorEventCategoriesComposer';
 export * from './NavigatorLiftedRoomsComposer';

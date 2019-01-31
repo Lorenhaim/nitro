@@ -12,9 +12,9 @@ export class ClientVariablesEvent extends Incoming
         {
             if(this.packet.header !== IncomingHeader.CLIENT_VARIABLES) throw new Error('invalid_header');
 
-            const unknown: number               = this.packet.readInt();
-            const clientBasePath: string        = this.packet.readString();
-            const clientVariablesPath: string   = this.packet.readString();
+            const unknown               = this.packet.readInt();
+            const clientBasePath        = this.packet.readString();
+            const clientVariablesPath   = this.packet.readString();
 
             return true;
         }

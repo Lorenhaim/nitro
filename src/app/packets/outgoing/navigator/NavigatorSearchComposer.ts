@@ -17,13 +17,22 @@ export class NavigatorSearchComposer extends Outgoing
         try
         {
             if(!this.user.isAuthenticated) return this.cancel(); // check perm
-            
-            this.packet.writeInt(100); // x
-            this.packet.writeInt(100); // y
-            this.packet.writeInt(435); // width
-            this.packet.writeInt(535); // height
-            this.packet.writeBoolean(false); // open searches
-            this.packet.writeInt(0); // ??
+
+            this.packet.writeString(''); //search code
+            this.packet.writeString(''); //search query
+            this.packet.writeInt(0); // total results
+
+            //foreach
+            //this.packet.writeString(''); // code
+            //this.packet.writeString(''); // query
+            //this.packet.writeInt(0); // action type
+            //this.packet.writeBoolean(false); // if collapsed
+            //this.packet.writeInt(0); // mode type
+
+            // with results of rooms
+            // this.packet.writeInt(0); // total rooms
+
+            //foreach
 
             this.packet.prepare();
 
