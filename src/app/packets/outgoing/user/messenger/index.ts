@@ -2,6 +2,7 @@ export * from './MessengerChatComposer';
 export * from './MessengerChatErrorComposer';
 export * from './MessengerFriendsComposer';
 export * from './MessengerInitComposer';
+export * from './MessengerRelationshipsComposer';
 export * from './MessengerRequestComposer';
 export * from './MessengerRequestErrorComposer';
 export * from './MessengerRequestsComposer';

@@ -9,6 +9,7 @@ import { MessengerCategory } from './MessengerCategory';
 import { MessengerFriend } from './MessengerFriend';
 import { MessengerFriendRequest } from './MessengerFriendRequest';
 import { MessengerFriendRequestError } from './MessengerFriendRequestError';
+import { MessengerRelationships } from './MessengerRelationships';
 import { MessengerUpdate } from './MessengerUpdate';
 
 export class Messenger
@@ -54,6 +55,24 @@ export class Messenger
 
             this._isLoaded  = true;
             this._isLoading = false;
+        }
+    }
+
+    public async totalFriends(): Promise<number>
+    {
+        if(this._isLoaded)
+        {
+            return Promise.resolve(this._friends.length);
+        }
+        else
+        {
+            const count = await getManager().count(MessengerFriendEntity, {
+                where: {
+                    userId: this._user.userId
+                }
+            });
+
+            return Promise.resolve(count);
         }
     }
 
@@ -227,6 +246,32 @@ export class Messenger
         }
 
         return Promise.resolve(result);
+    }
+
+    public async getRelationships(): Promise<MessengerRelationships>
+    {
+        const lovers: MessengerFriend[]     = [];
+        const friends: MessengerFriend[]    = [];
+        const haters: MessengerFriend[]     = [];
+
+        if(this._isLoaded)
+        {
+            const totalFriends = this._friends.length;
+
+            for(let i = 0; i < totalFriends; i++)
+            {
+                const friend = this._friends[i];
+
+                if(friend.relation > 0)
+                {
+                    if(friend.relation === 1) lovers.push(friend);
+                    else if(friend.relation === 2) friends.push(friend);
+                    else if(friend.relation === 3) haters.push(friend);
+                }
+            }
+        }
+
+        return Promise.resolve({ lovers, friends, haters });
     }
 
     public async composeUpdates(startReceiving = false): Promise<void>
@@ -556,7 +601,7 @@ export class Messenger
                         figure: result.friend.figure,
                         online: result.friend.online === '1' ? true : false,
                         categoryId: result.categoryId || 0,
-                        relation: result.relation
+                        relation: <any> parseInt(<any> result.relation)
                     });
                 }
             }

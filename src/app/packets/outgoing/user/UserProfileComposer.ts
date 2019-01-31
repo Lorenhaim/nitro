@@ -32,7 +32,7 @@ export class UserProfileComposer extends Outgoing
 
                     if(profile.messenger() && this.user.messenger())
                     {
-                        this.packet.writeInt(profile.messenger().friends.length); // get offline total
+                        this.packet.writeInt(await profile.messenger().totalFriends());
                         this.packet.writeBoolean(await this.user.messenger().hasFriend(profile.userId));
                         this.packet.writeBoolean(await profile.messenger().hasRequest(this.user.userId));
                     }

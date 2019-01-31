@@ -46,7 +46,7 @@ export class MessengerFriendsComposer extends Outgoing
                             this.packet.writeBoolean(false); // allow offline messaging
                             this.packet.writeBoolean(false);
                             this.packet.writeBoolean(false); // has pocket habbo
-                            this.packet.writeShort(parseInt(friend.relation));
+                            this.packet.writeShort(friend.relation);
                         }
                     }
                     else

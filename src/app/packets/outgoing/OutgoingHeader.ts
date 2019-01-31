@@ -8,6 +8,7 @@ export const enum OutgoingHeader
     MESSENGER_CHAT_ERROR       = 896,
     MESSENGER_FRIENDS          = 3130,
     MESSENGER_INIT             = 1605,
+    MESSENGER_RELATIONSHIPS    = 2016,
     MESSENGER_REQUEST          = 2219,
     MESSENGER_REQUEST_ERROR    = 892,
     MESSENGER_REQUESTS         = 280,
@@ -40,5 +41,7 @@ export const enum OutgoingHeader
     USER_PROFILE               = 3898,
     USER_RIGHTS                = 2033,
     USER_SANCTION_STATUS       = 3679,
-    USER_SETTINGS              = 513
+    USER_SETTINGS              = 513,
+    HOTELVIEW_NEWS             = 286,
+    HOTELVIEW_CAMPAIGN         = 1745
 }

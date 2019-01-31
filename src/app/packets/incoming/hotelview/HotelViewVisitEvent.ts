@@ -1,21 +1,19 @@
 import { Logger } from '../../../common';
 
-import { UserProfileComposer } from '../../outgoing';
-
 import { Incoming } from '../Incoming';
 import { IncomingHeader } from '../IncomingHeader';
 
-export class UserRelationshipsEvent extends Incoming
+export class HotelViewVisitEvent extends Incoming
 {
     public async process(): Promise<boolean>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_RELATIONSHIPS) throw new Error('invalid_header');
+            if(this.packet.header !== IncomingHeader.HOTELVIEW_VISIT) throw new Error('invalid_header');
 
             if(this.user.isAuthenticated)
             {
-                const userId = this.packet.readInt();
+                // clear room status
             }
 
             return true;

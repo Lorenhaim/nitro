@@ -1,5 +1,6 @@
 export * from './alerts';
 export * from './client';
+export * from './hotelview';
 export * from './moderation';
 export * from './navigator';
 export * from './security';

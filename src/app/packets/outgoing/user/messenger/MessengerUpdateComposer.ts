@@ -63,7 +63,7 @@ export class MessengerUpdateComposer extends Outgoing
                             this.packet.writeBoolean(false); // allow offline messaging
                             this.packet.writeBoolean(false);
                             this.packet.writeBoolean(false); // has pocket habbo
-                            this.packet.writeShort(parseInt(update.friend.relation));
+                            this.packet.writeShort(update.friend.relation);
                         }
                         else if(update.type === 'update')
                         {
@@ -81,7 +81,7 @@ export class MessengerUpdateComposer extends Outgoing
                             this.packet.writeBoolean(false); // allow offline messaging
                             this.packet.writeBoolean(false);
                             this.packet.writeBoolean(false); // has pocket habbo
-                            this.packet.writeShort(parseInt(update.friend.relation));
+                            this.packet.writeShort(update.friend.relation);
                         }
                         else if(update.type === 'remove')
                         {

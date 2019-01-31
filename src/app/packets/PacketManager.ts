@@ -80,8 +80,9 @@ export class PacketManager
 
     private registerHotelView(): void
     {
-        this.addHandler(IncomingHeader.HOTELVIEW_ARTICLES, IncomingHotelView.GetArticlesEvent);
-        this.addHandler(IncomingHeader.HOTELVIEW_CAMPAIGNS, IncomingHotelView.GetCampaignsEvent);
+        this.addHandler(IncomingHeader.HOTELVIEW_CAMPAIGNS, IncomingHotelView.HotelViewCampaignsEvent);
+        this.addHandler(IncomingHeader.HOTELVIEW_NEWS, IncomingHotelView.HotelViewNewsEvent);
+        this.addHandler(IncomingHeader.HOTELVIEW_VISIT, IncomingHotelView.HotelViewVisitEvent);
     }
     
     private registerNavigator(): void
@@ -100,11 +101,12 @@ export class PacketManager
         this.addHandler(IncomingHeader.MESSENGER_DECLINE, IncomingUser.MessengerDeclineEvent);
         this.addHandler(IncomingHeader.MESSENGER_FRIENDS, IncomingUser.MessengerFriendsEvent);
         this.addHandler(IncomingHeader.MESSENGER_INIT, IncomingUser.MessengerInitEvent);
+        this.addHandler(IncomingHeader.MESSENGER_RELATIONSHIPS, IncomingUser.MessengerRelationshipsEvent);
         this.addHandler(IncomingHeader.MESSENGER_REMOVE, IncomingUser.MessengerRemoveEvent);
         this.addHandler(IncomingHeader.MESSENGER_REQUEST, IncomingUser.MessengerRequestEvent);
         this.addHandler(IncomingHeader.MESSENGER_REQUESTS, IncomingUser.MessengerRequestsEvent);
         this.addHandler(IncomingHeader.MESSENGER_SEARCH, IncomingUser.MessengerSearchEvent);
-        this.addHandler(IncomingHeader.MESSENGER_UPDATE, IncomingUser.MessengerUpdateEvent);
+        this.addHandler(IncomingHeader.MESSENGER_RELATIONSHIPS_UPDATE, IncomingUser.MessengerRelationshipUpdateEvent);
         this.addHandler(IncomingHeader.MESSENGER_UPDATES, IncomingUser.MessengerUpdatesEvent);
     }
 
@@ -121,7 +123,6 @@ export class PacketManager
         this.addHandler(IncomingHeader.USER_INFO, IncomingUser.UserInfoEvent);
         this.addHandler(IncomingHeader.USER_ONLINE, IncomingUser.UserOnlineEvent);
         this.addHandler(IncomingHeader.USER_PROFILE, IncomingUser.UserProfileEvent);
-        this.addHandler(IncomingHeader.USER_RELATIONSHIPS, IncomingUser.UserRelationshipsEvent);
         this.addHandler(IncomingHeader.USER_SETTINGS, IncomingUser.UserSettingsEvent);
     }
 
@@ -158,6 +159,7 @@ export class PacketManager
         }
 
         await packetHandler.process();
+        console.log(`Handled -> ${ packet.header }`);
 
         return Promise.resolve(true);
     }

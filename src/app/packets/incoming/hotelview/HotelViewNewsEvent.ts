@@ -1,19 +1,19 @@
 import { Logger } from '../../../common';
 
+import { HotelViewNewsComposer } from '../../outgoing';
+
 import { Incoming } from '../Incoming';
 import { IncomingHeader } from '../IncomingHeader';
 
-export class GetCampaignsEvent extends Incoming
+export class HotelViewNewsEvent extends Incoming
 {
     public async process(): Promise<boolean>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.HOTELVIEW_CAMPAIGNS) throw new Error('invalid_header');
-
-            if(!this.user.isAuthenticated) throw new Error('invalid_authentication');
-
-            const something: string = this.packet.readString();
+            if(this.packet.header !== IncomingHeader.HOTELVIEW_NEWS) throw new Error('invalid_header');
+            
+            if(this.user.isAuthenticated) await this.user.client().processComposer(new HotelViewNewsComposer(this.user));
 
             return true;
         }

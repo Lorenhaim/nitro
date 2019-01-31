@@ -1,17 +1,19 @@
 import { Logger } from '../../../../common';
 
+import { MessengerRelationshipsComposer } from '../../../outgoing';
+
 import { Incoming } from '../../Incoming';
 import { IncomingHeader } from '../../IncomingHeader';
 
-export class MessengerUpdatesEvent extends Incoming
+export class MessengerRelationshipsEvent extends Incoming
 {
     public async process(): Promise<boolean>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.MESSENGER_UPDATES) throw new Error('invalid_header');
+            if(this.packet.header !== IncomingHeader.MESSENGER_RELATIONSHIPS) throw new Error('invalid_header');
 
-            if(this.user.isAuthenticated && this.user.messenger()) await this.user.messenger().composeUpdates();
+            if(this.user.isAuthenticated) await this.user.client().processComposer(new MessengerRelationshipsComposer(this.user, this.packet.readInt()));
 
             return true;
         }

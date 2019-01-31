@@ -7,5 +7,4 @@ export * from './UserIgnoredEvent';
 export * from './UserInfoEvent';
 export * from './UserOnlineEvent';
 export * from './UserProfileEvent';
-export * from './UserRelationshipsEvent';
 export * from './UserSettingsEvent';
