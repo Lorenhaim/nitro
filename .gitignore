@@ -13,3 +13,5 @@ ormlogs.log
 .DS_Store
 Thumbs.db
 swf
+src/ssl
+.zip
