@@ -1,40 +1,64 @@
-import { User } from '../../game';
-
+import { GameClient, SocketClient } from '../../networking';
 import { OutgoingHeader } from './OutgoingHeader';
 import { OutgoingPacket } from './OutgoingPacket';
 
 export abstract class Outgoing
 {
+    private _header: OutgoingHeader;
     private _packet: OutgoingPacket;
+    private _isCancelled: boolean;
 
-    constructor(private readonly _header: OutgoingHeader, private readonly _user: User)
+    private _client: GameClient | SocketClient;
+
+    constructor(header: OutgoingHeader)
     {
-        if(!(_user instanceof User)) throw new Error('invalid_user');
-        
-        this._packet = new OutgoingPacket(_header);
+        if(!header) throw new Error('invalid_header');
+
+        this._header        = header;
+        this._packet        = new OutgoingPacket(header);
+        this._isCancelled   = false;
+
+        this._client        = null;
     }
 
-    public get header()
+    public setClient(client: GameClient | SocketClient): void
     {
-        return this._header;
-    }
-
-    public get packet()
-    {
-        return this._packet;
-    }
-
-    public get user()
-    {
-        return this._user;
+        this._client = client;
     }
 
     public cancel(): OutgoingPacket
     {
         this._packet.cancel();
 
+        this._isCancelled = true;
+
         return this._packet;
     }
 
-    public abstract async compose(): Promise<OutgoingPacket>;
+    public error(err: Error): void
+    {
+        if(this._client && this._client.logger) this._client.logger.error(`Outgoing => ${ this.packet.header } => ${ this.constructor.name } ${ err.message || err }`, err.stack);
+    }
+
+    public abstract compose(): OutgoingPacket;
+
+    public get header(): OutgoingHeader
+    {
+        return this._header;
+    }
+
+    public get packet(): OutgoingPacket
+    {
+        return this._packet;
+    }
+
+    public get isCancelled(): boolean
+    {
+        return this._isCancelled;
+    }
+
+    public get client(): GameClient | SocketClient
+    {
+        return this._client;
+    }
 }

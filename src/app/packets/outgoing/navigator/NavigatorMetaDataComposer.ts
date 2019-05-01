@@ -1,36 +1,33 @@
 import { Emulator } from '../../../Emulator';
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class NavigatorMetaDataComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.NAVIGATOR_METADATA, _user);
+        super(OutgoingHeader.NAVIGATOR_METADATA);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            if(Emulator.gameManager.navigatorManager.isLoaded)
             {
-                const totalTabs = Emulator.gameManager().navigatorManager().tabs.length;
+                const tabs      = Emulator.gameManager.navigatorManager.tabs;
+                const totalTabs = tabs.length;
 
-                if(totalTabs)
+                if(tabs && totalTabs)
                 {
                     this.packet.writeInt(totalTabs);
 
                     for(let i = 0; i < totalTabs; i++)
                     {
-                        const tab = Emulator.gameManager().navigatorManager().tabs[i];
+                        const tab = tabs[i];
 
-                        this.packet.writeString(tab.name);
-                        this.packet.writeInt(0); // ??
+                        this.packet.writeString(tab.name).writeInt(0);
                     }
                 }
                 else
@@ -38,19 +35,15 @@ export class NavigatorMetaDataComposer extends Outgoing
                     this.packet.writeInt(0);
                 }
 
-                this.packet.prepare();
+                return this.packet.prepare();
+            }
 
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.cancel();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

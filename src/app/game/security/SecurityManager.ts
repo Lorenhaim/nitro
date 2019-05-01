@@ -1,39 +1,60 @@
-import { Logger } from '../../common';
+import { Manager } from '../../common';
+import { AuthenticationManager } from './AuthenticationManager';
+import { PermissionManager } from './permission';
+import { RankManager } from './rank';
+import { TicketManager } from './TicketManager';
 
-import { TicketManager } from './ticket';
-
-export class SecurityManager
+export class SecurityManager extends Manager
 {
+    private _authenticationManager: AuthenticationManager;
+    private _permissionManager: PermissionManager;
+    private _rankManager: RankManager;
     private _ticketManager: TicketManager;
 
     constructor()
     {
-        this._ticketManager = new TicketManager();
+        super('SecurityManager');
+
+        this._authenticationManager = new AuthenticationManager();
+        this._permissionManager     = new PermissionManager();
+        this._rankManager           = new RankManager();
+        this._ticketManager         = new TicketManager();
+
+        this._isLoaded      = false;
+        this._isLoading     = false;
+
+        this._isDisposed    = false;
+        this._isDisposing   = false;
     }
 
-    public async init(): Promise<boolean>
+    protected async onInit(): Promise<void>
     {
-        Logger.writeLine(`SecurityManager -> Loaded`);
-            
-        return Promise.resolve(true);
+        await this._permissionManager.init();
+        await this._rankManager.init();
     }
 
-    public async dispose(): Promise<boolean>
+    protected async onDispose(): Promise<void>
     {
-        try
-        {
-            Logger.writeLine(`SecurityManager -> Disposed`);
-
-            return true;
-        }
-
-        catch(err)
-        {
-            Logger.writeError(`SecurityManager Dispose Error -> ${ err.message || err }`);
-        }
+        if(this._permissionManager !== null)    await this._permissionManager.dispose();
+        if(this._rankManager !== null)          await this._rankManager.dispose();
     }
     
-    public ticketManager(): TicketManager
+    public get authenticationManager(): AuthenticationManager
+    {
+        return this._authenticationManager;
+    }
+
+    public get permissionManager(): PermissionManager
+    {
+        return this._permissionManager;
+    }
+
+    public get rankManager(): RankManager
+    {
+        return this._rankManager;
+    }
+
+    public get ticketManager(): TicketManager
     {
         return this._ticketManager;
     }

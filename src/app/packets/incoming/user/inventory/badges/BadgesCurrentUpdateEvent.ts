@@ -1,39 +1,32 @@
-import { Logger } from '../../../../../common';
-
-import { BadgesCurrentComposer } from '../../../../outgoing';
-
 import { Incoming } from '../../../Incoming';
-import { IncomingHeader } from '../../../IncomingHeader';
 
 export class BadgesCurrentUpdateEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_BADGES_CURRENT_UPDATE) throw new Error('invalid_header');
+            const badges: { slotNumber: 1 | 2 | 3 | 4 | 5, badgeCode: string }[] = [];
 
-            if(this.user.isAuthenticated && this.user.inventory() && this.user.inventory().badges())
+            for(let i = 0; i < 5; i++)
             {
-                await this.user.inventory().badges().resetAllSlots();
+                const slotNumber: any   = this.packet.readInt();
+                const badgeCode         = this.packet.readString();
 
-                for(let i = 0; i < 5; i++)
-                {
-                    const slotNumber    = this.packet.readInt();
-                    const badgeCode     = this.packet.readString();
-
-                    await this.user.inventory().badges().setSlotNumber(badgeCode, <any> slotNumber);
-                }
-
-                await this.user.client().processComposer(new BadgesCurrentComposer(this.user, this.user.userId));
+                if(slotNumber && badgeCode) badges.push({ slotNumber, badgeCode });
             }
 
-            return true;
+            if(badges.length) this.client.user.inventory.badges.setCurrentBadges(...badges);
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

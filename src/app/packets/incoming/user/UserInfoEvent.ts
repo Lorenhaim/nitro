@@ -1,26 +1,25 @@
-import { Logger } from '../../../common';
-
-import { UserInfoComposer } from '../../outgoing';
-
+import { UserInfoComposer, UserPerksComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class UserInfoEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_INFO) throw new Error('invalid_header');
-            
-            if(this.user.isAuthenticated) await this.user.client().processComposer(new UserInfoComposer(this.user));
-
-            return true;
+            this.client.processOutgoing(
+                new UserInfoComposer(),
+                new UserPerksComposer());
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

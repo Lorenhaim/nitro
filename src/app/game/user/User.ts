@@ -1,193 +1,183 @@
-import { getManager } from 'typeorm';
-
+import { Subject, Subscription } from 'rxjs';
+import { Logger } from '../../common';
+import { UserEntity } from '../../database';
 import { Emulator } from '../../Emulator';
-import { UserEntity, TimeHelper } from '../../common';
-import { Client } from '../../networking';
-import { UserFigureComposer } from '../../packets';
-
-import { Info, Statistics } from './data';
-import { Inventory } from './inventory';
-import { Messenger } from './messenger';
+import { PermissionList, Rank } from '../security';
+import { Unit, UnitType } from '../unit';
+import { UserEvent } from './events';
+import { UserInventory } from './inventory';
+import { UserMessenger } from './messenger';
+import { UserConnections } from './UserConnections';
+import { UserDetails } from './UserDetails';
 
 export class User
 {
-    private _userId: number;
-    private _client: Client;
-    private _isAuthenticated: boolean;
+    private _id: number;
+    private _logger: Logger;
 
-    private _entity: UserEntity;
-    private _info: Info;
-    private _statistics: Statistics;
-    private _inventory: Inventory;
-    private _messenger: Messenger;
+    private _events: Subject<UserEvent>;
+    private _subscription: Subscription;
+
+    private _details: UserDetails;
+    private _connections: UserConnections;
+    private _inventory: UserInventory;
+    private _messenger: UserMessenger;
+    private _unit: Unit;
+    private _rank: Rank;
 
     private _isLoaded: boolean;
-    private _isPending: boolean;
-    private _isSaving: boolean;
+    private _isLoading: boolean;
+
     private _isDisposed: boolean;
     private _isDisposing: boolean;
 
-    constructor(_userId: number, _client?: Client)
+    constructor(entity: UserEntity)
     {
-        if(_userId && _client) throw new Error('invalid_construction');
+        if(!(entity instanceof UserEntity)) throw new Error('invalid_entity');
 
-        this._userId            = 0;
-        this._client            = null;
-        this._isAuthenticated   = false;
+        this._id            = entity.id;
+        this._logger        = new Logger('User', entity.username);
 
-        this._entity        = null;
-        this._info          = null;
-        this._statistics    = null;
-        this._inventory     = null;
-        this._messenger     = null;
+        this._events        = null;
+        this._subscription  = null;
 
-        this._isLoaded          = false;
-        this._isPending         = false;
-        this._isSaving          = false;
-        this._isDisposed        = false;
-        this._isDisposing       = false;
+        this._details       = new UserDetails(entity, this);
+        this._connections   = new UserConnections(this);
+        this._inventory     = new UserInventory(this);
+        this._messenger     = new UserMessenger(this);
+        this._unit          = new Unit(UnitType.USER, this);
+        this._rank          = null;
+        
+        this._isDisposed    = false;
+        this._isDisposing   = false;
 
-        if(_userId && !_client)
-        {
-            this._userId = _userId;
-        }
-
-        if(!_userId && _client)
-        {
-            if(!(_client instanceof Client)) throw new Error('invalid_client');
-
-            this._client = _client;
-        }
+        this.loadRank();
     }
 
-    public async checkTicket(ticket: string): Promise<void>
+    public async init(): Promise<void>
     {
-        if(this._userId || this._isAuthenticated || !this._client) return Promise.reject(new Error('invalid_authentication'));
+        if(this._isLoaded || this._isLoading || this._isDisposing) return;
 
-        const userId = await Emulator.gameManager().securityManager().ticketManager().checkTicket(ticket);
+        this._isLoading = true;
 
-        this._userId            = userId;
-        this._isAuthenticated   = true;
-    }
+        this._events        = new Subject();
+        this._subscription  = this._events.subscribe(async event => await this.handleEvent(event));
 
-    public async loadUser(): Promise<boolean>
-    {
-        if(this._userId && !this._isLoaded)
-        {
-            const result = await getManager().findOne(UserEntity, this._userId, {
-                relations: ['info', 'statistics']
-            });
+        if(this._inventory) await this._inventory.init();
+        if(this._messenger) await this._messenger.init();
 
-            if(!result) return Promise.reject(new Error('invalid_user'));
-
-            if(!result.info) return Promise.reject(new Error('invalid_user_info'));
-
-            if(!result.statistics) return Promise.reject(new Error('invalid_user_statistics'));
-
-            this._info          = new Info(result.info);
-            this._statistics    = new Statistics(result.statistics);
-
-            delete result.info;
-            delete result.statistics;
-
-            this._entity = result;
-            
-            this._inventory = new Inventory(this);
-            this._messenger = new Messenger(this);
-
-            if(this._client) await this._messenger.init();
-
-            this._isLoaded = true;
-        }
-
-        return Promise.resolve(true);
-    }
-
-    public async save(): Promise<void>
-    {
-        if(this._isPending && !this._isSaving)
-        {
-            this._isSaving = true;
-
-            await getManager().update(UserEntity, this._userId, this._entity);
-
-            this._isPending = false;
-            this._isSaving  = false;
-        }
-    }
-
-    public async setOnline(flag: boolean, immediate: boolean = true): Promise<void>
-    {
-        if(this._isAuthenticated && this._isLoaded)
-        {
-            if(flag)
-            {
-                this._entity.online     = '1';
-                this._entity.lastOnline = TimeHelper.now;
-
-                this._statistics.updateLoginStreak('login');
-            }
-            else
-            {
-                this._entity.online = '0';
-
-                this._statistics.updateLoginStreak('logout');
-            }
-        }
-
-        this._isPending = true;
-
-        if(immediate) await this.save();
-
-        if(this._messenger) await this._messenger.updateAllFriends();
-    }
-
-    public async updateFigure(gender: 'M' | 'F', figure: string): Promise<void>
-    {
-        this._entity.gender = gender === 'M' ? 'M' : 'F';
-        this._entity.figure = figure;
-
-        this._isPending = true;
-
-        await this.save();
-
-        if(this._isAuthenticated && this._client) await this._client.processComposer(new UserFigureComposer(this));
-
-        if(this._messenger) await this._messenger.updateAllFriends();
+        this._isLoaded      = true;
+        this._isLoading     = false;
+        this._isDisposed    = false;
     }
 
     public async dispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing)
+        if(this._isDisposed || this._isDisposing || this._isLoading) return;
+
+        this._isDisposing = true;
+
+        this._rank = null;
+
+        if(this._subscription) this._subscription.unsubscribe();
+
+        if(this._details)
         {
-            this._isDisposing = true;
+            this._details.updateOnline(false);
 
-            if(this._isLoaded)
+            await this._details.saveNow(true);
+        }
+
+        if(this._inventory)     await this._inventory.dispose();
+        if(this._messenger)     await this._messenger.dispose();
+        if(this._unit)          await this._unit.dispose();
+        if(this._connections)   await this._connections.dispose();
+
+        this._isDisposed    = true;
+        this._isDisposing   = false;
+        this._isLoaded      = false;
+    }
+
+    private async handleEvent(event: UserEvent)
+    {
+        if(event instanceof UserEvent)
+        {
+            try
             {
-                if(this._isAuthenticated && this.online) await this.setOnline(false, false);
+                event.user = this;
+                //this.setEventUser(event);
 
-                if(this._info instanceof Info) await this._info.dispose();
-                if(this._statistics instanceof Statistics) await this._statistics.dispose();
-
-                await this.save();
+                await event.runEvent();
             }
 
-            this._isAuthenticated   = false;
-            this._isDisposed        = true;
-            this._isDisposing       = false;
-
-            this._client.dispose();
+            catch(err)
+            {
+                this.logger.error(err);
+            }
         }
     }
 
-    public get userId(): number
+    public loadRank(): void
     {
-        return this._userId;
+        this._rank = null;
+
+        if(!this._details || !this._details.rankId) return;
+        
+        const rank = Emulator.gameManager.securityManager.rankManager.getRank(this._details.rankId);
+
+        if(!rank) return;
+
+        this._rank = rank;
     }
 
-    public get isAuthenticated(): boolean
+    public hasPermission(permission: PermissionList | string): boolean
     {
-        return this._isAuthenticated;
+        return this._rank && this._rank.permission && this._rank.permission.hasPermission(permission);
+    }
+
+    public get id(): number
+    {
+        return this._id;
+    }
+
+    public get logger(): Logger
+    {
+        return this._logger;
+    }
+
+    public get events(): Subject<UserEvent>
+    {
+        return this._events;
+    }
+
+    public get details(): UserDetails
+    {
+        return this._details;
+    }
+
+    public get connections(): UserConnections
+    {
+        return this._connections;
+    }
+
+    public get inventory(): UserInventory
+    {
+        return this._inventory;
+    }
+
+    public get messenger(): UserMessenger
+    {
+        return this._messenger;
+    }
+
+    public get unit(): Unit
+    {
+        return this._unit;
+    }
+
+    public get rank(): Rank
+    {
+        return this._rank;
     }
 
     public get isLoaded(): boolean
@@ -195,82 +185,18 @@ export class User
         return this._isLoaded;
     }
 
-    public get username(): string
+    public get isLoading(): boolean
     {
-        return this._entity.username;
+        return this._isLoading;
     }
 
-    public get motto(): string
+    public get isDisposed(): boolean
     {
-        return this._entity.motto;
+        return this._isDisposed;
     }
 
-    public get gender(): 'M' | 'F'
+    public get isDisposing(): boolean
     {
-        return this._entity.gender;
-    }
-
-    public set gender(gender: 'M' | 'F')
-    {
-        this._entity.gender = gender;
-
-        this._isPending = true;
-    }
-
-    public get figure(): string
-    {
-        return this._entity.figure;
-    }
-
-    public set figure(figure: string)
-    {
-        this._entity.figure = figure;
-
-        this._isPending = true;
-    }
-
-    public get rankId(): number
-    {
-        return this._entity.rankId || 0;
-    }
-
-    public get online(): boolean
-    {
-        return this._entity.online == '1';
-    }
-
-    public get lastOnline(): Date
-    {
-        return this._entity.lastOnline;
-    }
-
-    public get timestampCreated(): Date
-    {
-        return this._entity.timestampCreated;
-    }
-
-    public client(): Client
-    {
-        return this._client;
-    }
-
-    public info(): Info
-    {
-        return this._info;
-    }
-
-    public statistics(): Statistics
-    {
-        return this._statistics;
-    }
-
-    public messenger(): Messenger
-    {
-        return this._messenger;
-    }
-
-    public inventory(): Inventory
-    {
-        return this._inventory;
+        return this._isDisposing;
     }
 }

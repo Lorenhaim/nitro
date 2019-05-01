@@ -1,36 +1,30 @@
-import { Logger } from '../../../../common';
-
 import { Incoming } from '../../Incoming';
-import { IncomingHeader } from '../../IncomingHeader';
 
 export class MessengerRemoveEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.MESSENGER_REMOVE) throw new Error('invalid_header');
+            const totalIds = this.packet.readInt();
 
-            if(this.user.isAuthenticated && this.user.messenger())
-            {
-                const totalToRemove = this.packet.readInt();
+            if(!totalIds) return;
 
-                if(totalToRemove)
-                {
-                    const friendIds: number[] = [];
+            const ids: number[] = [];
+            
+            for(let i = 0; i < totalIds; i++) ids.push(this.packet.readInt());
 
-                    for(let i = 0; i < totalToRemove; i++) friendIds.push(this.packet.readInt());
-
-                    if(friendIds) await this.user.messenger().removeFriend(friendIds);
-                }
-            }
-
-            return true;
+            if(ids.length) await this.client.user.messenger.removeFriends(...ids);
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

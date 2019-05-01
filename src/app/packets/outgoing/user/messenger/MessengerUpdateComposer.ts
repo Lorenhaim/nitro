@@ -1,24 +1,28 @@
-import { Logger } from '../../../../common';
-import { User, MessengerUpdate } from '../../../../game';
-
+import { MessengerUpdate, MessengerUpdateType } from '../../../../game';
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class MessengerUpdateComposer extends Outgoing
 {
-    constructor(_user: User)
+    private _updates: MessengerUpdate[];
+
+    constructor(...updates: MessengerUpdate[])
     {
-        super(OutgoingHeader.MESSENGER_UPDATE, _user);
+        super(OutgoingHeader.MESSENGER_UPDATE);
+
+        this._updates = [ ...updates ];
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated && this.user.messenger() && this.user.messenger().isLoaded)
+            const categories = this.client.user.messenger.categories;
+
+            if(categories)
             {
-                const totalCategories = this.user.messenger().categories.length;
+                const totalCategories = categories.length;
 
                 if(totalCategories)
                 {
@@ -26,90 +30,42 @@ export class MessengerUpdateComposer extends Outgoing
 
                     for(let i = 0; i < totalCategories; i++)
                     {
-                        const category = this.user.messenger().categories[i];
+                        const category = this.client.user.messenger.categories[i];
 
-                        this.packet.writeInt(category.id);
-                        this.packet.writeString(category.name);
+                        if(!category) continue;
+
+                        category.parseCategory(this.packet);
                     }
                 }
-                else
-                {
-                    this.packet.writeInt(0);
-                }
-
-                const totalUpdates = this.user.messenger().pendingUpdates.length;
-
-                if(totalUpdates)
-                {
-                    this.packet.writeInt(totalUpdates);
-
-                    for(let i = 0; i < totalUpdates; i++)
-                    {
-                        const update = this.user.messenger().pendingUpdates[i];
-
-                        if(update.type === 'add')
-                        {
-                            this.packet.writeInt(1);
-                            this.packet.writeInt(update.friend.userId); // if group 0
-                            this.packet.writeString(update.friend.username); // group name
-                            this.packet.writeInt(update.friend.gender === 'M' ? 0 : 1); //group 0
-                            this.packet.writeBoolean(update.friend.online);
-                            this.packet.writeBoolean(false); // inroom / following enabled
-                            this.packet.writeString(update.friend.figure); // group badge
-                            this.packet.writeInt(update.friend.categoryId); // category id
-                            this.packet.writeString(update.friend.motto);
-                            this.packet.writeString('');
-                            this.packet.writeString('');
-                            this.packet.writeBoolean(false); // allow offline messaging
-                            this.packet.writeBoolean(false);
-                            this.packet.writeBoolean(false); // has pocket habbo
-                            this.packet.writeShort(update.friend.relation);
-                        }
-                        else if(update.type === 'update')
-                        {
-                            this.packet.writeInt(0);
-                            this.packet.writeInt(update.friend.userId); // if group 0
-                            this.packet.writeString(update.friend.username); // group name
-                            this.packet.writeInt(update.friend.gender === 'M' ? 0 : 1); //group 0
-                            this.packet.writeBoolean(update.friend.online);
-                            this.packet.writeBoolean(false); // inroom / following enabled
-                            this.packet.writeString(update.friend.figure); // group badge
-                            this.packet.writeInt(update.friend.categoryId); // category id
-                            this.packet.writeString(update.friend.motto);
-                            this.packet.writeString('');
-                            this.packet.writeString('');
-                            this.packet.writeBoolean(false); // allow offline messaging
-                            this.packet.writeBoolean(false);
-                            this.packet.writeBoolean(false); // has pocket habbo
-                            this.packet.writeShort(update.friend.relation);
-                        }
-                        else if(update.type === 'remove')
-                        {
-                            this.packet.writeInt(-1);
-                            this.packet.writeInt(update.friend.userId);
-                        }
-                    }
-                    
-                    this.user.messenger().clearPendingUpdates();
-                }
-                else
-                {
-                    this.packet.writeInt(0);
-                }
-
-                this.packet.prepare();
-
-                return this.packet;
+                else this.packet.writeInt(0);
             }
-            else
+            else this.packet.writeInt(0);
+
+            const totalUpdates = this._updates.length;
+
+            if(!totalUpdates) return this.packet.writeInt(0).prepare();
+            
+            this.packet.writeInt(totalUpdates);
+
+            for(let i = 0; i < totalUpdates; i++)
             {
-                return this.cancel();
+                const update = this._updates[i];
+
+                if(!update) continue;
+
+                this.packet.writeInt(update.type);
+                
+                if(update.type === MessengerUpdateType.REMOVE) this.packet.writeInt(update.friendId);
+
+                else update.friend.parseFriend(this.packet);
             }
+            
+            return this.packet.prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

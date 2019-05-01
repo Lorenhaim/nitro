@@ -1,30 +1,25 @@
-import { Logger } from '../../../common';
-
-import { CurrencyCreditsComposer, CurrencyComposer } from '../../outgoing';
-
+import { CurrencyComposer, CurrencyCreditsComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class UserCurrencyEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_CURRENCY) throw new Error('invalid_header');
-
-            if(this.user.isAuthenticated)
-            {
-                await this.user.client().processComposer(new CurrencyCreditsComposer(this.user));
-                await this.user.client().processComposer(new CurrencyComposer(this.user));
-            }
-
-            return true;
+            this.client.processOutgoing(
+                new CurrencyCreditsComposer(),
+                new CurrencyComposer());
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

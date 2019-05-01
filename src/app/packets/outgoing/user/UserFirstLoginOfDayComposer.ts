@@ -1,45 +1,24 @@
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class UserFirstLoginOfDayComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.FIRST_LOGIN_OF_DAY, _user);
+        super(OutgoingHeader.FIRST_LOGIN_OF_DAY);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
-            {
-                if(this.user.statistics())
-                {
-                    this.packet.writeBoolean(this.user.statistics().isFirstLoginOfDay);
-                }
-                else
-                {
-                    this.packet.writeBoolean(false);
-                }
-
-                this.packet.prepare();
-
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.packet.writeBoolean(this.client.user.details.firstLoginOfDay).prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

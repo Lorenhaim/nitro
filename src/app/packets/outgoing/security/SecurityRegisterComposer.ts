@@ -1,0 +1,36 @@
+import { Outgoing } from '../Outgoing';
+import { OutgoingHeader } from '../OutgoingHeader';
+import { OutgoingPacket } from '../OutgoingPacket';
+
+export class SecurityRegisterComposer extends Outgoing
+{
+    private _success: boolean;
+    private _ticket: string;
+
+    constructor(success: boolean, ticket?: string)
+    {
+        super(OutgoingHeader.SECURITY_REGISTER);
+
+        this._success   = success || false;
+        this._ticket    = ticket || null;
+    }
+
+    public compose(): OutgoingPacket
+    {
+        try
+        {
+            this.packet.writeBoolean(this._success);
+            
+            if(this._ticket) this.packet.writeString(this._ticket);
+
+            this.packet.prepare();
+
+            return this.packet;
+        }
+
+        catch(err)
+        {
+            this.error(err);
+        }
+    }
+}

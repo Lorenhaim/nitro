@@ -1,25 +1,31 @@
-import { Emulator } from '../../../Emulator';
-import { Logger } from '../../../common';
-
+import { NavigatorSettings } from '../../../game';
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class NavigatorSettingsSaveEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.NAVIGATOR_SETTINGS_SAVE) throw new Error('invalid_header');
-
-            if(this.user.isAuthenticated) this.user.info().updateNavigator(this.packet.readInt(), this.packet.readInt(), this.packet.readInt(), this.packet.readInt(), this.packet.readBoolean());
-
-            return true;
+            const navigatorSettings: NavigatorSettings = {
+                x: this.packet.readInt(),
+                y: this.packet.readInt(),
+                width: this.packet.readInt(),
+                height: this.packet.readInt(),
+                searchOpen: this.packet.readBoolean()
+            }
+            
+            this.client.user.details.updateNavigator(navigatorSettings);
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

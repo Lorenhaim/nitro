@@ -1,29 +1,26 @@
-import { Logger } from '../../../../../common';
-
+import { Emulator } from '../../../../../Emulator';
 import { BadgesCurrentComposer } from '../../../../outgoing';
-
 import { Incoming } from '../../../Incoming';
-import { IncomingHeader } from '../../../IncomingHeader';
 
 export class BadgesCurrentEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_BADGES_CURRENT) throw new Error('invalid_header');
+            const user = Emulator.gameManager.userManager.getUserById(this.packet.readInt());
 
-            if(this.user.isAuthenticated)
-            {
-                await this.user.client().processComposer(new BadgesCurrentComposer(this.user, this.packet.readInt()));
-            }
-            
-            return true;
+            if(user) this.client.processOutgoing(new BadgesCurrentComposer(user.id, ...user.inventory.badges.currentBadges));
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

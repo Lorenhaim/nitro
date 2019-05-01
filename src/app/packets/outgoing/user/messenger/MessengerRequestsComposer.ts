@@ -1,58 +1,43 @@
-import { Logger } from '../../../../common';
-import { User } from '../../../../game';
-
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class MessengerRequestsComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.MESSENGER_REQUESTS, _user);
+        super(OutgoingHeader.MESSENGER_REQUESTS);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated && this.user.messenger())
+            const friendRequests = this.client.user.messenger.requests;
+
+            if(!friendRequests) return this.packet.writeInt(0, 0).prepare();
+
+            const totalFriendRequests = friendRequests.length;
+
+            if(!totalFriendRequests) return this.packet.writeInt(0, 0).prepare();
+
+            this.packet.writeInt(totalFriendRequests, totalFriendRequests);
+
+            for(let i = 0; i < totalFriendRequests; i++)
             {
-                const totalFriendRequests = this.user.messenger().friendRequests.length;
+                const request = friendRequests[i];
 
-                if(totalFriendRequests)
-                {
-                    this.packet.writeInt(totalFriendRequests);
-                    this.packet.writeInt(totalFriendRequests);
-    
-                    for(let i = 0; i < totalFriendRequests; i++)
-                    {
-                        const request = this.user.messenger().friendRequests[i];
-    
-                        this.packet.writeInt(request.userId);
-                        this.packet.writeString(request.username);
-                        this.packet.writeString(request.figure);
-                    }
-                }
-                else
-                {
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                }
+                if(!request) continue;
 
-                this.packet.prepare();
-
-                return this.packet;
+                request.parseRequest(this.packet);
             }
-            else
-            {
-                return this.cancel();
-            }
+
+            return this.packet.prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

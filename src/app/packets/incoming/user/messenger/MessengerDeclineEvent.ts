@@ -1,45 +1,37 @@
-import { Logger } from '../../../../common';
-
 import { Incoming } from '../../Incoming';
-import { IncomingHeader } from '../../IncomingHeader';
 
 export class MessengerDeclineEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.MESSENGER_DECLINE) throw new Error('invalid_header');
-
-            if(this.user.isAuthenticated && this.user.messenger())
+            if(this.packet.readBoolean())
             {
-                const deleteAll = this.packet.readBoolean();
-
-                if(deleteAll)
-                {
-                    await this.user.messenger().declineAllRequests();
-                }
-                else
-                {
-                    const totalToDecline = this.packet.readInt();
-
-                    if(totalToDecline)
-                    {
-                        const requestorIds: number[] = [];
-
-                        for(let i = 0; i < totalToDecline; i++) requestorIds.push(this.packet.readInt());
-
-                        if(requestorIds) await this.user.messenger().declineRequest(requestorIds);
-                    }
-                }
+                await this.client.user.messenger.removeAllRequests();
             }
+            else
+            {
+                const totalIds = this.packet.readInt();
 
-            return true;
+                if(!totalIds) return;
+
+                const ids: number[] = [];
+
+                for(let i = 0; i < totalIds; i++) ids.push(this.packet.readInt());
+                    
+                if(ids.length) await this.client.user.messenger.removeRequests(...ids);
+            }
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

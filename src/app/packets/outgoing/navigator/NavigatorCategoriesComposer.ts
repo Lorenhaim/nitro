@@ -1,40 +1,40 @@
 import { Emulator } from '../../../Emulator';
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class NavigatorCategoriesComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.NAVIGATOR_CATEGORIES, _user);
+        super(OutgoingHeader.NAVIGATOR_CATEGORIES);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            if(Emulator.gameManager.navigatorManager.isLoaded)
             {
-                const totalCategories = Emulator.gameManager().navigatorManager().categories.length;
+                const categories        = Emulator.gameManager.navigatorManager.categories;
+                const totalCategories   = categories.length;
 
-                if(totalCategories)
+                if(categories && totalCategories)
                 {
                     this.packet.writeInt(totalCategories);
 
                     for(let i = 0; i < totalCategories; i++)
                     {
-                        const category = Emulator.gameManager().navigatorManager().categories[i];
+                        const category = categories[i];
 
-                        this.packet.writeInt(category.id);
-                        this.packet.writeString(category.name);
-                        this.packet.writeBoolean(true);
-                        this.packet.writeBoolean(false);
-                        this.packet.writeString(category.name);
-                        this.packet.writeString(category.name);
+                        this.packet
+                            .writeInt(category.id)
+                            .writeString(category.name)
+                            .writeBoolean(true) // can access
+                            .writeBoolean(false)
+                            .writeString(null)
+                            .writeString(null)
+                            .writeBoolean(false);
                     }
                 }
                 else
@@ -42,19 +42,15 @@ export class NavigatorCategoriesComposer extends Outgoing
                     this.packet.writeInt(0);
                 }
 
-                this.packet.prepare();
+                return this.packet.prepare();
+            }
 
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.cancel();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

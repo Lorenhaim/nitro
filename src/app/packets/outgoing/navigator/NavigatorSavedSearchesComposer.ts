@@ -1,22 +1,20 @@
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
+import { Emulator } from '../../../Emulator';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class NavigatorSavedSearchesComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.NAVIGATOR_SEARCHES, _user);
+        super(OutgoingHeader.NAVIGATOR_SEARCHES);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            if(Emulator.gameManager.navigatorManager.isLoaded)
             {
                 this.packet.writeInt(4);
                 this.packet.writeInt(1);
@@ -36,19 +34,15 @@ export class NavigatorSavedSearchesComposer extends Outgoing
                 this.packet.writeString('');
                 this.packet.writeString('');
 
-                this.packet.prepare();
+                return this.packet.prepare();
+            }
 
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.cancel();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

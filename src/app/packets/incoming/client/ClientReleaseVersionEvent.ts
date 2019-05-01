@@ -1,29 +1,28 @@
 import { Emulator } from '../../../Emulator';
-import { Logger } from '../../../common';
-
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class ClientReleaseVersionEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.RELEASE_VERSION) throw new Error('invalid_header');
-
-            const releaseVersion = this.packet.readString();
-
-            if(releaseVersion !== Emulator.config().getString('client.releaseVersion', 'PRODUCTION-201611291003-338511768')) throw new Error('invalid_release_version');
-
-            return true;
+            if(Emulator.config.game.login.security.validateProduction)
+            {
+                if(Emulator.config.general.production !== this.packet.readString()) await this.client.dispose();
+            }
         }
 
         catch(err)
         {
-            await this.user.dispose();
+            await this.client.dispose();
 
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get guestOnly(): boolean
+    {
+        return true;
     }
 }

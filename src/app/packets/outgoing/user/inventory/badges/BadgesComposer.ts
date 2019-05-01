@@ -1,51 +1,50 @@
-import { Logger } from '../../../../../common';
-import { User } from '../../../../../game';
-
 import { Outgoing } from '../../../Outgoing';
 import { OutgoingHeader } from '../../../OutgoingHeader';
 import { OutgoingPacket } from '../../../OutgoingPacket';
 
 export class BadgesComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.USER_BADGES, _user);
+        super(OutgoingHeader.USER_BADGES);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            const badges = this.client.user.inventory.badges.badges;
+                
+            if(badges)
             {
-                if(this.user.inventory() && this.user.inventory().badges() && this.user.inventory().badges().isLoaded)
-                {
-                    const totalBadges = this.user.inventory().badges().badges.length;
+                const totalBadges = badges.length;
 
-                    if(totalBadges)
+                if(totalBadges)
+                {
+                    this.packet.writeInt(totalBadges);
+
+                    for(let i = 0; i < totalBadges; i++)
                     {
-                        this.packet.writeInt(totalBadges);
-    
-                        for(let i = 0; i < totalBadges; i++)
-                        {
-                            const badge = this.user.inventory().badges().badges[i];
-    
-                            this.packet.writeInt(badge.id);
-                            this.packet.writeString(badge.badgeCode);
-                        }
-    
-                        const totalCurrentBadges = this.user.inventory().badges().currentBadges.length;
-    
+                        const badge = badges[i];
+
+                        this.packet.writeInt(badge.id).writeString(badge.badgeCode);
+                    }
+
+                    const currentBadges = this.client.user.inventory.badges.currentBadges;
+
+                    if(currentBadges)
+                    {
+                        const totalCurrentBadges = currentBadges.length;
+
                         if(totalCurrentBadges)
                         {
                             this.packet.writeInt(totalCurrentBadges);
-    
+
                             for(let i = 0; i < totalCurrentBadges; i++)
                             {
-                                const badge = this.user.inventory().badges().currentBadges[i];
-    
-                                this.packet.writeInt(badge.slotNumber);
-                                this.packet.writeString(badge.badgeCode);
+                                const badge = currentBadges[i];
+
+                                this.packet.writeInt(badge.slotNumber).writeString(badge.badgeCode);
                             }
                         }
                         else
@@ -56,28 +55,18 @@ export class BadgesComposer extends Outgoing
                     else
                     {
                         this.packet.writeInt(0);
-                        this.packet.writeInt(0);
                     }
-                }
-                else
-                {
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                }
 
-                this.packet.prepare();
+                    return this.packet.prepare();
+                }
+            }
 
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.packet.writeInt(0, 0).prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

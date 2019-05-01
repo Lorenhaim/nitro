@@ -1,113 +1,111 @@
 import { Emulator } from '../../../../Emulator';
-import { Logger } from '../../../../common';
-import { User } from '../../../../game';
-
+import { MessengerRelationshipType } from '../../../../game';
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class MessengerRelationshipsComposer extends Outgoing
 {
-    constructor(_user: User, private readonly _userId: number)
+    private _userId: number;
+
+    constructor(userId: number)
     {
-        super(OutgoingHeader.MESSENGER_RELATIONSHIPS, _user);
+        super(OutgoingHeader.MESSENGER_RELATIONSHIPS);
+
+        if(userId < 0) throw new Error('invalid_user_id');
+
+        this._userId = userId;
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated && this._userId)
+            const user = Emulator.gameManager.userManager.getUserById(this._userId);
+
+            if(user !== null)
             {
-                const userInstance = await Emulator.gameManager().userManager().getUser(this._userId);
+                this.packet.writeInt(this._userId);
+                
+                const relationships = user.messenger.getRelationships();
 
-                if(userInstance)
+                if(relationships !== null)
                 {
-                    this.packet.writeInt(this._userId);
+                    const totalLovers   = relationships.lovers.length;
+                    const totalFriends  = relationships.friends.length;
+                    const totalHaters   = relationships.haters.length;
 
-                    if(userInstance.messenger())
+                    const total = totalLovers + totalFriends + totalHaters;
+
+                    if(total > 0)
                     {
-                        const relationships = await userInstance.messenger().getRelationships();
-
-                        const totalLovers   = relationships.lovers ? relationships.lovers.length : 0;
-                        const totalFriends  = relationships.friends ? relationships.friends.length : 0;
-                        const totalHaters   = relationships.haters ? relationships.haters.length : 0;
-
-                        let total = 0;
-                        if(totalLovers) total++;
-                        if(totalFriends) total++;
-                        if(totalHaters) total++;
-
                         this.packet.writeInt(total);
 
-                        if(totalLovers)
-                        {
-                            this.packet.writeInt(1);
-                            this.packet.writeInt(totalLovers);
+                        this.packet.writeInt(MessengerRelationshipType.LOVER);
 
+                        if(totalLovers > 0)
+                        {
+                            this.packet.writeInt(totalLovers);
+                            
                             for(let i = 0; i < totalLovers; i++)
                             {
                                 const lover = relationships.lovers[i];
 
-                                this.packet.writeInt(lover.userId);
-                                this.packet.writeString(lover.username);
-                                this.packet.writeString(lover.figure);
+                                this.packet.writeInt(lover.id).writeString(lover.username, lover.figure);
                             }
                         }
-
-                        if(totalFriends)
+                        else
                         {
-                            this.packet.writeInt(2);
-                            this.packet.writeInt(totalFriends);
+                            this.packet.writeInt(0);
+                        }
 
+                        this.packet.writeInt(MessengerRelationshipType.FRIENDS);
+
+                        if(totalFriends > 0)
+                        {
+                            this.packet.writeInt(totalFriends);
+                            
                             for(let i = 0; i < totalFriends; i++)
                             {
                                 const friend = relationships.friends[i];
 
-                                this.packet.writeInt(friend.userId);
-                                this.packet.writeString(friend.username);
-                                this.packet.writeString(friend.figure);
+                                this.packet.writeInt(friend.id).writeString(friend.username, friend.figure);
                             }
                         }
-
-                        if(totalHaters)
+                        else
                         {
-                            this.packet.writeInt(3);
-                            this.packet.writeInt(totalHaters);
+                            this.packet.writeInt(0);
+                        }
 
+                        this.packet.writeInt(MessengerRelationshipType.HATERS);
+
+                        if(totalHaters > 0)
+                        {
+                            this.packet.writeInt(totalHaters);
+                            
                             for(let i = 0; i < totalHaters; i++)
                             {
-                                const hater = relationships.friends[i];
+                                const hater = relationships.haters[i];
 
-                                this.packet.writeInt(hater.userId);
-                                this.packet.writeString(hater.username);
-                                this.packet.writeString(hater.figure);
+                                this.packet.writeInt(hater.id).writeString(hater.username, hater.figure);
                             }
                         }
-                    }
-                    else
-                    {
-                        this.packet.writeInt(0);
-                    }
+                        else
+                        {
+                            this.packet.writeInt(0);
+                        }
 
-                    this.packet.prepare();
-
-                    return this.packet;
-                }
-                else
-                {
-                    return this.cancel();
+                        return this.packet.prepare();
+                    }
                 }
             }
-            else
-            {
-                return this.cancel();
-            }
+
+            return this.packet.writeInt(0, 0).prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

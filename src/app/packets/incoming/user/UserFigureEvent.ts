@@ -1,24 +1,25 @@
-import { Logger } from '../../../common';
-
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class UserFigureEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_FIGURE) throw new Error('invalid_header');
+            const gender    = this.packet.readString();
+            const figure    = this.packet.readString();
 
-            if(this.user.isAuthenticated) await this.user.updateFigure(<any> this.packet.readString(), this.packet.readString());
-
-            return true;
+            this.client.user.details.updateFigure(figure, <any> gender);
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

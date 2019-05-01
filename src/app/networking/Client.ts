@@ -1,46 +1,154 @@
-import { Socket } from 'net';
+import { randomBytes } from 'crypto';
+import { Logger } from '../common';
+import { Emulator } from '../Emulator';
+import { User } from '../game';
+import { Incoming, IncomingPacket, Outgoing, OutgoingPacket } from '../packets';
 
-import { Outgoing } from '../packets';
-
-export class Client
+export abstract class Client<T>
 {
-    private _ip: string;
-    private _machineId: string;
+    private _uniqueId: string;
+    protected _socket: T;
+    protected _ip: string;
 
-    public _pingCount: number;
+    protected _logger: Logger;
 
-    constructor(private readonly _socket: Socket)
+    protected _user: User;
+    protected _willDestoryUser: boolean;
+    protected _pingCount: number;
+
+    private _isDisposed: boolean;
+    private _isDisposing: boolean;
+
+    constructor(socket: T, ip: string)
     {
-        this._ip        = _socket.remoteAddress;
-        this._machineId = null;
-        this._pingCount = null;
+        this._uniqueId          = randomBytes(16).toString('hex');
+        this._socket            = socket;
+        this._ip                = ip;
+
+        this._logger            = new Logger(this._uniqueId);
+
+        this._user              = null;
+        this._willDestoryUser   = true;
+        this._pingCount         = 0;
     }
 
-    public write(buffer: Buffer): void
+    public async dispose(): Promise<void>
     {
-        this._socket.write(buffer);
+        if(!this._isDisposed && !this._isDisposing)
+        {
+            this._isDisposing = true;
+
+            await this.onDispose();
+
+            this._isDisposed    = true;
+            this._isDisposing   = false;
+        }
     }
 
-    public async processComposer(composer: any): Promise<boolean>
+    public setUser(user: User): void
     {
-        if(!(composer instanceof Outgoing)) return Promise.reject(new Error('invalid_composer'));
-
-        const result = await composer.compose();
-
-        if(!result.isPrepared) return Promise.resolve(true);
-
-        this.write(result.buffer);
-        console.log(`Sent -> ${ composer.header }`);
-
-        return Promise.resolve(true);
+        if(user instanceof User) this._user = user;
     }
 
-    public dispose()
+    public async processIncoming(...incoming: IncomingPacket[]): Promise<void>
     {
-        this._socket.destroy();
+        const packets = [ ...incoming ];
+
+        if(packets)
+        {
+            const totalPackets = packets.length;
+
+            if(totalPackets)
+            {
+                for(let i = 0; i < totalPackets; i++)
+                {
+                    const packet = packets[i];
+
+                    const handler: any = Emulator.networkManager.packetManager().getHandler(packet.header);
+
+                    if(handler)
+                    {
+                        const instance: Incoming = new handler();
+                        
+                        if(instance instanceof Incoming)
+                        {
+                            this.setIncomingClient(instance);
+
+                            if(instance.authenticationRequired && !this.isAuthenticated) return;
+                            
+                            instance.setPacket(packet);
+
+                            if(Emulator.config.logging.enabled && Emulator.config.logging.packets.incoming) this.logger.log(`IncomingEvent [${ packet.header }] => ${ instance.constructor.name }`);
+
+                            await instance.process();
+                        }
+                    }
+                    else
+                    {
+                        if(Emulator.config.logging.enabled && Emulator.config.logging.packets.unknown)  this.logger.warn(`IncomingEvent [${ packet.header }] => Unknown`);
+                    }
+                }
+            }
+        }
     }
 
-    public socket(): Socket
+    public processOutgoing(...outgoing: Outgoing[]): void
+    {
+        const composers = [ ...outgoing ];
+
+        if(!composers) return;
+
+        const totalComposers = composers.length;
+
+        if(!totalComposers) return;
+        
+        for(let i = 0; i < totalComposers; i++)
+        {
+            const composer = composers[i];
+
+            if(composer instanceof Outgoing)
+            {
+                this.setOutgoingClient(composer);
+
+                const packet = composer.compose();
+
+                if(packet instanceof OutgoingPacket)
+                {
+                    if(composer.isCancelled) continue;
+                    
+                    if(packet.isPrepared && !packet.isCancelled)
+                    {
+                        this.write(packet.buffer);
+
+                        if(Emulator.config.logging.enabled && Emulator.config.logging.packets.outgoing) this.logger.log(`OutgoingComposer [${ composer.header }] => ${ composer.constructor.name }`);
+                    }
+                    else
+                    {
+                        if(Emulator.config.logging.enabled && Emulator.config.logging.packets.unprepared) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Packet unprepared`);
+                    }
+                }
+                else
+                {
+                    if(Emulator.config.logging.enabled) this.logger.error(`Invalid Composer => ${ composer.constructor.name }`);
+                }
+            }
+        }
+    }
+
+    protected abstract setIncomingClient(incoming: Incoming): void;
+
+    protected abstract setOutgoingClient(outgoing: Outgoing): void;
+
+    protected abstract write(buffer: Buffer): void;
+
+    protected abstract async onDispose(): Promise<void>;
+
+    public get uniqueId(): string
+    {
+        return this._uniqueId;
+    }
+
+    public get socket(): T
     {
         return this._socket;
     }
@@ -50,13 +158,38 @@ export class Client
         return this._ip;
     }
 
-    public get machineId(): string
+    public get logger(): Logger
     {
-        return this._machineId;
+        return this.isAuthenticated ? this._user.logger : this._logger;
     }
 
-    public set machineId(machineId: string)
+    public get user(): User
     {
-        this._machineId = machineId;
+        return this._user;
+    }
+
+    public get willDestroyUser(): boolean
+    {
+        return this._willDestoryUser;
+    }
+    
+    public set willDestroyUser(value: boolean)
+    {
+        this._willDestoryUser = value;
+    }
+
+    public get isAuthenticated(): boolean
+    {
+        return this._user !== null;
+    }
+
+    public get pingCount(): number
+    {
+        return this._pingCount;
+    }
+
+    public set pingCount(count: number)
+    {
+        this._pingCount = count;
     }
 }

@@ -1,22 +1,27 @@
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class SecurityTicketComposer extends Outgoing
 {
-    constructor(_user: User)
+    private _success: boolean;
+    private _ticket: string;
+
+    constructor(success: boolean, ticket?: string)
     {
-        super(OutgoingHeader.SECURITY_TICKET_OK, _user);
+        super(OutgoingHeader.SECURITY_TICKET);
+
+        this._success   = success || false;
+        this._ticket    = ticket || null;
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            this.packet.writeBoolean(this.user.isAuthenticated)
+            this.packet.writeBoolean(this._success);
+            
+            if(this._ticket) this.packet.writeString(this._ticket);
 
             this.packet.prepare();
 
@@ -25,7 +30,7 @@ export class SecurityTicketComposer extends Outgoing
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

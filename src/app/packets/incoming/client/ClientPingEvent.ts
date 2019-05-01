@@ -1,33 +1,29 @@
-import { Logger } from '../../../common';
-
 import { ClientPongComposer } from '../../outgoing';
-
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class ClientPingEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.CLIENT_PING) throw new Error('invalid_header');
+            const pingCount = this.packet.readInt();
 
-            if(this.user.isAuthenticated)
+            if(pingCount === this.client.pingCount)
             {
-                const pingCount = this.packet.readInt();
+                this.client.processOutgoing(new ClientPongComposer());
 
-                this.user.client()._pingCount = this.user.client()._pingCount === null ? 0 : this.user.client()._pingCount + 1;
+                this.client.pingCount++;
 
-                await this.user.client().processComposer(new ClientPongComposer(this.user));
+                return;
             }
-
-            return true;
+            
+            //await this.client.dispose();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

@@ -1,39 +1,28 @@
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class UserHomeRoomComposer extends Outgoing
 {
-    constructor(_user: User)
+    private _update: boolean;
+    
+    constructor(update: boolean = false)
     {
-        super(OutgoingHeader.USER_HOME_ROOM, _user);
+        super(OutgoingHeader.USER_HOME_ROOM);
+
+        this._update = update || false;
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated && this.user.info())
-            {
-                this.packet.writeInt(this.user.info().homeRoom || 0);
-                this.packet.writeInt(0);
-
-                this.packet.prepare();
-
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.packet.writeInt(this.client.user.details.homeRoom, this._update ? this.client.user.details.homeRoom : 0).prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

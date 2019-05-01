@@ -1,43 +1,50 @@
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
+import { Emulator } from '../../../Emulator';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class NavigatorSettingsComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.NAVIGATOR_SETTINGS, _user);
+        super(OutgoingHeader.NAVIGATOR_SETTINGS);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            if(Emulator.gameManager.navigatorManager.isLoaded)
             {
-                this.packet.writeInt(this.user.info().navigatorX);
-                this.packet.writeInt(this.user.info().navigatorY);
-                this.packet.writeInt(this.user.info().navigatorWidth);
-                this.packet.writeInt(this.user.info().navigatorHeight);
-                this.packet.writeBoolean(this.user.info().navigatorSearchOpen);
-                this.packet.writeInt(0); // ??
+                let settings = {
+                    x: 100,
+                    y: 100,
+                    width: 435,
+                    height: 535,
+                    searchOpen: false
+                };
 
-                this.packet.prepare();
+                if(this.client.user.details !== null)
+                {
+                    settings = { ...settings, ...this.client.user.details.navigatorSettings };
+                }
 
-                return this.packet;
+                return this.packet
+                    .writeInt(settings.x)
+                    .writeInt(settings.y)
+                    .writeInt(settings.width)
+                    .writeInt(settings.height)
+                    .writeBoolean(settings.searchOpen)
+                    .writeInt(0)
+                    .prepare();
             }
-            else
-            {
-                return this.cancel();
-            }
+
+            return this.cancel();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

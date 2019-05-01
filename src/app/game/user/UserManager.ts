@@ -1,186 +1,26 @@
-import { getManager, Like, Not, In } from 'typeorm';
-
-import { Logger, UserEntity } from '../../common';
-
+import { Manager } from '../../common/interfaces/Manager';
+import { UserDao, UserEntity } from '../../database';
+import { Outgoing } from '../../packets';
 import { User } from './User';
 
-export class UserManager
+export class UserManager extends Manager
 {
     private _users: User[];
 
     constructor()
     {
+        super('UserManager');
+
         this._users = [];
     }
 
-    public async init(): Promise<void> {}
+    protected async onInit(): Promise<void> {}
 
-    public async getUser(userId: number, username?: string): Promise<User>
-    {
-        if(!userId && !username) return null;
-
-        let result: User = null;
-
-        const totalUsers = this._users.length;
-
-        for(let i = 0; i < totalUsers; i++)
-        {
-            const user = this._users[i];
-
-            if(user.userId === userId || user.username === username)
-            {
-                result = user;
-
-                break;
-            }
-        }
-
-        if(result) return Promise.resolve(result);
-
-        if(!userId && username)
-        {            
-            const findUser = await getManager().findOne(UserEntity, {
-                select: ['id'],
-                where: { username }
-            });
-
-            if(findUser) userId = findUser.id;
-        }
-
-        if(userId)
-        {
-            const user = new User(userId, null);
-        
-            await user.loadUser();
-
-            result = user;
-        }
-        
-        return Promise.resolve(result);
-    }
-
-    public async getOnlineUser(userId: number, username?: string): Promise<User>
-    {
-        if(!userId && !username) return null;
-
-        let result: User = null;
-
-        const totalUsers = this._users.length;
-
-        for(let i = 0; i < totalUsers; i++)
-        {
-            const user = this._users[i];
-
-            if(user.userId === userId || user.username === username)
-            {
-                result = user;
-
-                break;
-            }
-        }
-        
-        return Promise.resolve(result);
-    }
-
-    public async searchUsers(username: string): Promise<User[]>
-    {
-        if(!username) return null;
-
-        username = username.toLowerCase();
-
-        let results: User[]     = [];
-        let userIds: number[]   = [0];
-
-        const totalUsers        = this._users.length;
-
-        for(let i = 0; i < totalUsers; i++)
-        {
-            const user = this._users[i];
-
-            if(username.startsWith(user.username.toLowerCase()))
-            {
-                results.push(user);
-                userIds.push(user.userId);
-            }
-        }
-
-        if(results.length < 50)
-        {
-            const dbResults = await getManager().find(UserEntity, {
-                select: ['id'],
-                where: { id: Not(In(userIds)), username: Like(`${ username }%`) },
-                take: 50 - results.length
-            });
-
-            const totalDbResults = dbResults.length;
-
-            if(totalDbResults)
-            {
-                for(let i = 0; i < totalDbResults; i++)
-                {
-                    const user = dbResults[i];
-
-                    const newInstance = new User(user.id, null);
-
-                    await newInstance.loadUser();
-
-                    results.push(newInstance);
-                }
-            }
-        }
-        
-        return Promise.resolve(results);
-    }
-
-    public async addUser(user: User): Promise<boolean>
-    {
-        if(!(user instanceof User) || !user.client()) return Promise.reject(new Error('invalid_user'));
-        
-        const totalUsers        = this._users.length;
-
-        for(let i = 0; i < totalUsers; i++)
-        {
-            const onlineUser = this._users[i];
-
-            if(onlineUser.userId === user.userId)
-            {
-                await onlineUser.dispose();
-
-                this._users.splice(i, 1);
-
-                break;
-            }
-        }
-
-        this._users.push(user);
-        
-        return Promise.resolve(true);
-    }
-
-    public async removeUser(userId: number): Promise<boolean>
+    protected async onDispose(): Promise<void>
     {
         const totalUsers = this._users.length;
 
-        for(let i = 0; i < totalUsers; i++)
-        {
-            const user = this._users[i];
-
-            if(user.userId === userId)
-            {
-                await user.dispose();
-
-                this._users.splice(i, 1);
-
-                break;
-            }
-        }
-
-        return Promise.resolve(true);
-    }
-
-    public async dispose(): Promise<boolean>
-    {
-        const totalUsers = this._users.length;
+        if(!totalUsers) return;
 
         for(let i = 0; i < totalUsers; i++)
         {
@@ -190,11 +30,149 @@ export class UserManager
 
             this._users.splice(i, 1);
         }
+    }
 
-        if(totalUsers > 0) return Promise.reject(new Error('user_manager_dispose_error'));
+    public getUserById(id: number): User
+    {
+        if(!id) return null;
 
-        Logger.writeLine(`UserManager -> Disposed`);
+        const totalUsers = this._users.length;
 
-        return Promise.resolve(true);
+        if(!totalUsers) return null;
+        
+        for(let i = 0; i < totalUsers; i++)
+        {
+            const user = this._users[i];
+
+            if(!user) continue;
+
+            if(user.id === id) return user;
+        }
+
+        return null;
+    }
+
+    public getUserByUsername(username: string): User
+    {
+        username = username.toLocaleLowerCase();
+
+        if(!username) return null;
+
+        const totalUsers = this._users.length;
+
+        if(!totalUsers) return null;
+        
+        for(let i = 0; i < totalUsers; i++)
+        {
+            const user = this._users[i];
+
+            if(!user) continue;
+
+            if(user.details.username.toLocaleLowerCase() === username) return user;
+        }
+
+        return null;
+    }
+
+    public async getOfflineUserById(id: number): Promise<User>
+    {
+        if(!id) return null;
+
+        const activeUser = this.getUserById(id);
+
+        if(activeUser) return activeUser;
+
+        const entity = await UserDao.getUserById(id);
+
+        if(!entity) return null;
+
+        const newUser = new User(entity);
+
+        if(!newUser) return null;
+
+        return newUser;
+    }
+
+    public async getOfflineUserByUsername(username: string): Promise<User>
+    {
+        if(!username) return null;
+
+        const activeUser = this.getUserByUsername(username);
+
+        if(activeUser) return activeUser;
+
+        const entity = await UserDao.getUserByUsername(username);
+
+        if(!entity) return null;
+
+        const newUser = new User(entity);
+
+        if(!newUser) return null;
+
+        return newUser;
+    }
+
+    public processOutgoing(...composers: Outgoing[]): void
+    {
+        const totalUsers = this._users.length;
+
+        if(!totalUsers) return;
+        
+        for(let i = 0; i < totalUsers; i++)
+        {
+            const user = this._users[i];
+
+            if(!user || !user.connections) continue;
+            
+            user.connections.processOutgoing(...composers);
+        }
+    }
+
+    public async searchUsersByUsername(username: string): Promise<UserEntity[]>
+    {
+        if(!username) return null;
+
+        const results = await UserDao.searchUsersByUsername(username);
+
+        if(!results || !results.length) return null;
+
+        return results;
+    }
+
+    public async addUser(user: User): Promise<void>
+    {
+        if(!(user instanceof User)) return;
+
+        await this.removeUser(user.id);
+        
+        this._users.push(user);
+    }
+
+    public async removeUser(id: number): Promise<void>
+    {
+        const totalUsers = this._users.length;
+
+        if(!totalUsers) return;
+
+        for(let i = 0; i < totalUsers; i++)
+        {
+            const user = this._users[i];
+
+            if(!user) continue;
+
+            if(user.id === id)
+            {
+                await user.dispose();
+
+                this._users.splice(i, 1);
+
+                return;
+            }
+        }
+    }
+
+    public get users(): User[]
+    {
+        return this._users;
     }
 }

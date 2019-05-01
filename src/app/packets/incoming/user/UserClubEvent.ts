@@ -1,26 +1,23 @@
-import { Logger } from '../../../common';
-
 import { UserClubComposer } from '../../outgoing';
-
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class UserClubEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_CLUB) throw new Error('invalid_header');
-
-            if(this.user.isAuthenticated) await this.user.client().processComposer(new UserClubComposer(this.user));
-
-            return true;
+            this.client.processOutgoing(new UserClubComposer());
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

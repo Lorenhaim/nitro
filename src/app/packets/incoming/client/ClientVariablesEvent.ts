@@ -1,29 +1,32 @@
 import { Emulator } from '../../../Emulator';
-import { Logger } from '../../../common';
-
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class ClientVariablesEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.CLIENT_VARIABLES) throw new Error('invalid_header');
-
             const unknown               = this.packet.readInt();
             const clientBasePath        = this.packet.readString();
             const clientVariablesPath   = this.packet.readString();
 
-            return true;
+            if(Emulator.config.game.login.security.validateVariables)
+            {
+                if(Emulator.config.client.url.swfBase !== clientBasePath || Emulator.config.client.url.variables !== clientVariablesPath) await this.client.dispose();
+            }
         }
 
         catch(err)
         {
-            await this.user.dispose();
+            await this.client.dispose();
 
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get guestOnly(): boolean
+    {
+        return true;
     }
 }

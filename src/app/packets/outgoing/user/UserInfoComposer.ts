@@ -1,51 +1,33 @@
-import { Logger, TimeHelper } from '../../../common';
-import { User } from '../../../game';
-
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class UserInfoComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.USER_INFO, _user);
+        super(OutgoingHeader.USER_INFO);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated && this.user.info())
-            {
-                this.packet.writeInt(this.user.userId);
-                this.packet.writeString(this.user.username);
-                this.packet.writeString(this.user.figure);
-                this.packet.writeString(this.user.gender);
-                this.packet.writeString(this.user.motto);
-                this.packet.writeString(this.user.username);
-                this.packet.writeBoolean(false);
-                this.packet.writeInt(this.user.info().respectsReceived);
-                this.packet.writeInt(this.user.info().respectsRemaining);
-                this.packet.writeInt(this.user.info().respectsPetRemaining);
-                this.packet.writeBoolean(false);
-                this.packet.writeString(TimeHelper.formatDate(this.user.timestampCreated, 'YYYY-MM-DD HH:mm:ss'));
-                this.packet.writeBoolean(false); // name change
-                this.packet.writeBoolean(false);
-
-                this.packet.prepare();
-
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.packet
+                .writeInt(this.client.user.id)
+                .writeString(this.client.user.details.username, this.client.user.details.figure, this.client.user.details.gender.toUpperCase(), this.client.user.details.motto, this.client.user.details.username)
+                .writeBoolean(false)
+                .writeInt(this.client.user.details.respectsReceived, this.client.user.details.respectsRemaining, this.client.user.details.respectsPetRemaining)
+                .writeBoolean(false)
+                //.writeString(TimeHelper.formatDate(this.client.user.details.timestampCreated, 'YYYY-MM-DD HH:mm:ss'))
+                .writeString('01-01-1970 00:00:00')
+                .writeBoolean(false, false) // first name change
+                .prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

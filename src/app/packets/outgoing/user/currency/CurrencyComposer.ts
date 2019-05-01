@@ -1,42 +1,65 @@
-import { Logger } from '../../../../common';
-import { User } from '../../../../game';
-
+import { Currency } from '../../../../game';
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class CurrencyComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.USER_CURRENCY, _user);
+        super(OutgoingHeader.USER_CURRENCY);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(!this.user.isAuthenticated)
+            const currenciesToSend: Currency[] = [];
+
+            if(this.client.user.inventory.currencies !== null)
             {
-                this.packet.writeInt(1); // total point types to send
-            
-                //foreach
-                this.packet.writeInt(1); // point type
-                this.packet.writeInt(5); // point amount
+                const currencies = this.client.user.inventory.currencies.currencies;
 
-                this.packet.prepare();
+                if(currencies !== null)
+                {
+                    const totalCurrencies = currencies.length;
 
-                return this.packet;
+                    if(totalCurrencies > 0)
+                    {
+                        for(let i = 0; i < totalCurrencies; i++)
+                        {
+                            const currency = currencies[i];
+
+                            if(currency.type !== -1) currenciesToSend.push(currency);
+                        }
+                    }
+                }
+            }
+
+            const totalToSend = currenciesToSend.length;
+
+            if(totalToSend > 0)
+            {
+                this.packet.writeInt(totalToSend);
+
+                for(let i = 0; i < totalToSend; i++)
+                {
+                    const currency = currenciesToSend[i];
+
+                    this.packet.writeInt(currency.type, currency.amount);
+                }
+
+                return this.packet.prepare();
             }
             else
             {
-                return this.cancel();
+                return this.packet.writeInt(0).prepare();
             }
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

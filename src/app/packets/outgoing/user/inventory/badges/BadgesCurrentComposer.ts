@@ -1,75 +1,51 @@
-import { Emulator } from '../../../../../Emulator';
-import { Logger } from '../../../../../common';
-import { User } from '../../../../../game';
-
+import { Badge } from '../../../../../game';
 import { Outgoing } from '../../../Outgoing';
 import { OutgoingHeader } from '../../../OutgoingHeader';
 import { OutgoingPacket } from '../../../OutgoingPacket';
 
 export class BadgesCurrentComposer extends Outgoing
 {
-    constructor(_user: User, private readonly _userId: number)
+    private _userId: number;
+    private _badges: Badge[]
+
+    constructor(userId: number, ...badges: Badge[])
     {
-        super(OutgoingHeader.USER_BADGES_CURRENT, _user);
+        super(OutgoingHeader.USER_BADGES_CURRENT);
+
+        if(!userId) throw new Error('invalid_current_badges');
+
+        this._userId    = userId;
+        this._badges    = [ ...badges ];
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            this.packet.writeInt(this._userId);
+
+            const totalCurrentBadges = this._badges.length;
+
+            if(totalCurrentBadges)
             {
-                const userInstance = await Emulator.gameManager().userManager().getUser(this._userId);
+                this.packet.writeInt(totalCurrentBadges);
 
-                if(userInstance)
+                for(let i = 0; i < totalCurrentBadges; i++)
                 {
-                    this.packet.writeInt(this._userId);
+                    const badge = this._badges[i];
 
-                    if(userInstance.inventory() && userInstance.inventory().badges())
-                    {
-                        const currentBadges = await userInstance.inventory().badges().getCurrentBadges();
-                        const totalBadges   = currentBadges.length;
-
-                        if(currentBadges && totalBadges)
-                        {
-                            this.packet.writeInt(totalBadges);
-
-                            for(let i = 0; i < totalBadges; i++)
-                            {
-                                const badge = currentBadges[i];
-
-                                this.packet.writeInt(badge.slotNumber);
-                                this.packet.writeString(badge.badgeCode);
-                            }
-                        }
-                        else
-                        {
-                            this.packet.writeInt(0);
-                        }
-                    }
-                    else
-                    {
-                        this.packet.writeInt(0);
-                    }
-
-                    this.packet.prepare();
-
-                    return this.packet;
+                    this.packet.writeInt(badge.slotNumber).writeString(badge.badgeCode);
                 }
-                else
-                {
-                    return this.cancel();
-                }
+
+                return this.packet.prepare();
             }
-            else
-            {
-                return this.cancel();
-            }
+            
+            return this.packet.writeInt(0).prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

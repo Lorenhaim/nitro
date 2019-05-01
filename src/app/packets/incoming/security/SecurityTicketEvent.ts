@@ -1,55 +1,129 @@
 import { Emulator } from '../../../Emulator';
-import { Logger } from '../../../common';
-
-import { SecurityTicketComposer, UserHomeRoomComposer, UserRightsComposer, ModToolComposer, EffectsComposer, ClothingOutfitsComposer, UserPermissionsComposer, UserFirstLoginOfDayComposer, UserAchievementScoreComposer } from '../../outgoing';
-
+import { PermissionList } from '../../../game';
+import { GameClient, SocketClient } from '../../../networking';
+import { CfhTopicsComposer, ClothingComposer, EffectsComposer, ModToolComposer, Outgoing, SecurityTicketComposer, SecurityUnknown2Composer, SecurityUnknownComposer, SecurtiyDebugComposer, UserAchievementScoreComposer, UserBuildersClubComposer, UserClubComposer, UserFavoriteRoomCountComposer, UserFirstLoginOfDayComposer, UserHomeRoomComposer, UserItemsRefreshComposer, UserPermissionsComposer, UserRightsComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class SecurityTicketEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.SECURITY_TICKET) throw new Error('invalid_header');
-
-            if(!this.user.isAuthenticated)
+            if(this.client instanceof GameClient)
             {
-                await this.user.checkTicket(this.packet.readString());
+                const userId = await Emulator.gameManager.securityManager.ticketManager.checkGameTicket(this.packet.readString(), this.client.ip);
 
-                if(this.user.isAuthenticated)
+                if(!userId) return;
+                
+                const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
+
+                if(!user) return;
+
+                if(user.isLoaded)
                 {
-                    await this.user.loadUser();
+                    await user.connections.setGameClient(this.client);
 
-                    if(this.user.isLoaded)
+                    this.client.setUser(user);
+                }
+                else
+                {
+                    await user.init();
+
+                    await Emulator.gameManager.userManager.addUser(user);
+
+                    await user.connections.setGameClient(this.client);
+
+                    this.client.setUser(user);
+                }
+                
+                if(this.client.user)
+                {
+                    if(!this.client.user.details.online) await this.client.user.details.updateOnline(true);
+
+                    const pendingComposers: Outgoing[] = [];
+
+                    pendingComposers.push(
+                        new SecurityTicketComposer(true),
+                        new UserHomeRoomComposer(),
+                        new UserRightsComposer(),
+                        new UserPermissionsComposer(),
+                        new UserFirstLoginOfDayComposer(),
+                        new UserAchievementScoreComposer(),
+                        new UserBuildersClubComposer(),
+                        new UserItemsRefreshComposer(),
+                        new EffectsComposer(),
+                        new ClothingComposer(),
+                        new SecurityUnknownComposer(),
+                        new SecurityUnknown2Composer(),
+                        new UserClubComposer(),
+                        new CfhTopicsComposer(),
+                        new UserFavoriteRoomCountComposer()
+                    );
+                    
+                    if(this.client.user.rank && this.client.user.rank.permission)
                     {
-                        await Emulator.gameManager().userManager().addUser(this.user);
+                        if(this.client.user.rank.permission.hasPermission(PermissionList.MOD_TOOL)) pendingComposers.push(new ModToolComposer());
 
-                        await this.user.setOnline(true);
-
-                        await this.user.client().processComposer(new SecurityTicketComposer(this.user));
-                        await this.user.client().processComposer(new UserHomeRoomComposer(this.user));
-                        await this.user.client().processComposer(new UserRightsComposer(this.user));
-                        await this.user.client().processComposer(new UserPermissionsComposer(this.user));
-                        await this.user.client().processComposer(new EffectsComposer(this.user));
-                        await this.user.client().processComposer(new ClothingOutfitsComposer(this.user));
-                        await this.user.client().processComposer(new UserFirstLoginOfDayComposer(this.user));
-                        await this.user.client().processComposer(new UserAchievementScoreComposer(this.user));
-
-                        await this.user.client().processComposer(new ModToolComposer(this.user));
+                        pendingComposers.push(new SecurtiyDebugComposer(true));
                     }
+
+                    if(pendingComposers.length) this.client.processOutgoing(...pendingComposers);
+
+                    return;
                 }
             }
 
-            return true;
+            else if(this.client instanceof SocketClient)
+            {
+                if(Emulator.config.captcha.enabled) await Emulator.gameManager.securityManager.authenticationManager.validateCaptcha(this.packet.readString(), this.client.ip);
+                    
+                const userId = await Emulator.gameManager.securityManager.ticketManager.checkWebTicket(this.packet.readString(), this.client.ip);
+
+                if(!userId) return;
+                
+                const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
+
+                if(!user) return;
+
+                if(user.isLoaded)
+                {
+                    await user.connections.setSocketClient(this.client);
+
+                    this.client.setUser(user);
+                }
+                else
+                {
+                    await user.init();
+
+                    await Emulator.gameManager.userManager.addUser(user);
+
+                    await user.connections.setSocketClient(this.client);
+
+                    this.client.setUser(user);
+                }
+                
+                if(this.client.user)
+                {
+                    if(!this.client.user.details.online) await this.client.user.details.updateOnline(true);
+
+                    this.client.processOutgoing(new SecurityTicketComposer(true));
+
+                    return;
+                }
+            }
         }
 
         catch(err)
         {
-            await this.user.dispose();
+            this.client.processOutgoing(new SecurityTicketComposer(false));
 
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            if(this.client instanceof GameClient) await this.client.dispose();
         }
+    }
+
+    public get guestOnly(): boolean
+    {
+        return true;
     }
 }

@@ -1,48 +1,46 @@
 import { Connection, createConnection } from 'typeorm';
-import { Logger, Config } from './common';
-import { GameManager } from './game';
-import { GameServer } from './networking';
+import { ConfigOptions, Logger } from './common';
+import { Config } from './Config';
+import { GameManager, GameScheduler } from './game';
+import { NetworkManager } from './networking';
 
 export class Emulator
 {
     private static _database: Connection;
-    private static _config: Config;
+
+    private static _logger: Logger = new Logger('Emulator');
+    
     private static _gameManager: GameManager;
-    private static _gameServer: GameServer;
+    private static _gameScheduler: GameScheduler;
+    private static _networkManager: NetworkManager;
 
     public static async bootstrap()
     {
         try
         {
-            Logger.writeLine(`Starting HabboAPI`);
+            const timeStarted = Date.now();
 
-            Emulator._database  = await createConnection();
-            Emulator._config    = new Config();
+            Emulator._logger.log(`Starting HabboAPI`);
 
-            await Emulator.config().loadConfig();
+            Emulator._database      = await createConnection();
+            Emulator._gameManager   = new GameManager();
+            Emulator._gameScheduler = new GameScheduler();
 
-            Emulator._gameManager = new GameManager();
+            await Emulator._gameManager.cleanup();
+            await Emulator._gameManager.init();
+            Emulator._gameScheduler.init();
+            
+            Emulator._networkManager = new NetworkManager();
 
-            await Emulator.gameManager().cleanup();
-            await Emulator.gameManager().init();
+            await Emulator._networkManager.init();
+            await Emulator._networkManager.listen();
 
-            if(Emulator.gameManager().isReady)
-            {
-                Emulator._gameServer = new GameServer();
-
-                await Emulator.gameServer().init();
-
-                await Emulator.gameServer().listen(Emulator.config().getString('emulator.ip', '0.0.0.0'), Emulator.config().getNumber('emulator.port', 1242));
-            }
-            else
-            {
-                throw new Error('something went wrong');
-            }
+            Emulator.logger().log(`Started in ${ Date.now() - timeStarted }ms`);
         }
 
         catch(err)
         {
-            Logger.writeError(err.message || err);
+            Emulator._logger.error(err.message || err, err.stack);
 
             await Emulator.dispose();
         }
@@ -52,17 +50,30 @@ export class Emulator
     {
         try
         {
-            Logger.writeLine(`Disposing HabboAPI`);
-
+            if(Emulator._networkManager) await Emulator._networkManager.dispose();
             if(Emulator._gameManager) await Emulator._gameManager.dispose();
-            if(Emulator._gameServer && Emulator) Emulator.gameServer().socketServer().close();
+            if(Emulator._gameScheduler) await Emulator._gameScheduler.dispose();
 
-            Logger.writeLine(`Emulator -> Disposed`);
+            if(Emulator._database.isConnected) Emulator._database.close();
         }
 
         catch(err)
         {
-            Logger.writeError(err.message || err);
+            Emulator._logger.error(err.message || err, err.stack);
+        }
+    }
+
+    public static async reboot()
+    {
+        try
+        {
+            this.dispose();
+            this.bootstrap();
+        }
+
+        catch(err)
+        {
+            Emulator._logger.error(err.message || err, err.stack);
         }
     }
 
@@ -71,18 +82,28 @@ export class Emulator
         return Emulator._database;
     }
 
-    public static config(): Config
+    public static logger(): Logger
     {
-        return Emulator._config;
+        return Emulator._logger;
     }
 
-    public static gameManager(): GameManager
+    public static get config(): ConfigOptions
+    {
+        return Config;
+    }
+
+    public static get gameManager(): GameManager
     {
         return Emulator._gameManager;
     }
 
-    public static gameServer(): GameServer
+    public static get gameScheduler(): GameScheduler
     {
-        return Emulator._gameServer;
+        return Emulator._gameScheduler;
+    }
+
+    public static get networkManager(): NetworkManager
+    {
+        return Emulator._networkManager;
     }
 }

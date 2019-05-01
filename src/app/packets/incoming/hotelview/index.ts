@@ -1,3 +1,3 @@
 export * from './HotelViewCampaignsEvent';
+export * from './HotelViewEvent';
 export * from './HotelViewNewsEvent';
-export * from './HotelViewVisitEvent';

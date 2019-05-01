@@ -1,32 +1,50 @@
+import { UserEntity } from '../../../../database';
 import { Emulator } from '../../../../Emulator';
-import { Logger } from '../../../../common';
-
 import { MessengerSearchComposer } from '../../../outgoing';
-
 import { Incoming } from '../../Incoming';
-import { IncomingHeader } from '../../IncomingHeader';
 
 export class MessengerSearchEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.MESSENGER_SEARCH) throw new Error('invalid_header');
+            const friendResults: UserEntity[]   = [];
+            const otherResults: UserEntity[]    = [];
 
-            if(this.user.isAuthenticated && this.user.messenger())
+            const results = await Emulator.gameManager.userManager.searchUsersByUsername(this.packet.readString());
+
+            if(results)
             {
-                const results = await Emulator.gameManager().userManager().searchUsers(this.packet.readString());
+                const totalResults = results.length;
 
-                if(results) await this.user.client().processComposer(new MessengerSearchComposer(this.user, results));
+                if(totalResults)
+                {
+                    for(let i = 0; i < totalResults; i++)
+                    {
+                        const result = results[i];
+
+                        if(!result) continue;
+
+                        if(result.id === this.client.user.id) continue;
+
+                        if(this.client.user.messenger.hasFriend(result.id)) friendResults.push(result);
+                        else otherResults.push(result);
+                    }
+                }
             }
 
-            return true;
+            this.client.processOutgoing(new MessengerSearchComposer(friendResults, otherResults));
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

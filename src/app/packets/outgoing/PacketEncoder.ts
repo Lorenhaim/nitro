@@ -1,6 +1,6 @@
 export class PacketEncoder
 {
-    public static encodeInt(number: number = 0): [number, number, number, number]
+    public static encodeInt(number: number = 0): number[]
     {
         return [
             Math.floor(+number / 16777216),
@@ -10,7 +10,7 @@ export class PacketEncoder
         ];
     }
 
-    public static encodeShort(number: number = 0): [number, number]
+    public static encodeShort(number: number = 0): number[]
     {
         return [
             Math.floor(+number / 256),
@@ -18,17 +18,15 @@ export class PacketEncoder
         ];
     }
 
-    public static encodeString(string: string = ""): any[]
+    public static encodeString(string: string = ''): number[]
     {
-        if(string.length === 0) return [];
+        let bytes: number[] = [];
 
-        let bytes = [];
-
-        for(let i = 0; i < string.length; ++i)
+        if(string)
         {
-            let byte = string.charCodeAt(i);
+            const stringLength = string.length;
 
-            bytes = bytes.concat([byte]);
+            if(stringLength) for(let i = 0; i < stringLength; i++) bytes.push(string.charCodeAt(i));
         }
 
         return bytes;

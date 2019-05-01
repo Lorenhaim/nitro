@@ -1,37 +1,36 @@
 import { Emulator } from '../../../Emulator';
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class NavigatorEventCategoriesComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.NAVIGATOR_EVENT_CATEGORIES, _user);
+        super(OutgoingHeader.NAVIGATOR_EVENT_CATEGORIES);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            if(Emulator.gameManager.navigatorManager.isLoaded)
             {
-                const totalEventCategories = Emulator.gameManager().navigatorManager().eventCategories.length;
+                const eventCategories       = Emulator.gameManager.navigatorManager.eventCategories;
+                const totalEventCategories  = eventCategories.length;
 
-                if(totalEventCategories)
+                if(eventCategories && totalEventCategories)
                 {
                     this.packet.writeInt(totalEventCategories);
 
                     for(let i = 0; i < totalEventCategories; i++)
                     {
-                        const category = Emulator.gameManager().navigatorManager().categories[i];
+                        const eventCategory = eventCategories[i];
 
-                        this.packet.writeInt(category.id);
-                        this.packet.writeString(category.name);
-                        this.packet.writeBoolean(true); // ??
+                        this.packet
+                            .writeInt(eventCategory.id)
+                            .writeString(eventCategory.name)
+                            .writeBoolean(true); // ??
                     }
                 }
                 else
@@ -39,19 +38,15 @@ export class NavigatorEventCategoriesComposer extends Outgoing
                     this.packet.writeInt(0);
                 }
 
-                this.packet.prepare();
+                return this.packet.prepare();
+            }
 
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.cancel();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

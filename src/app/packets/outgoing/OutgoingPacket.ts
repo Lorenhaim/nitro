@@ -3,85 +3,116 @@ import { PacketEncoder } from './PacketEncoder';
 
 export class OutgoingPacket
 {
+    private _header: OutgoingHeader;
     private _bytes: number[];
-    private _encoded: { type: 'int' | 'short' | 'boolean' | 'string', value: number | boolean | string }[];
+    private _encoded: { type: string, value: string }[];
 
     private _isPrepared: boolean;
     private _isCancelled: boolean;
 
-    constructor(private readonly _header: OutgoingHeader)
+    constructor(header: OutgoingHeader)
     {
+        this._header        = header || null;
         this._bytes         = [];
         this._encoded       = [];
 
         this._isPrepared    = false;
         this._isCancelled   = false;
 
-        this.writeShort(_header);
+        if(header) this.writeShort(header);
     }
 
-    public prepare(): void
+    public writeBytes(...bytes: number[]): this
     {
-        if(this._isPrepared) return;
+        if(!this._isPrepared && !this._isCancelled) this._bytes.push(...bytes);
 
-        this._bytes = PacketEncoder.encodeInt(this._bytes.length).concat(this._bytes);
-
-        this._isPrepared = true;
+        return this;
     }
 
-    public cancel(): void
+    public writeInt(...numbers: number[]): this
+    {
+        for(let number of numbers)
+        {
+            this.writeBytes(...PacketEncoder.encodeInt(number));
+            this._encoded.push({ type: 'int', value: number.toString() });
+        }
+
+        return this;
+    }
+
+    public writeShort(...numbers: number[]): this
+    {
+        for(let number of numbers)
+        {
+            this.writeBytes(...PacketEncoder.encodeShort(number));
+            this._encoded.push({ type: 'short', value: number.toString() });
+        }
+
+        return this;
+    }
+
+    public writeString(...strings: string[]): this
+    {
+        for(let string of strings)
+        {
+            if(string)
+            {
+                this.writeShort(string.length).writeBytes(...PacketEncoder.encodeString(string));
+                this._encoded.push({ type: 'string', value: string });
+            }
+            else
+            {
+                this.writeShort(0);
+            }
+        }
+
+        return this;
+    }
+
+    public writeBoolean(...flags: boolean[]): this
+    {
+        for(let flag of flags)
+        {
+            this.writeBytes(PacketEncoder.encodeBoolean(flag));
+            this._encoded.push({ type: 'boolean', value: flag ? 'true' : 'fase' });
+        }
+
+        return this;
+    }
+
+    public prepare(): this
+    {
+        if(!this._isPrepared && this._header)
+        {
+            this.bytes.unshift(...PacketEncoder.encodeInt(this._bytes.length));
+
+            this._isPrepared = true;
+        }
+
+        return this;
+    }
+
+    public cancel(): this
     {
         this._bytes         = [];
         this._isCancelled   = true;
-    }
 
-    private writeBytes(bytes: any[]): void
-    {
-        if(this._isPrepared || this._isCancelled) return;
-
-        for(let i = 0; i < bytes.length; i++) this._bytes.push(bytes[i]);
-    }
-
-    public writeInt(number: number): void
-    {
-        const bytes = PacketEncoder.encodeInt(number);
-
-        this._encoded.push({ type: 'int', value: number });
-        this.writeBytes(bytes);
-    }
-
-    public writeShort(number: number): void
-    {
-        const bytes = PacketEncoder.encodeShort(number);
-
-        this._encoded.push({ type: 'short', value: number });
-        this.writeBytes(bytes);
-    }
-
-    public writeBoolean(flag: boolean): void
-    {
-        const bytes = PacketEncoder.encodeBoolean(flag);
-
-        this._encoded.push({ type: 'boolean', value: flag });
-
-        this.writeBytes([bytes]);
-    }
-
-    public writeString(string: string): void
-    {
-        if(!string) string = "";
-        
-        const bytes = PacketEncoder.encodeString(string);
-
-        this.writeShort(string.length);
-
-        this._encoded.push({ type: 'string', value: string });
-        this.writeBytes(bytes);
+        return this;
     }
 
     public get header(): OutgoingHeader
     {
         return this._header;
+    }
+
+    public get bytes(): number[]
+    {
+        return this._bytes;
+    }
+
+    public get encoded(): { type: string, value: string }[]
+    {
+        return this._encoded;
     }
 
     public get isPrepared(): boolean
@@ -92,11 +123,6 @@ export class OutgoingPacket
     public get isCancelled(): boolean
     {
         return this._isCancelled;
-    }
-
-    public get encoded()
-    {
-        return this._encoded;
     }
 
     public get buffer(): Buffer

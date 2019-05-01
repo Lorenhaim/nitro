@@ -1,39 +1,29 @@
-import { Logger } from '../../../../common';
-import { User, MessengerFriendRequestError } from '../../../../game';
-
+import { MessengerRequestError } from '../../../../game';
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class MessengerRequestErrorComposer extends Outgoing
 {
-    constructor(_user: User, private readonly _error: MessengerFriendRequestError)
+    private _error: MessengerRequestError;
+
+    constructor(error: MessengerRequestError)
     {
-        super(OutgoingHeader.MESSENGER_REQUEST_ERROR, _user);
+        super(OutgoingHeader.MESSENGER_REQUEST_ERROR);
+
+        this._error = error;
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated && this.user.messenger() && this._error)
-            {
-                this.packet.writeInt(0);
-                this.packet.writeInt(this._error);
-
-                this.packet.prepare();
-
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.packet.writeInt(0).writeInt(this._error).prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

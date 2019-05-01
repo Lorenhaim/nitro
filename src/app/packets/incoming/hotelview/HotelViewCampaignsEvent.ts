@@ -1,33 +1,25 @@
-import { Logger } from '../../../common';
-
 import { HotelViewCampaignComposer } from '../../outgoing';
-
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class HotelViewCampaignsEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.HOTELVIEW_CAMPAIGNS) throw new Error('invalid_header');
+            const something = this.packet.readString();
 
-            if(this.user.isAuthenticated)
-            {
-                const something = this.packet.readString();
-
-                console.log(something);
-
-                await this.user.client().processComposer(new HotelViewCampaignComposer(this.user));
-            }
-
-            return true;
+            this.client.processOutgoing(new HotelViewCampaignComposer());
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

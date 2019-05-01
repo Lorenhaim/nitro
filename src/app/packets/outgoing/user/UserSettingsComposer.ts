@@ -1,45 +1,33 @@
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class UserSettingsComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.USER_SETTINGS, _user);
+        super(OutgoingHeader.USER_SETTINGS);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
-            {
-                this.packet.writeInt(100); //volume system
-                this.packet.writeInt(100); //volume furni
-                this.packet.writeInt(100); // volume trax
-                this.packet.writeBoolean(false); // old chat
-                this.packet.writeBoolean(false); // block room invites
-                this.packet.writeBoolean(false); // block (camera) follow
-                this.packet.writeInt(1);
-                this.packet.writeInt(0); // chat style
-
-                this.packet.prepare();
-
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.packet
+                .writeInt(100) //volume system
+                .writeInt(100) //volume furni
+                .writeInt(100) // volume trax
+                .writeBoolean(false) // old chat
+                .writeBoolean(false) // block room invites
+                .writeBoolean(false) // block (camera) follow
+                .writeInt(1)
+                .writeInt(0) // chat style
+                .prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

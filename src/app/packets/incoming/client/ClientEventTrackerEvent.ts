@@ -1,31 +1,23 @@
-import { Logger } from '../../../common';
-
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class ClientEventTrackerEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.EVENT_TRACKER) throw new Error('invalid_header');
+            const component = this.packet.readString();
+            const title     = this.packet.readString();
+            const action    = this.packet.readString();
+            const data      = this.packet.readString();
+            const extraData = this.packet.readInt();
 
-            if(this.user.isAuthenticated)
-            {
-                const unknown1   = this.packet.readString();
-                const unknown2   = this.packet.readString();
-                const unknown3   = this.packet.readString();
-                const unknown4   = this.packet.readString();
-                const unknown5   = this.packet.readInt();
-            }
-
-            return true;
+            //console.log(component, title, action, data, extraData);
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

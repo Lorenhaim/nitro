@@ -14,4 +14,5 @@ ormlogs.log
 Thumbs.db
 swf
 src/ssl
-.zip
+*.zip
+sqls

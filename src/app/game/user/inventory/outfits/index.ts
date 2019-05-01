@@ -1,2 +1,2 @@
 export * from './Outfit';
-export * from './Outfits';
+export * from './UserOutfits';

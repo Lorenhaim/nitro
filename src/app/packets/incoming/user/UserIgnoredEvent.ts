@@ -1,26 +1,23 @@
-import { Logger } from '../../../common';
-
 import { UserIgnoredComposer } from '../../outgoing';
-
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class UserIgnoredEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_IGNORED) throw new Error('invalid_header');
-
-            if(this.user.isAuthenticated) await this.user.client().processComposer(new UserIgnoredComposer(this.user));
-
-            return true;
+            this.client.processOutgoing(new UserIgnoredComposer());
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

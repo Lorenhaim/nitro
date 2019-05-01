@@ -1,27 +1,26 @@
-import { Logger } from '../../../common';
-
+import { Emulator } from '../../../Emulator';
+import { GenericAlertComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
-import { IncomingHeader } from '../IncomingHeader';
 
 export class UserOnlineEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.USER_ONLINE) throw new Error('invalid_header');
+            if(Emulator.config.game.login.alert.enabled) this.client.processOutgoing(new GenericAlertComposer(Emulator.config.game.login.alert.message));
 
-            if(this.user.isAuthenticated)
-            {
-                if(this.user.messenger()) await this.user.messenger().composeUpdates(true);
-            }
-
-            return true;
+            if(this.client.user.details.homeRoom) this.client.user.unit.fowardRoom(this.client.user.details.homeRoom);
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

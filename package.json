@@ -4,14 +4,22 @@
   "description": "Habbo Emulator",
   "main": "index.js",
   "dependencies": {
-    "moment": "^2.23.0",
-    "mysql2": "^1.6.4",
-    "typeorm": "^0.2.12",
-    "typescript": "^3.2.0"
+    "bcryptjs": "^2.4.3",
+    "cli-color": "^1.4.0",
+    "moment": "^2.24.0",
+    "mysql2": "^1.6.5",
+    "rxjs": "^6.4.0",
+    "typeorm": "^0.2.14",
+    "typescript": "^3.3.3333",
+    "ws": "^6.1.4",
+    "xml2js": "^0.4.19"
   },
   "devDependencies": {
-    "@types/node": "^10.12.0",
-    "nodemon": "^1.18.0",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/cli-color": "^0.3.29",
+    "@types/node": "^10.12.29",
+    "@types/ws": "^6.0.1",
+    "nodemon": "^1.18.10",
     "ts-node": "^7.0.0"
   },
   "scripts": {

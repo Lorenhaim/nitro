@@ -1,118 +1,123 @@
-import { Server } from 'net';
-
+import * as net from 'net';
 import { Emulator } from '../Emulator';
-import { Logger } from '../common';
-import { User } from '../game';
+import { IncomingPacket } from '../packets';
+import { GameClient } from './GameClient';
+import { Server } from './Server';
 
-import { Client } from './Client';
-import { PacketManager, IncomingPacket, Incoming } from '../packets';
-
-export class GameServer
+export class GameServer extends Server<net.Server>
 {
-    private _socketServer: Server;
-    private _packetManager: PacketManager;
-
     constructor()
     {
-        this._packetManager = new PacketManager();
+        super('GameServer');
     }
 
-    public async init(): Promise<boolean>
+    protected onInit(): void
     {
-        this._socketServer = new Server(async socket =>
-        {
-            const user: User = new User(null, new Client(socket));
+        this._server = new net.Server();
 
-            socket.on('data', async data =>
-            {
-                try
-                {
-                    const packets: IncomingPacket[] = [];
-
-                    const originalPacket        = new IncomingPacket(data);
-                    const originalBufferLength  = originalPacket.bufferLength;
-
-                    let packetLength    = originalPacket.packetLength + 4;
-                    let completedLength = 0;
-
-                    if(originalBufferLength > packetLength)
-                    {
-                        for(let i = 0; i < originalBufferLength; i += packetLength)
-                        {
-                            const packet = new IncomingPacket(data.slice(i, i + packetLength));
-
-                            if(packet.header !== 0) packets.push(packet);
-
-                            packetLength    = packet.packetLength + 4;
-                            completedLength = completedLength + packetLength;
-                        }
-
-                        if(completedLength === originalBufferLength)
-                        {
-                            const totalPackets = packets.length;
-                            
-                            for(let i = 0; i < totalPackets; i++) await this._packetManager.processPacket(user, packets[i]);
-                        }
-                    }
-                    else
-                    {
-                        await this._packetManager.processPacket(user, originalPacket);
-                    }
-                }
-
-                catch(err)
-                {
-                    Logger.writeError(`Packet Error -> ${ err.message || err }`);
-                }
-            });
-
-            socket.on('close', async hadError =>
-            {
-                try
-                {
-                    if(user.isAuthenticated) await Emulator.gameManager().userManager().removeUser(user.userId);
-                }
-
-                catch(err)
-                {
-                    Logger.writeError(`Socket Close Error -> ${ err.message || err }`);
-                }
-            });
-
-            socket.on('error', err => socket.destroy());
-        });
-
-        this._socketServer.on('listening', () =>
-        {
-            Logger.writeLine(`GameServer -> Listening`);
-        });
-
-        return Promise.resolve(true);
+        this._server.on('listening', () => this.onServerListening());
+        this._server.on('connection', socket => this.onServerConnection(socket));
+        this._server.on('close', async () => await this.onServerClose());
+        this._server.on('error', err => this.onServerError(err));
     }
 
-    public listen(ip: string, port: number): Promise<boolean>
+    protected onDispose(): void
     {
-        return new Promise((resolve, reject) =>
+        this._server.close();
+    }
+
+    private onServerListening(): void
+    {
+        this.logger().log(`Listening ${ this._ip }:${ this._port }`);
+    }
+
+    private onServerConnection(socket: net.Socket): void
+    {
+        if(!this.isDisposed && !this.isDisposing)
         {
-            try
+            const client = new GameClient(socket);
+
+            if(Emulator.config.logging.enabled && Emulator.config.logging.connections.game) this.logger().log(`New Connection => ${ client.uniqueId }`);
+
+            socket.on('data', async data => await this.onSocketData(client, data));
+            socket.on('close', async hadError => await this.onSocketClose(client, hadError));
+            socket.on('error', err => this.onSocketError(client, err));
+        }
+    }
+
+    private async onServerClose(): Promise<void>
+    {
+        this.logger().warn(`Server Closed`);
+    }
+
+    private onServerError(err: Error): void
+    {
+        this.logger().error(err.message || err, err.stack);
+    }
+
+    private async onSocketData(client: GameClient, data: Buffer): Promise<void>
+    {
+        try
+        {
+            const packets: IncomingPacket[] = [];
+
+            const originalPacket        = new IncomingPacket(data);
+            const originalPacketLength  = originalPacket.bytesLength;
+
+            let packetLength    = originalPacket.packetLength + 4;
+            let completedLength = 0;
+
+            if(originalPacketLength > packetLength)
             {
-                this._socketServer.listen(port, ip, () => resolve(true));
+                for(let i = 0; i < originalPacketLength; i += packetLength)
+                {
+                    const packet = new IncomingPacket(data.slice(i, i + packetLength));
+
+                    if(packet.header !== 0) packets.push(packet);
+
+                    packetLength    = packet.packetLength + 4;
+                    completedLength = completedLength + packetLength;
+                }
+
+                if(completedLength === originalPacketLength) await client.processIncoming(...packets);
             }
-
-            catch(err)
+            else
             {
-                reject(err);
+                await client.processIncoming(originalPacket);
             }
-        });
+        }
+
+        catch(err)
+        {
+            client.logger.error(err.message || err, err.stack);
+        }
     }
 
-    public socketServer(): Server
+    private async onSocketClose(client: GameClient, hadError: boolean)
     {
-        return this._socketServer;
+        try
+        {
+            await client.dispose();
+
+            if(Emulator.config.logging.enabled && Emulator.config.logging.connections.game) this.logger().log(`Closed Connection => ${ client.uniqueId }`);
+        }
+
+        catch(err)
+        {
+            client.logger.error(err.message || err, err.stack);
+        }
     }
 
-    public packetManager(): PacketManager
+    private onSocketError(client: GameClient, err: Error)
     {
-        return this._packetManager;
+        client.logger.error(err.message || err, err.stack);
+    }
+
+    public listen(ip: string, port: number): void
+    {
+        this._ip    = ip;
+        this._port  = port;
+
+        this._server.listen(port, ip);
     }
 }

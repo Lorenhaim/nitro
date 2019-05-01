@@ -1,111 +1,66 @@
-import { Logger, TimeHelper } from '../../../../common';
-import { User } from '../../../../game';
-
+import { UserEntity } from '../../../../database';
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class MessengerSearchComposer extends Outgoing
 {
-    constructor(_user: User, private readonly _results: User[])
+    private _friends: UserEntity[];
+    private _others: UserEntity[];
+
+    constructor(friends: UserEntity[], others: UserEntity[])
     {
-        super(OutgoingHeader.MESSENGER_SEARCH, _user);
+        super(OutgoingHeader.MESSENGER_SEARCH);
+
+        this._friends   = friends;
+        this._others    = others;
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated && this.user.messenger())
+            const totalFriends = this._friends.length;
+
+            if(totalFriends)
             {
-                const totalResults = this._results.length;
+                this.packet.writeInt(totalFriends);
 
-                if(totalResults)
-                {
-                    const friends   = [];
-                    const users     = [];
-    
-                    for(let i = 0; i < totalResults; i++)
-                    {
-                        const result = this._results[i];
-    
-                        if(result instanceof User && result.userId !== this.user.userId)
-                        {
-                            if(await this.user.messenger().hasFriend(result.userId)) friends.push(result);
-                            else users.push(result);
-                        }
-                    }
-    
-                    const totalFriends = friends.length;
-                    const totalUsers   = users.length;
-
-                    if(totalFriends)
-                    {
-                        this.packet.writeInt(totalFriends);
-    
-                        for(let i = 0; i < totalFriends; i++)
-                        {
-                            const friend = friends[i];
-    
-                            this.packet.writeInt(friend.userId);
-                            this.packet.writeString(friend.username);
-                            this.packet.writeString(friend.motto);
-                            this.packet.writeBoolean(friend.online);
-                            this.packet.writeBoolean(false);
-                            this.packet.writeString('');
-                            this.packet.writeInt(1);
-                            this.packet.writeString(friend.figure);
-                            this.packet.writeString('');
-                        }
-                    }
-                    else
-                    {
-                        this.packet.writeInt(0);
-                    }
-
-                    if(totalUsers)
-                    {
-                        this.packet.writeInt(totalUsers);
-    
-                        for(let i = 0; i < totalUsers; i++)
-                        {
-                            const user = users[i];
-    
-                            this.packet.writeInt(user.userId);
-                            this.packet.writeString(user.username);
-                            this.packet.writeString(user.motto);
-                            this.packet.writeBoolean(user.online);
-                            this.packet.writeBoolean(false);
-                            this.packet.writeString('');
-                            this.packet.writeInt(1);
-                            this.packet.writeString(user.figure);
-                            this.packet.writeString('');
-                        }
-                    }
-                    else
-                    {
-                        this.packet.writeInt(0);
-                    }
-                }
-                else
-                {
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                }
-
-                this.packet.prepare();
-
-                return this.packet;
+                for(let i = 0; i < totalFriends; i++) this.parseResult(this._friends[i]);
             }
-            else
+            else this.packet.writeInt(0);
+
+            const totalOthers = this._others.length;
+
+            if(totalOthers)
             {
-                return this.cancel();
+                this.packet.writeInt(totalOthers);
+
+                for(let i = 0; i < totalOthers; i++) this.parseResult(this._others[i]);
             }
+            else this.packet.writeInt(0);
+
+            return this.packet.prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    private parseResult(result: UserEntity): void
+    {
+        if(!result) return;
+
+        this.packet
+            .writeInt(result.id)
+            .writeString(result.username)
+            .writeString(result.motto)
+            .writeBoolean(false, false)
+            .writeString(null)
+            .writeInt(1)
+            .writeString(result.figure)
+            .writeString(null);
     }
 }

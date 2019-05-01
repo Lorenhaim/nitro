@@ -1,59 +1,101 @@
-import { User } from '../game';
-
-import { Incoming, IncomingHeader, IncomingPacket } from './incoming';
-
+import { Incoming, IncomingHeader } from './incoming';
+import * as IncomingAchivement from './incoming/achievements';
+import * as IncomingCamera from './incoming/camera';
+import * as IncomingCatalog from './incoming/catalog';
 import * as IncomingClient from './incoming/client';
 import * as IncomingGames from './incoming/games';
-import * as IncomingSecurity from './incoming/security';
 import * as IncomingHotelView from './incoming/hotelview';
 import * as IncomingNavigator from './incoming/navigator';
+import * as IncomingPet from './incoming/pet';
+import * as IncomingRoom from './incoming/room';
+import * as IncomingSecurity from './incoming/security';
 import * as IncomingUser from './incoming/user';
+import * as IncomingWebSocket from './incoming/websocket';
 
 export class PacketManager
 {
-    private _incomingHandlers: { header: IncomingHeader, handler: Incoming }[];
+    private _handlers: { header: IncomingHeader | string, handler: typeof Incoming }[];
 
     constructor()
     {
-        this._incomingHandlers = [];
+        this._handlers = [];
 
+        this.registerAchievements();
+        this.registerCamera();
+        this.registerCatalog();
         this.registerClient();
         this.registerGames();
         this.registerSecurity();
         this.registerHotelView();
         this.registerNavigator();
+        this.registerPet();
+        this.registerRoom();
         this.registerMessenger();
         this.registerUser();
+        this.registerWebSocket();
+        this.registerWired();
     }
 
-    public addHandler(header: IncomingHeader, handler: any): boolean
+    public addHandler(header: IncomingHeader, handler: typeof Incoming)
     {
-        if(!(handler.prototype instanceof Incoming)) return false;
-        
-        const totalHandlers = this._incomingHandlers.length;
-
-        let result = false;
+        const totalHandlers = this._handlers.length;
 
         for(let i = 0; i < totalHandlers; i++)
         {
-            const handle = this._incomingHandlers[i];
+            const existing = this._handlers[i];
 
-            if(handle.header === header)
+            if(existing.header === header)
             {
-                this._incomingHandlers.splice(i, 1);
+                this._handlers.splice(i, 1);
 
-                this._incomingHandlers.push({
-                    header: handle.header,
-                    handler: handle.handler
-                });
-
-                result = true;
+                break;
             }
         }
 
-        if(!result) this._incomingHandlers.push({ header, handler });
-        
-        return true;
+        this._handlers.push({ header: header.toString(), handler });
+    }
+
+    public getHandler(header: IncomingHeader): typeof Incoming
+    {
+        let handler: typeof Incoming = null;
+
+        const totalHandlers = this._handlers.length;
+
+        for(let i = 0; i < totalHandlers; i++)
+        {
+            const existing = this._handlers[i];
+
+            if(existing.header === header.toString())
+            {
+                handler = existing.handler;
+
+                break;
+            }
+        }
+
+        return handler;
+    }
+
+    private registerAchievements(): void
+    {
+        this.addHandler(IncomingHeader.ACHIEVEMENT_LIST, IncomingAchivement.AchievementsRequestEvent);
+    }
+
+    private registerCamera(): void
+    {
+        this.addHandler(IncomingHeader.CAMERA_CONFIGURATION, IncomingCamera.CameraConfigurationEvent);
+        this.addHandler(IncomingHeader.CAMERA_PREVIEW, IncomingCamera.CameraSaveEvent);
+    }
+
+    private registerCatalog(): void
+    {
+        this.addHandler(IncomingHeader.CATALOG_MODE, IncomingCatalog.CatalogModeEvent);
+        this.addHandler(IncomingHeader.CATALOG_PAGE, IncomingCatalog.CatalogPageEvent);
+        this.addHandler(IncomingHeader.CATALOG_PURCHASE, IncomingCatalog.CatalogPurchaseEvent);
+        this.addHandler(IncomingHeader.RECYCLER_PRIZES, IncomingCatalog.RecyclerPrizesEvent);
+        this.addHandler(IncomingHeader.MARKETPLACE_CONFIG, IncomingCatalog.MarketplaceConfigEvent);
+        this.addHandler(IncomingHeader.GIFT_CONFIG, IncomingCatalog.GiftConfigEvent);
+        this.addHandler(IncomingHeader.DISCOUNT_CONFIG, IncomingCatalog.DiscountConfigEvent);
     }
 
     private registerClient(): void
@@ -74,24 +116,83 @@ export class PacketManager
 
     private registerSecurity(): void
     {
-        this.addHandler(IncomingHeader.MACHINE_ID, IncomingSecurity.SecurityMachineIdEvent);
+        this.addHandler(IncomingHeader.SECURITY_MACHINE, IncomingSecurity.SecurityMachineEvent);
         this.addHandler(IncomingHeader.SECURITY_TICKET, IncomingSecurity.SecurityTicketEvent);
+
+        this.addHandler(IncomingHeader.SECURITY_LOGIN, IncomingSecurity.SecurityLoginEvent);
+        this.addHandler(IncomingHeader.SECURITY_LOGOUT, IncomingSecurity.SecurityLogoutEvent);
+        this.addHandler(IncomingHeader.SECURITY_REQUEST, IncomingSecurity.SecurityRequestEvent);
+        this.addHandler(IncomingHeader.SECURITY_REGISTER, IncomingSecurity.SecurityRegisterEvent);
     }
 
     private registerHotelView(): void
     {
         this.addHandler(IncomingHeader.HOTELVIEW_CAMPAIGNS, IncomingHotelView.HotelViewCampaignsEvent);
         this.addHandler(IncomingHeader.HOTELVIEW_NEWS, IncomingHotelView.HotelViewNewsEvent);
-        this.addHandler(IncomingHeader.HOTELVIEW_VISIT, IncomingHotelView.HotelViewVisitEvent);
+        this.addHandler(IncomingHeader.HOTELVIEW_VISIT, IncomingHotelView.HotelViewEvent);
     }
     
     private registerNavigator(): void
     {
+        // SEARCH
+        this.addHandler(IncomingHeader.NAVIGATOR_SEARCH_CLOSE, IncomingNavigator.NavigatorSearchCloseEvent);
+        this.addHandler(IncomingHeader.NAVIGATOR_SEARCH, IncomingNavigator.NavigatorSearchEvent);
+        this.addHandler(IncomingHeader.NAVIGATOR_SEARCH_OPEN, IncomingNavigator.NavigatorSearchOpenEvent);
+        this.addHandler(IncomingHeader.NAVIGATOR_SEARCH_SAVE, IncomingNavigator.NavigatorSearchSaveEvent);
+
         this.addHandler(IncomingHeader.NAVIGATOR_CATEGORIES, IncomingNavigator.NavigatorCategoriesEvent);
         this.addHandler(IncomingHeader.NAVIGATOR_INIT, IncomingNavigator.NavigatorInitEvent);
-        this.addHandler(IncomingHeader.NAVIGATOR_ROOMS, IncomingNavigator.NavigatorRoomsEvent);
+        this.addHandler(IncomingHeader.NAVIGATOR_PROMOTED_ROOMS, IncomingNavigator.NavigatorPromotedRoomsEvent);
         this.addHandler(IncomingHeader.NAVIGATOR_SETTINGS, IncomingNavigator.NavigatorSettingsEvent);
         this.addHandler(IncomingHeader.NAVIGATOR_SETTINGS_SAVE, IncomingNavigator.NavigatorSettingsSaveEvent);
+    }
+
+    private registerPet(): void
+    {
+        this.addHandler(IncomingHeader.PET_PLACE, IncomingPet.PetPlaceEvent);
+        this.addHandler(IncomingHeader.PET_INFO, IncomingPet.PetInfoEvent);
+        this.addHandler(IncomingHeader.PET_PICKUP, IncomingPet.PetPickupEvent);
+        this.addHandler(IncomingHeader.PET_RIDE, IncomingPet.PetRideEvent);
+    }
+
+    private registerRoom(): void
+    {
+        this.addHandler(IncomingHeader.ROOM_CREATE, IncomingRoom.RoomCreateEvent);
+        this.addHandler(IncomingHeader.ROOM_INFO, IncomingRoom.RoomInfoEvent);
+        this.addHandler(IncomingHeader.ROOM_ENTER, IncomingRoom.RoomEnterEvent);
+        this.addHandler(IncomingHeader.ROOM_MODEL, IncomingRoom.RoomModelEvent);
+        this.addHandler(IncomingHeader.ROOM_MODEL2, IncomingRoom.RoomModelEvent);
+        this.addHandler(IncomingHeader.UNIT_WALK, IncomingRoom.UnitWalkEvent);
+        this.addHandler(IncomingHeader.UNIT_CHAT, IncomingRoom.UnitChatEvent);
+        this.addHandler(IncomingHeader.UNIT_LOOK, IncomingRoom.UnitLookEvent);
+        this.addHandler(IncomingHeader.UNIT_ACTION, IncomingRoom.UnitActionEvent);
+        this.addHandler(IncomingHeader.UNIT_SIT, IncomingRoom.UnitSitEvent);
+        this.addHandler(IncomingHeader.UNIT_SIGN, IncomingRoom.UnitSignEvent);
+        this.addHandler(IncomingHeader.UNIT_TYPING, IncomingRoom.UnitTypingEvent);
+        this.addHandler(IncomingHeader.UNIT_TYPING_STOP, IncomingRoom.UnitTypingStopEvent);
+        this.addHandler(IncomingHeader.UNIT_DANCE, IncomingRoom.UnitDanceEvent);
+        this.addHandler(IncomingHeader.UNIT_CHAT_SHOUT, IncomingRoom.UnitChatShoutEvent);
+        this.addHandler(IncomingHeader.UNIT_CHAT_WHISPER, IncomingRoom.UnitChatWhisperEvent);
+        this.addHandler(IncomingHeader.ITEM_FLOOR_UPDATE, IncomingRoom.ItemFloorUpdateEvent);
+        this.addHandler(IncomingHeader.ROOM_SETTINGS, IncomingRoom.RoomSettingsEvent);
+        this.addHandler(IncomingHeader.ROOM_DOORBELL, IncomingRoom.RoomDoorbellEvent);
+        this.addHandler(IncomingHeader.ITEM_PLACE, IncomingRoom.ItemPlaceEvent);
+        this.addHandler(IncomingHeader.ITEM_FLOOR_CLICK, IncomingRoom.ItemFloorClickEvent);
+        this.addHandler(IncomingHeader.ITEM_PICKUP, IncomingRoom.ItemPickupEvent);
+        this.addHandler(IncomingHeader.ROOM_RIGHTS_GIVE, IncomingRoom.RoomRightsGiveEvent);
+        this.addHandler(IncomingHeader.ROOM_RIGHTS_REMOVE, IncomingRoom.RoomRightsRemoveEvent);
+        this.addHandler(IncomingHeader.ROOM_RIGHTS_REMOVE_OWN, IncomingRoom.RoomRightsRemoveOwnEvent);
+        this.addHandler(IncomingHeader.ROOM_RIGHTS_REMOVE_ALL, IncomingRoom.RoomRightsRemoveAllEvent);
+        this.addHandler(IncomingHeader.ROOM_RIGHTS_LIST, IncomingRoom.RoomRightsListEvent);
+        this.addHandler(IncomingHeader.ITEM_WALL_UPDATE, IncomingRoom.ItemWallUpdateEvent);
+        this.addHandler(IncomingHeader.ITEM_PAINT, IncomingRoom.ItemPaintEvent);
+        this.addHandler(IncomingHeader.ITEM_WALL_CLICK, IncomingRoom.ItemWallClickEvent);
+        this.addHandler(IncomingHeader.ITEM_REDEEM, IncomingRoom.ItemRedeemEvent);
+        this.addHandler(IncomingHeader.ITEM_DICE_CLICK, IncomingRoom.ItemDiceClickEvent);
+        this.addHandler(IncomingHeader.ITEM_DICE_CLOSE, IncomingRoom.ItemDiceCloseEvent);
+        this.addHandler(IncomingHeader.UNIT_GIVE_HANDITEM, IncomingRoom.UnitGiveHandItemEvent);
+        this.addHandler(IncomingHeader.UNIT_DROP_HAND_ITEM, IncomingRoom.UnitDropHandItemEvent);
+        this.addHandler(IncomingHeader.ROOM_SETTINGS_SAVE, IncomingRoom.RoomSettingsSaveEvent);
     }
 
     private registerMessenger(): void
@@ -116,6 +217,14 @@ export class PacketManager
         this.addHandler(IncomingHeader.USER_BADGES_CURRENT, IncomingUser.BadgesCurrentEvent);
         this.addHandler(IncomingHeader.USER_BADGES_CURRENT_UPDATE, IncomingUser.BadgesCurrentUpdateEvent);
 
+        this.addHandler(IncomingHeader.USER_ITEMS, IncomingUser.UserItemsEvent);
+        this.addHandler(IncomingHeader.USER_ITEMS_TEST, IncomingUser.UserItemsEvent);
+
+        this.addHandler(IncomingHeader.USER_PETS, IncomingUser.UserPetsEvent);
+        this.addHandler(IncomingHeader.USER_BOTS, IncomingUser.UserBotsEvent);
+
+        this.addHandler(IncomingHeader.USER_RESPECT, IncomingUser.UserRespectEvent);
+
         this.addHandler(IncomingHeader.USER_CLUB, IncomingUser.UserClubEvent);
         this.addHandler(IncomingHeader.USER_CURRENCY, IncomingUser.UserCurrencyEvent);
         this.addHandler(IncomingHeader.USER_FIGURE, IncomingUser.UserFigureEvent);
@@ -124,43 +233,26 @@ export class PacketManager
         this.addHandler(IncomingHeader.USER_ONLINE, IncomingUser.UserOnlineEvent);
         this.addHandler(IncomingHeader.USER_PROFILE, IncomingUser.UserProfileEvent);
         this.addHandler(IncomingHeader.USER_SETTINGS, IncomingUser.UserSettingsEvent);
+        this.addHandler(IncomingHeader.USER_TAGS, IncomingUser.UserTagsEvent);
+        this.addHandler(IncomingHeader.USER_OUTFITS, IncomingUser.OutfitsEvent);
+        this.addHandler(IncomingHeader.USER_OUTFIT_SAVE, IncomingUser.OutfitSaveEvent);
+        this.addHandler(IncomingHeader.USER_MOTTO, IncomingUser.UserMottoEvent);
+        this.addHandler(IncomingHeader.USER_HOME_ROOM, IncomingUser.UserHomeRoomEvent);
     }
 
-    public async processPacket(user: User, packet: IncomingPacket)
+    private registerWebSocket(): void
     {
-        if(!packet.header) return Promise.resolve(true);
+        this.addHandler(IncomingHeader.SYSTEM_CONFIG, IncomingWebSocket.SystemConfigEvent);
+        this.addHandler(IncomingHeader.VALIDATOR, IncomingWebSocket.ValidatorEvent);
+    }
 
-        let packetHandler: Incoming = null;
+    private registerWired(): void
+    {
+        this.addHandler(IncomingHeader.WIRED_EFFECT_SAVE, IncomingRoom.WiredEffectSaveEvent);
+    }
 
-        const totalHandlers = this._incomingHandlers.length;
-
-        for(let i = 0; i < totalHandlers; i++)
-        {
-            const handle = this._incomingHandlers[i];
-
-            if(handle.header === packet.header)
-            {
-                let getHandler: any     = handle.handler;
-                let handler: Incoming   = new getHandler();
-
-                if(!(handler instanceof Incoming)) break;
-
-                handler.user    = user;
-                handler.packet  = packet;
-
-                packetHandler = handler;
-            }
-        }
-
-        if(!packetHandler)
-        {
-            console.log(`Unhandled -> ${ packet.header }`);
-            return Promise.resolve(true);
-        }
-
-        await packetHandler.process();
-        console.log(`Handled -> ${ packet.header }`);
-
-        return Promise.resolve(true);
+    public get handlers(): { header: IncomingHeader | string, handler: typeof Incoming }[]
+    {
+        return this._handlers;
     }
 }

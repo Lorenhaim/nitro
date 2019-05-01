@@ -1,67 +1,46 @@
-import { Logger, TimeHelper } from '../../../common';
-import { User } from '../../../game';
-
+import { TimeHelper } from '../../../common';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class UserClubComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.USER_CLUB, _user);
+        super(OutgoingHeader.USER_CLUB);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            this.packet.writeString('club_habbo');
+
+            if(this.client.user.details.clubActive)
             {
-                this.packet.writeString('club_habbo');
+                const clubExpiration = this.client.user.details.clubExpiration;
 
-                const clubExpiration: Date = this.user.info().clubExpiration;
+                const remaining = TimeHelper.timeBetween(TimeHelper.now, clubExpiration);
 
-                if(clubExpiration == null || clubExpiration <= TimeHelper.now)
-                {
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                    this.packet.writeBoolean(true);
-                    this.packet.writeBoolean(true);
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                }
-                else
-                {
-                    const clubRemaining = TimeHelper.timeBetween(clubExpiration, TimeHelper.now);
-
-                    this.packet.writeInt(clubRemaining.days);
-                    this.packet.writeInt(1);
-                    this.packet.writeInt(clubRemaining.months);
-                    this.packet.writeInt(clubRemaining.years);
-                    this.packet.writeBoolean(true);
-                    this.packet.writeBoolean(true);
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(TimeHelper.until(clubExpiration, 'seconds'));
-                }
-
-                this.packet.prepare();
-
-                return this.packet;
+                return this.packet
+                    .writeInt(remaining.days, 1, remaining.months, remaining.years)
+                    .writeBoolean(true, true)
+                    .writeInt(0, 0, TimeHelper.until(clubExpiration, 'seconds'))
+                    .prepare();
             }
             else
             {
-                return this.cancel();
+                return this.packet
+                    .writeInt(0, 7, 0, 1)
+                    .writeBoolean(true, true)
+                    .writeInt(0, 0, 0)
+                    .prepare();
             }
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

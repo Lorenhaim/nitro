@@ -1,47 +1,62 @@
-import { Logger } from '../../../common';
-import { User } from '../../../game';
-
+import { Emulator } from '../../../Emulator';
+import { NavigatorSearchResult } from '../../../game/navigator/search';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
 export class NavigatorSearchComposer extends Outgoing
 {
-    constructor(_user: User)
+    private _tab: string;
+    private _query: string;
+    private _results: NavigatorSearchResult[];
+
+    constructor(tab: string, query: string, ...searchResults: NavigatorSearchResult[])
     {
-        super(OutgoingHeader.NAVIGATOR_SEARCH, _user);
+        super(OutgoingHeader.NAVIGATOR_SEARCH);
+
+        this._tab       = tab || null;
+        this._query     = query || null;
+        this._results   = null;
+
+        if(searchResults)
+        {
+            let someResults = [];
+            this._results = someResults.concat(searchResults);
+        }
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(!this.user.isAuthenticated) return this.cancel(); // check perm
+            if(Emulator.gameManager.navigatorManager.isLoaded)
+            {
+                this.packet
+                    .writeString(this._tab)
+                    .writeString(this._query);
 
-            this.packet.writeString(''); //search code
-            this.packet.writeString(''); //search query
-            this.packet.writeInt(0); // total results
+                if(this._results)
+                {
+                    const totalResults = this._results.length;
 
-            //foreach
-            //this.packet.writeString(''); // code
-            //this.packet.writeString(''); // query
-            //this.packet.writeInt(0); // action type
-            //this.packet.writeBoolean(false); // if collapsed
-            //this.packet.writeInt(0); // mode type
+                    this.packet.writeInt(totalResults);
 
-            // with results of rooms
-            // this.packet.writeInt(0); // total rooms
+                    if(totalResults) for(let i = 0; i < totalResults; i++) this.packet.writeBytes(...this._results[i].parseBytes());
+                }
+                else
+                {
+                    this.packet.writeInt(0);
+                }
 
-            //foreach
+                return this.packet.prepare();
+            }
 
-            this.packet.prepare();
-
-            return this.packet;
+            return this.cancel();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

@@ -1,26 +1,23 @@
-import { Logger } from '../../../../common';
-
 import { MessengerFriendsComposer } from '../../../outgoing';
-
 import { Incoming } from '../../Incoming';
-import { IncomingHeader } from '../../IncomingHeader';
 
 export class MessengerFriendsEvent extends Incoming
 {
-    public async process(): Promise<boolean>
+    public async process(): Promise<void>
     {
         try
         {
-            if(this.packet.header !== IncomingHeader.MESSENGER_FRIENDS) throw new Error('invalid_header');
-
-            if(this.user.isAuthenticated && this.user.messenger()) await this.user.client().processComposer(new MessengerFriendsComposer(this.user));
-
-            return true;
+            this.client.processOutgoing(new MessengerFriendsComposer());
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Incoming Packet Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
+    }
+
+    public get authenticationRequired(): boolean
+    {
+        return true;
     }
 }

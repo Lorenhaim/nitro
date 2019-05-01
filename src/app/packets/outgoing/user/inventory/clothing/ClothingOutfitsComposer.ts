@@ -1,94 +1,48 @@
-import { Logger } from '../../../../../common';
-import { User } from '../../../../../game';
-
 import { Outgoing } from '../../../Outgoing';
 import { OutgoingHeader } from '../../../OutgoingHeader';
 import { OutgoingPacket } from '../../../OutgoingPacket';
 
 export class ClothingOutfitsComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.USER_OUTFITS, _user);
+        super(OutgoingHeader.USER_OUTFITS);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            if(this.client.user.inventory.outfits !== null && this.client.user.inventory.outfits.isLoaded)
             {
-                if(this.user.inventory() && this.user.inventory().outfits())
+                const outfits = this.client.user.inventory.outfits.outfits;
+
+                if(outfits !== null)
                 {
-                    if(!this.user.inventory().outfits().isLoaded) await this.user.inventory().outfits().init();
+                    const totalOutfits = outfits.length;
 
-                    if(this.user.inventory().outfits().isLoaded)
+                    if(totalOutfits > 0)
                     {
-                        const totalOutfits = this.user.inventory().outfits().outfits.length;
+                        this.packet.writeInt(1, totalOutfits);
 
-                        if(totalOutfits)
+                        for(let i = 0; i < totalOutfits; i++)
                         {
-                            const outfitIds: number[]       = [];
-                            const outfitFigures: string[]   = [];
+                            const outfit = outfits[i];
 
-                            for(let i = 0; i < totalOutfits; i++)
-                            {
-                                const outfit = this.user.inventory().outfits().outfits[i];
-
-                                outfitIds.push(outfit.id);
-                                outfitFigures.push(outfit.figure);
-                            }
-
-                            const totalOutfitIds        = outfitIds.length;
-                            const totalOutfitFigures    = outfitFigures.length;
-
-                            if(totalOutfitIds === totalOutfitFigures)
-                            {
-                                this.packet.writeInt(totalOutfitIds);
-
-                                for(let i = 0; i < totalOutfitIds; i++) this.packet.writeInt(outfitIds[i]);
-
-                                this.packet.writeInt(totalOutfitFigures);
-
-                                for(let i = 0; i < totalOutfitFigures; i++) this.packet.writeString(outfitFigures[i]);
-                            }
-                            else
-                            {
-                                this.packet.writeInt(0);
-                                this.packet.writeInt(0);
-                            }
+                            this.packet.writeInt(outfit.slotNumber).writeString(outfit.figure, outfit.gender.toUpperCase());
                         }
-                        else
-                        {
-                            this.packet.writeInt(0);
-                            this.packet.writeInt(0);
-                        }
-                    }
-                    else
-                    {
-                        this.packet.writeInt(0);
-                        this.packet.writeInt(0);
+
+                        return this.packet.prepare();
                     }
                 }
-                else
-                {
-                    this.packet.writeInt(0);
-                    this.packet.writeInt(0);
-                }
-
-                this.packet.prepare();
-
-                return this.packet;
             }
-            else
-            {
-                return this.cancel();
-            }
+
+            return this.packet.writeInt(1, 0).prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }

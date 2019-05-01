@@ -1,38 +1,34 @@
-import { Logger } from '../../../../common';
-import { User } from '../../../../game';
-
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class CurrencyCreditsComposer extends Outgoing
 {
-    constructor(_user: User)
+    constructor()
     {
-        super(OutgoingHeader.USER_CREDITS, _user);
+        super(OutgoingHeader.USER_CREDITS);
     }
 
-    public async compose(): Promise<OutgoingPacket>
+    public compose(): OutgoingPacket
     {
         try
         {
-            if(this.user.isAuthenticated)
+            if(this.client.user.inventory.currencies !== null)
             {
-                this.packet.writeString('0.0');
+                const credits = this.client.user.inventory.currencies.getCurrency(-1);
 
-                this.packet.prepare();
+                if(credits !== null)
+                {
+                    return this.packet.writeString(`${ credits.amount }.0`).prepare();
+                }
+            }
 
-                return this.packet;
-            }
-            else
-            {
-                return this.cancel();
-            }
+            return this.packet.writeString('0').prepare();
         }
 
         catch(err)
         {
-            Logger.writeWarning(`Outgoing Composer Failed [${ this.packet.header }] -> ${ err.message || err }`);
+            this.error(err);
         }
     }
 }
