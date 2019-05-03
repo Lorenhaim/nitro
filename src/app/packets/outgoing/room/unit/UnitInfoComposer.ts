@@ -25,13 +25,24 @@ export class UnitInfoComposer extends Outgoing
                 return this.packet
                     .writeInt(this._unit.id)
                     .writeString(this._unit.user.details.figure)
-                    .writeString(this._unit.user.details.gender.toString())
+                    .writeString(this._unit.user.details.gender)
                     .writeString(this._unit.user.details.motto)
                     .writeInt(this._unit.user.details.achievementScore)
                     .prepare();
             }
+            
+            else if(this._unit.type === UnitType.BOT)
+            {
+                return this.packet
+                    .writeInt(this._unit.id)
+                    .writeString(this._unit.bot.figure)
+                    .writeString(this._unit.bot.gender)
+                    .writeString(this._unit.bot.motto)
+                    .writeInt(0)
+                    .prepare();
+            }
 
-            return this.packet.writeInt(-1).prepare();
+            else return this.cancel();
         }
 
         catch(err)

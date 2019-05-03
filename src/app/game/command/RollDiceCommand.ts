@@ -1,4 +1,4 @@
-import { InteractionType } from '../item';
+import { InteractionDice } from '../item';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { Command } from './Command';
@@ -40,7 +40,7 @@ export class RollDiceCommand extends Command
 
                                     if(highestItem)
                                     {
-                                        if(highestItem.baseItem.hasInteraction(InteractionType.DICE))
+                                        if(highestItem.baseItem.hasInteraction(InteractionDice))
                                         {
                                             const interaction: any = highestItem.baseItem.interaction;
                                             

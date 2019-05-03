@@ -1,7 +1,7 @@
 import { TimeHelper } from '../../common';
 import { RoomEntity } from '../../database';
 import { Emulator } from '../../Emulator';
-import { RoomBanType, RoomChatMode, RoomChatProtection, RoomChatSpeed, RoomChatWeight, RoomKickType, RoomState, RoomThickness, RoomTradeType } from './interfaces';
+import { RoomBanType, RoomChatMode, RoomChatProtection, RoomChatSpeed, RoomChatWeight, RoomKickType, RoomSettings, RoomState, RoomThickness, RoomTradeType } from './interfaces';
 import { Room } from './Room';
 
 export class RoomDetails
@@ -31,23 +31,62 @@ export class RoomDetails
         this.save();
     }
 
-    public setFloorPaint(color: number)
+    public setFloorPaint(color: number): void
     {
         this._entity.paintFloor = color;
 
         this.save();
     }
 
-    public setWallPaint(color: number)
+    public setWallPaint(color: number): void
     {
         this._entity.paintWall = color;
 
         this.save();
     }
 
-    public setLandscapePaint(color: string)
+    public setLandscapePaint(color: string): void
     {
         this._entity.paintLandscape = color;
+
+        this.save();
+    }
+
+    public updateSettings(settings: RoomSettings): void
+    {
+        if(!settings.name) return;
+
+        this._entity.name           = settings.name;
+        this._entity.description    = settings.description;
+
+        if(settings.state === RoomState.PASSWORD && !settings.password) return;
+
+        this._entity.state              = settings.state;
+        this._entity.password           = settings.password;
+        this._entity.usersMax           = settings.usersMax > Emulator.config.game.rooms.maxUnitsPerRoom ? Emulator.config.game.rooms.maxUnitsPerRoom : settings.usersMax;
+        this._entity.categoryId         = settings.categoryId;
+        this._entity.tradeType          = settings.tradeType;
+        this._entity.allowPets          = settings.allowPets ? '1' : '0';
+        this._entity.allowPetsEat       = settings.allowPetsEat ? '1' : '0';
+        this._entity.allowWalkThrough   = settings.allowWalkThrough ? '1' : '0';
+        this._entity.hideWalls          = settings.hideWalls ? '1' : '0';
+        this._entity.thicknessWall      = settings.thicknessWall;
+        this._entity.thicknessFloor     = settings.thicknessFloor;
+        this._entity.allowMute          = settings.muteOption;
+        this._entity.allowKick          = settings.kickOption;
+        this._entity.allowBan           = settings.banOption;
+        this._entity.chatMode           = settings.chatMode;
+        this._entity.chatWeight         = settings.chatWeight;
+        this._entity.chatSpeed          = settings.chatSpeed;
+        this._entity.chatDistance       = settings.chatDistance;
+        this._entity.chatProtection     = settings.chatProtection;
+
+        this.save();
+    }
+
+    public setName(name: string)
+    {
+        this._entity.name = name;
 
         this.save();
     }
@@ -177,9 +216,9 @@ export class RoomDetails
         return this._entity.allowBan;
     }
 
-    public get allowWalkthrough(): boolean
+    public get allowWalkThrough(): boolean
     {
-        return this._entity.allowWalkthrough === '1';
+        return this._entity.allowWalkThrough === '1';
     }
 
     public get chatMode(): RoomChatMode

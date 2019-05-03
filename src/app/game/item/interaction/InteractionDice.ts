@@ -19,40 +19,37 @@ export class InteractionDice extends InteractionDefault implements OnClick, OnPi
 
     public onClick(unit: Unit, item: Item): void
     {
-        if(unit && item)
+        if(!unit || !item) return;
+
+        const room = item.room;
+
+        if(!room) return;
+
+        if(!unit.hasRights() || !unit.location.position.isNear(item.position)) return;
+        
+        const randomNumber = NumberHelper.randomNumber(1, 6);
+
+        if(randomNumber)
         {
-            const room = item.room;
+            item.setExtraData(-1);
 
-            if(room)
+            setTimeout(() =>
             {
-                if(unit.hasRights() && unit.location.position.isNear(item.position))
-                {
-                    const randomNumber = NumberHelper.randomNumber(1, 6);
-
-                    if(randomNumber)
-                    {
-                        item.setExtraData(-1);
-
-                        setTimeout(() =>
-                        {
-                            if(!item.isItemClosed) item.setExtraData(randomNumber)
-                        }, 1000);
-                    }
-                }
-            }
+                if(!item.isItemClosed) item.setExtraData(randomNumber);
+            }, 1000);
         }
     }
 
     public onClickAlternative(unit: Unit, item: Item): void
     {
-        if(unit && item)
-        {
-            const room = item.room;
+        if(!unit || !item) return;
 
-            if(room)
-            {
-                if(unit.hasRights() && unit.location.position.isNear(item.position)) item.setExtraData(0);
-            }
-        }
+        const room = item.room;
+
+        if(!room) return;
+
+        if(!unit.hasRights() || !unit.location.position.isNear(item.position)) return;
+
+        item.setExtraData(0);
     }
 }

@@ -24,16 +24,18 @@ export class RoomInfoComposer extends Outgoing
     {
         try
         {
-            this.packet
-                .writeBoolean(this._someBoolean2);
+            this.packet.writeBoolean(this._someBoolean2);
 
             this._room.parseInfo(this.packet);
 
-            return this.packet.writeBoolean(this._someBoolean, false, this._room.category.isPublic, false) // last false is (isMuted)
+            this.packet
+                .writeBoolean(this._someBoolean, false, this._room.category.isPublic, false) // last false is (isMuted)
                 .writeInt(this._room.details.allowMute, this._room.details.allowKick, this._room.details.allowBan)
-                .writeBoolean(this._room.securityManager.hasRights(this.client.user.id)) // mute all
-                .writeInt(this._room.details.chatMode, this._room.details.chatWeight, this._room.details.chatSpeed, this._room.details.chatDistance, this._room.details.chatProtection)
-                .prepare();
+                .writeBoolean(this._room.securityManager.hasRights(this.client.user.id)); // mute all
+
+            this._room.parseChatSettings(this.packet);
+                
+            return this.packet.prepare();
         }
 
         catch(err)

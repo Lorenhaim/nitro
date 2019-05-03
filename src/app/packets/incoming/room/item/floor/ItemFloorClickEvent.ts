@@ -1,3 +1,4 @@
+import { WiredTriggerStateChanged } from '../../../../../game';
 import { Incoming } from '../../../Incoming';
 
 export class ItemFloorClickEvent extends Incoming
@@ -8,23 +9,25 @@ export class ItemFloorClickEvent extends Incoming
         {
             const currentRoom = this.client.user.unit.room;
 
-            if(currentRoom)
-            {
-                if(this.client.user.unit.canLocate)
-                {
-                    const item = currentRoom.itemManager.getItem(this.packet.readInt());
+            if(!currentRoom) return;
 
-                    if(item)
-                    {
-                        const interaction: any = item.baseItem.interaction;
+            console.log('room');
 
-                        if(interaction)
-                        {
-                            if(interaction.onClick) interaction.onClick(this.client.user.unit, item, this.packet.readInt());
-                        }
-                    }
-                }
-            }
+            if(!this.client.user.unit.canLocate) return;
+
+            console.log('locate');
+            
+            const item = currentRoom.itemManager.getItem(this.packet.readInt());
+
+            if(!item) return;
+            
+            const interaction: any = item.baseItem.interaction;
+
+            if(!interaction) return;
+            
+            if(interaction.onClick) interaction.onClick(this.client.user.unit, item, this.packet.readInt());
+            
+            currentRoom.wiredManager.processTrigger(WiredTriggerStateChanged, item, this.client.user);
         }
 
         catch(err)

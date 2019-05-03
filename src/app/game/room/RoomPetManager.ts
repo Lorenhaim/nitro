@@ -1,61 +1,47 @@
+import { Manager } from '../../common';
 import { PetDao } from '../../database';
 import { Position } from '../pathfinder';
 import { Pet } from '../pet';
 import { User } from '../user';
 import { Room } from './Room';
 
-export class RoomPetManager
+export class RoomPetManager extends Manager
 {
     private _room: Room;
 
     private _pets: Pet[];
 
-    private _isLoaded: boolean;
-    private _isLoading: boolean;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
-
     constructor(room: Room)
     {
+        super('RoomPetManager', room.logger);
+
         if(!(room instanceof Room)) throw new Error('invalid_room');
 
-        this._room          = room;
+        this._room  = room;
 
-        this._pets         = [];
-
-        this._isLoaded      = false;
-        this._isLoading     = false;
-
-        this._isDisposed    = false;
-        this._isDisposing   = false;
+        this._pets  = [];
     }
 
-    public async init(): Promise<void>
+    protected async onInit(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading && !this._isDisposing)
-        {
-            this._isLoading = true;
-
-            await this.loadPets();
-
-            this._isLoaded      = true;
-            this._isLoading     = false;
-            this._isDisposed    = false;
-        }
+        await this.loadPets();
     }
 
-    public async dispose(): Promise<void>
+    protected async onDispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
+        const totalPets = this._pets.length;
+
+        if(!totalPets) return;
+
+        for(let i = 0; i < totalPets; i++)
         {
-            this._isDisposing = true;
+            const pet = this._pets[i];
 
-            this._pets          = [];
+            if(!pet) continue;
 
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
+            await this._room.unitManager.removeUnit(pet.unit);
+
+            this._pets.splice(i, 1);
         }
     }
 
@@ -112,9 +98,7 @@ export class RoomPetManager
 
         user.inventory.pets.removePet(pet);
 
-        await this._room.unitManager.addUnit(pet.unit, null, null, true);
-
-        pet.unit.location.walkToUnit(user.unit);
+        await this._room.unitManager.addUnit(pet.unit, null);
 
         pet.save();
     }
@@ -133,7 +117,9 @@ export class RoomPetManager
 
             if(!pet) continue;
 
-            await this._room.unitManager.removeUnit(pet.unit, true, false);
+            if(pet.id !== petId) continue;
+
+            await pet.unit.reset(false);
 
             this._pets.splice(i, 1);
 
@@ -153,26 +139,24 @@ export class RoomPetManager
 
         const results = await PetDao.loadRoomPets(this._room.id);
 
-        if(results)
+        if(!results) return;
+        
+        const totalResults = results.length;
+
+        if(!totalResults) return;
+        
+        for(let i = 0; i < totalResults; i++)
         {
-            const totalResults = results.length;
+            const result = results[i];
 
-            if(totalResults)
-            {
-                for(let i = 0; i < totalResults; i++)
-                {
-                    const result = results[i];
+            const pet = new Pet(result);
 
-                    const pet = new Pet(result);
+            pet.unit.room               = this._room;
+            pet.unit.location.position  = new Position(result.x, result.y, parseFloat(result.z), result.direction, result.direction);
 
-                    pet.unit.room               = this._room;
-                    pet.unit.location.position  = new Position(result.x, result.y, parseFloat(result.z), result.direction, result.direction);
+            this._pets.push(pet);
 
-                    this._pets.push(pet);
-
-                    this._room.unitManager.units.push(pet.unit);
-                }
-            }
+            await this._room.unitManager.addUnit(pet.unit, pet.unit.location.position);
         }
     }
 
@@ -184,15 +168,5 @@ export class RoomPetManager
     public get pets(): Pet[]
     {
         return this._pets;
-    }
-
-    public get isLoaded(): boolean
-    {
-        return this._isLoaded;
-    }
-
-    public get isDisposed(): boolean
-    {
-        return this._isDisposed;
     }
 }

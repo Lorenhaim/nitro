@@ -81,6 +81,9 @@ export enum OutgoingHeader
     ROOM_RIGHTS_LIST_REMOVE      = 1327,
     ROOM_SCORE                   = 482,
     ROOM_SETTINGS                = 1498,
+    ROOM_SETTINGS_CHAT           = 1191,
+    ROOM_SETTINGS_SAVE           = 948,
+    ROOM_SETTINGS_UPDATED        = 3297,
     ROOM_SETTINGS_SAVE_ERROR     = 1555,
     ROOM_STACK_HEIGHT            = 558,
     ROOM_THICKNESS               = 3547,
@@ -127,6 +130,8 @@ export enum OutgoingHeader
     USER_PERMISSIONS             = 411,
     USER_PETS                    = 3522,
     USER_PET_ADD                 = 2101,
+    USER_BOT_ADD                 = 1352,
+    USER_BOT_REMOVE              = 233,
     USER_PET_REMOVE              = 3253,
     USER_PROFILE                 = 3898,
     USER_RESPECT                 = 2815,
@@ -136,5 +141,6 @@ export enum OutgoingHeader
     WIRED_EFFECT_CONFIG          = 1434,
     WIRED_TRIGGER_CONFIG         = 383,
     WIRED_SAVE                   = 1155,
-    PET_INFO                     = 2901
+    PET_INFO                     = 2901,
+    ROOM_SPECTATOR               = 1033
 }

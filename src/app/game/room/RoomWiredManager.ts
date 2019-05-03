@@ -80,7 +80,7 @@ export class RoomWiredManager extends Manager
         return null;
     }
 
-    public async processTrigger(trigger: typeof WiredTrigger, ...args: any[]): Promise<void>
+    public processTrigger(trigger: typeof WiredTrigger, ...args: any[]): void
     {
         if(!trigger) return;
 
@@ -143,6 +143,7 @@ export class RoomWiredManager extends Manager
 
         const interaction = <WiredEffect> item.baseItem.interaction;
 
+        console.log('do it');
         // validate stuff, cooldowns etc
 
         interaction.onTriggered(item, ...args);

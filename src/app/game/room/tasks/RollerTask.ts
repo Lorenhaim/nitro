@@ -1,5 +1,5 @@
 import { Outgoing, UnitRollingComposer } from '../../../packets';
-import { InteractionRoller, InteractionType, Item } from '../../item';
+import { InteractionRoller, Item } from '../../item';
 import { Position } from '../../pathfinder';
 import { Unit, UnitRolling } from '../../unit';
 import { Room } from '../Room';
@@ -170,7 +170,7 @@ export class RollerTask extends Task
 
                 if(!item) continue;
 
-                if(!item.baseItem.hasInteraction(InteractionType.ROLLER)) continue;
+                if(!item.baseItem.hasInteraction(InteractionRoller)) continue;
 
                 nextRoller = item;
 
@@ -203,7 +203,7 @@ export class RollerTask extends Task
 
                         if(item.position.z < nextRoller.position.z) continue;
 
-                        if(item.baseItem.hasInteraction(InteractionType.ROLLER))
+                        if(item.baseItem.hasInteraction(InteractionRoller))
                         {
                             const itemNextPosition = item.position.getPositionInfront();
 
@@ -211,7 +211,7 @@ export class RollerTask extends Task
 
                             if(itemNextPosition.compare(unit.location.position))
                             {
-                                console.log('???');
+                                if(nextTile.items.length > 1 || nextTile.units.length > 0) return;
                             }
                         }
                         else

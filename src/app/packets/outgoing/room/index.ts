@@ -10,6 +10,11 @@ export * from './RoomInfoComposer';
 export * from './RoomInfoOwnerComposer';
 export * from './RoomPaintComposer';
 export * from './RoomScoreComposer';
+export * from './RoomSettingsChatComposer';
 export * from './RoomSettingsComposer';
+export * from './RoomSettingsSaveComposer';
 export * from './RoomSettingsSaveErrorComposer';
+export * from './RoomSettingsUpdatedComposer';
+export * from './RoomSpectatorComposer';
 export * from './unit';
+

@@ -1,3 +1,4 @@
+export * from './bot';
 export * from './camera';
 export * from './catalog';
 export * from './client';

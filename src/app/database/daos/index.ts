@@ -1,3 +1,4 @@
+export * from './BotDao';
 export * from './CatalogItemDao';
 export * from './CatalogPageDao';
 export * from './ItemBaseDao';
@@ -12,4 +13,3 @@ export * from './UserBadgeDao';
 export * from './UserCurrencyDao';
 export * from './UserDao';
 export * from './UserOutfitDao';
-

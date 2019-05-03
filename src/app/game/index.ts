@@ -1,3 +1,4 @@
+export * from './bot';
 export * from './catalog';
 export * from './command';
 export * from './GameManager';
@@ -10,3 +11,4 @@ export * from './room';
 export * from './security';
 export * from './unit';
 export * from './user';
+

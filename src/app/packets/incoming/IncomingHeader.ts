@@ -119,5 +119,10 @@ export const enum IncomingHeader
     PET_INFO                       = 2934,
     PET_PICKUP                     = 1581,
     PET_RIDE                       = 1036,
-    WIRED_EFFECT_SAVE              = 2281
+    WIRED_EFFECT_SAVE              = 2281,
+    WIRED_TRIGGER_SAVE             = 1520,
+    BOT_PLACE                      = 1592,
+    BOT_PICKUP                     = 3323,
+    BOT_INFO                       = 1986,
+    BOT_SETTINGS_SAVE              = 2624
 }

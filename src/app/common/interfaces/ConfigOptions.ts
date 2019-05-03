@@ -76,10 +76,19 @@ export interface ConfigOptions
                 checkItemBelow: boolean
             }
         },
+        rooms: {
+            maxUnitsPerRoom: number
+        },
         unit: {
             idleTimerMs: number,
             handItemMs: number,
-            lookTimerMs: number
+            lookTimerMs: number,
+            roamTimerMs: number
+        },
+        furni: {
+            wired: {
+                maxItems: number
+            }
         }
     },
     web: {

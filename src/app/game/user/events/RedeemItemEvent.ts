@@ -1,5 +1,4 @@
-import { InteractionType, Item } from '../../item';
-import { PickupItemEvent } from '../../room';
+import { InteractionExchange, Item } from '../../item';
 import { CurrencyType } from '../inventory';
 import { UserEvent } from './UserEvent';
 
@@ -28,7 +27,7 @@ export class RedeemItemEvent extends UserEvent
 
                 if(item.userId === this.user.id)
                 {
-                    if(item.baseItem.hasInteraction(InteractionType.EXCHANGE))
+                    if(item.baseItem.hasInteraction(InteractionExchange))
                     {
                         if(item.baseItem.extraData)
                         {
@@ -43,7 +42,7 @@ export class RedeemItemEvent extends UserEvent
                                 {
                                     await this.user.inventory.currencies.modifyCurrency(currencyType, amount);
 
-                                    item.room.events.next(new PickupItemEvent(this.user, item.id, true));
+                                    //item.room.events.next(new PickupItemEvent(this.user, item.id, true));
                                     // remove the item from the room & clear the user
 
                                     item.clearUser();

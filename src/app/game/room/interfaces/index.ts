@@ -11,6 +11,7 @@ export * from './RoomKickType';
 export * from './RoomMuteType';
 export * from './RoomPaintType';
 export * from './RoomRightsType';
+export * from './RoomSettings';
 export * from './RoomSettingsSaveError';
 export * from './RoomState';
 export * from './RoomThickness';

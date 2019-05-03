@@ -2,7 +2,7 @@ import { shuffleArray } from '../../../common';
 import { ItemBaseEntity } from '../../../database';
 import { Emulator } from '../../../Emulator';
 import { UnitEffect, UnitHandItem } from '../../unit';
-import { Interaction, InteractionType } from '../interaction';
+import { Interaction, InteractionMultiHeight, InteractionType, InteractionVendingMachine } from '../interaction';
 import { BaseItemType } from './BaseItemType';
 
 export class BaseItem
@@ -52,7 +52,7 @@ export class BaseItem
     {
         this._multiHeights = [];
         
-        if(this.hasInteraction(InteractionType.MULTI_HEIGHT))
+        if(this.hasInteraction(InteractionMultiHeight))
         {
             if(!this._entity.multiHeights) return;
             
@@ -72,7 +72,7 @@ export class BaseItem
     {
         this._vendingIds = [];
 
-        if(this.hasInteraction(InteractionType.VENDING_MACHINE))
+        if(this.hasInteraction(InteractionVendingMachine))
         {
             if(this._entity.vendingIds)
             {
@@ -149,7 +149,7 @@ export class BaseItem
 
     public currentStackHeight(extraData: string = null): number
     {
-        if(!this.hasInteraction(InteractionType.MULTI_HEIGHT)) return this.stackHeight;
+        if(!this.hasInteraction(InteractionMultiHeight)) return this.stackHeight;
 
         if(!this._multiHeights.length) return this.stackHeight;
 
@@ -162,7 +162,7 @@ export class BaseItem
         return result;
     }
 
-    public hasInteraction(...interactions: InteractionType[]): boolean
+    public hasInteraction(...interactions: typeof Interaction[]): boolean
     {
         const types = [ ...interactions ];
 
@@ -172,10 +172,25 @@ export class BaseItem
 
         if(!totalTypes) return false;
         
-        for(let i = 0; i < totalTypes; i++) if(this._interaction.name === types[i]) return true;
+        for(let i = 0; i < totalTypes; i++) if(this._interaction instanceof types[i]) return true;
 
         return false;
     }
+
+    // public hasInteraction(...interactions: InteractionType[]): boolean
+    // {
+    //     const types = [ ...interactions ];
+
+    //     if(!types) return false;
+        
+    //     const totalTypes = types.length;
+
+    //     if(!totalTypes) return false;
+        
+    //     for(let i = 0; i < totalTypes; i++) if(this._interaction.name === types[i]) return true;
+
+    //     return false;
+    // }
 
     public getRandomVending(): UnitHandItem
     {

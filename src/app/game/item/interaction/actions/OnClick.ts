@@ -3,5 +3,5 @@ import { Item } from '../../Item';
 
 export interface OnClick
 {
-    onClick(unit: Unit, item: Item): void;
+    onClick(unit: Unit, item: Item, toggleState?: boolean): void;
 }

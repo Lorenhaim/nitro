@@ -1,7 +1,7 @@
 import { NumberHelper } from '../../common';
 import { Emulator } from '../../Emulator';
-import { HotelViewComposer, RoomEnterComposer, RoomModelNameComposer, RoomOwnerComposer, RoomRightsComposer, RoomRightsListComposer, UnitIdleComposer, UserFowardRoomComposer } from '../../packets';
-import { Position } from '../pathfinder';
+import { HotelViewComposer, RoomEnterComposer, RoomModelNameComposer, RoomOwnerComposer, RoomRightsComposer, RoomRightsListComposer, RoomSpectatorComposer, UnitIdleComposer, UserFowardRoomComposer } from '../../packets';
+import { Bot } from '../bot';
 import { Pet } from '../pet';
 import { Room, RoomRightsType } from '../room';
 import { PermissionList } from '../security';
@@ -19,6 +19,7 @@ export class Unit
     private _type: UnitType;
 
     private _user: User;
+    private _bot: Bot;
     private _pet: Pet;
 
     private _connectedUnit: Unit;
@@ -32,19 +33,21 @@ export class Unit
     private _isIdle: boolean;
     private _lastChat: number;
     private _canLocate: boolean;
+    private _isSpectating: boolean;
 
     private _needsUpdate: boolean;
     private _needsInvoke: boolean;
     private _skipUpdate: boolean;
     private _isResetting: boolean;
 
-    constructor(type: UnitType, instance: User | Pet = null)
+    constructor(type: UnitType, instance: User | Pet | Bot = null)
     {
         if(!type) throw new Error('invalid_type');
 
         this._id    = NumberHelper.generateNumber();
         this._type  = type;
         this._user  = null;
+        this._bot   = null;
         this._pet   = null;
 
         if(type === UnitType.USER)
@@ -52,6 +55,13 @@ export class Unit
             if(!(instance instanceof User)) throw new Error('invalid_user');
 
             this._user = instance;
+        }
+
+        if(type === UnitType.BOT)
+        {
+            if(!(instance instanceof Bot)) throw new Error('invalid_bot');
+
+            this._bot = instance;
         }
 
         if(type === UnitType.PET)
@@ -72,6 +82,7 @@ export class Unit
         this._isIdle        = false;
         this._lastChat      = 0;
         this._canLocate     = true;
+        this._isSpectating  = false;
         
         this._needsUpdate   = false;
         this._needsInvoke   = false;
@@ -106,9 +117,8 @@ export class Unit
             this._isResetting = true;
 
             this._timer.stopTimers();
-            
-            if(this._room) await this._room.unitManager.removeUnit(this, false, sendHotelView);
-            if(this._roomQueue) await this._roomQueue.unitManager.removeQueuingUnit(this, null, false, true);
+
+            if(this._room) await this._room.unitManager.removeUnit(this, false);
 
             this._room      = null;
             this._roomQueue = null;
@@ -136,18 +146,19 @@ export class Unit
 
         const room = await Emulator.gameManager.roomManager.getRoom(id);
 
-        if(room)
-        {
-            await room.init();
+        if(!room) return this._user.connections.processOutgoing(new HotelViewComposer());
 
-            Emulator.gameManager.roomManager.addRoom(room);
+        await room.init();
 
-            this._roomLoading = room;
+        Emulator.gameManager.roomManager.addRoom(room);
 
-            this._user.connections.processOutgoing(
-                new RoomEnterComposer(),
-                new RoomModelNameComposer(room));
-        }
+        this._roomLoading = room;
+
+        this._user.connections.processOutgoing(new RoomEnterComposer());
+
+        if(this._isSpectating) this._user.connections.processOutgoing(new RoomSpectatorComposer());
+
+        this._user.connections.processOutgoing(new RoomModelNameComposer(room));
     }
 
     public async enterRoomPartTwo(): Promise<void>
@@ -155,45 +166,51 @@ export class Unit
         const room = this._roomLoading;
 
         if(!room) return;
-        
-        await room.unitManager.addUnit(this, null, null, true);
-    }
 
-    public async enterRoom(id: number, password: string, skipStateCheck: boolean = false): Promise<void>
-    {
-        if(id)
-        {
-            let position: Position = null;
+        // if(this._location.teleporting)
+        // {
+        //     if(this._location.teleporting.teleportGoal.roomId === id)
+        //     {
+        //         position = new Position(this._location.teleporting.teleportGoal.position.x, this._location.teleporting.teleportGoal.position.y);
 
-            const room = await Emulator.gameManager.roomManager.getRoom(id);
+        //         position.setDirection(this._location.teleporting.teleportGoal.position.direction);
 
-            if(room)
-            {
-                if(this._location.teleporting)
-                {
-                    if(this._location.teleporting.teleportGoal.roomId === id)
-                    {
-                        position = new Position(this._location.teleporting.teleportGoal.position.x, this._location.teleporting.teleportGoal.position.y);
+        //         skipStateCheck = true;
+        //     }
+        // }
 
-                        position.setDirection(this._location.teleporting.teleportGoal.position.direction);
-
-                        skipStateCheck = true;
-                    }
-                }
-
-                await room.unitManager.addUnit(this, position, password, skipStateCheck);
-            }
-        }
+        await room.unitManager.addUnit(this);
     }
 
     public isOwner(): boolean
     {
-        if(this._room && this._type === UnitType.USER)
-        {
-           if(this._room.details.ownerId === this._user.id || this._user.hasPermission(PermissionList.ANY_ROOM_OWNER)) return true;
-        }
+        if(this._type !== UnitType.USER || !this._room) return false;
 
-        return false;
+        if(this._room.details.ownerId !== this._user.id) return false;
+
+        if(this._user.hasPermission(PermissionList.ANY_ROOM_OWNER)) return true;
+
+        return true;
+    }
+
+    public spectate(status: boolean = false): void
+    {
+        if(this._type !== UnitType.USER) return;
+
+        this._isSpectating = status;
+
+        if(this._room)
+        {
+            if(status)
+            {
+                let roomId = this._room.id + 0;
+
+                this._room.unitManager.removeUnit(this, true, false);
+
+                this.fowardRoom(roomId);
+            }
+            else this._room.unitManager.removeUnit(this, true, true);
+        }
     }
 
     public loadRights(): void
@@ -204,6 +221,7 @@ export class Unit
 
         if(this.isOwner())
         {
+            console.log('owner');
             rightsType = RoomRightsType.MODERATOR;
 
             this._user.connections.processOutgoing(new RoomOwnerComposer());
@@ -224,14 +242,13 @@ export class Unit
 
     public hasRights(): boolean
     {
-        if(this.isOwner()) return true;
+        if(!this.isOwner()) return false;
+
+        if(!this._room || this._type !== UnitType.USER) return false;
         
-        if(this._room && this._type === UnitType.USER)
-        {
-            if(this._room.securityManager.hasRights(this._user.id)) return true;
-        }
+        if(!this._room.securityManager.hasRights(this._user.id)) return false;
         
-        return false;
+        return true;
     }
 
     public idle(status: boolean): void
@@ -305,6 +322,11 @@ export class Unit
         return this._user;
     }
 
+    public get bot(): Bot
+    {
+        return this._bot;
+    }
+
     public get pet(): Pet
     {
         return this._pet;
@@ -358,6 +380,11 @@ export class Unit
     public set canLocate(locate: boolean)
     {
         this._canLocate = locate;
+    }
+
+    public get isSpectating(): boolean
+    {
+        return this._isSpectating;
     }
 
     public get needsUpdate(): boolean

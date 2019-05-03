@@ -1,5 +1,6 @@
 import { Incoming, IncomingHeader } from './incoming';
 import * as IncomingAchivement from './incoming/achievements';
+import * as IncomingBot from './incoming/bot';
 import * as IncomingCamera from './incoming/camera';
 import * as IncomingCatalog from './incoming/catalog';
 import * as IncomingClient from './incoming/client';
@@ -21,6 +22,7 @@ export class PacketManager
         this._handlers = [];
 
         this.registerAchievements();
+        this.registerBot();
         this.registerCamera();
         this.registerCatalog();
         this.registerClient();
@@ -79,6 +81,14 @@ export class PacketManager
     private registerAchievements(): void
     {
         this.addHandler(IncomingHeader.ACHIEVEMENT_LIST, IncomingAchivement.AchievementsRequestEvent);
+    }
+
+    private registerBot(): void
+    {
+        this.addHandler(IncomingHeader.BOT_PLACE, IncomingBot.BotPlaceEvent);
+        this.addHandler(IncomingHeader.BOT_PICKUP, IncomingBot.BotPickupEvent);
+        this.addHandler(IncomingHeader.BOT_INFO, IncomingBot.BotInfoEvent);
+        this.addHandler(IncomingHeader.BOT_SETTINGS_SAVE, IncomingBot.BotSettingsSaveEvent);
     }
 
     private registerCamera(): void
@@ -249,6 +259,7 @@ export class PacketManager
     private registerWired(): void
     {
         this.addHandler(IncomingHeader.WIRED_EFFECT_SAVE, IncomingRoom.WiredEffectSaveEvent);
+        this.addHandler(IncomingHeader.WIRED_TRIGGER_SAVE, IncomingRoom.WiredTriggerSaveEvent);
     }
 
     public get handlers(): { header: IncomingHeader | string, handler: typeof Incoming }[]

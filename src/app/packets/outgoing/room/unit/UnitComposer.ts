@@ -54,20 +54,21 @@ export class UnitComposer extends Outgoing
 
                         else if(unit.type === UnitType.BOT)
                         {
+                            console.log(unit.bot);
                             this.packet
-                                .writeInt(unit.user.id)
-                                .writeString(unit.user.details.username)
-                                .writeString(unit.user.details.motto)
-                                .writeString(unit.user.details.figure)
+                                .writeInt(unit.bot.id)
+                                .writeString(unit.bot.name)
+                                .writeString(unit.bot.motto)
+                                .writeString(unit.bot.figure)
                                 .writeInt(unit.id)
                                 .writeInt(unit.location.position.x)
                                 .writeInt(unit.location.position.y)
                                 .writeString(unit.location.position.z.toString())
                                 .writeInt(unit.location.position.direction)
-                                .writeInt(1) // 2 pet 4 bot
-                                .writeString(unit.user.details.gender.toUpperCase())
-                                .writeInt(-1) // group id else -1
-                                .writeInt(-1) // group id else -1, if bot, becomes string owner username
+                                .writeInt(4) // 2 pet 4 bot
+                                .writeString(unit.bot.gender.toUpperCase())
+                                .writeInt(1) // owner id
+                                .writeString('BIll') // owner username
                                 .writeInt(10)
                                 .writeShort(0)
                                 .writeShort(1)

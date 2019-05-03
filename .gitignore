@@ -16,3 +16,6 @@ swf
 src/ssl
 *.zip
 sqls
+camera
+dist
+errors.txt

@@ -7,6 +7,7 @@ import { NavigatorCategory } from '../navigator';
 import { RoomEvent } from './events';
 import { RoomMap } from './mapping';
 import { RoomModel } from './models';
+import { RoomBotManager } from './RoomBotManager';
 import { RoomDetails } from './RoomDetails';
 import { RoomItemManager } from './RoomItemManager';
 import { RoomPetManager } from './RoomPetManager';
@@ -31,6 +32,7 @@ export class Room
     private _unitManager: RoomUnitManager;
     private _taskManager: RoomTaskManager;
     private _itemManager: RoomItemManager;
+    private _botManager: RoomBotManager;
     private _petManager: RoomPetManager;
     private _securityManager: RoomSecurityManager;
     private _wiredManager: RoomWiredManager;
@@ -61,6 +63,7 @@ export class Room
         this._unitManager       = new RoomUnitManager(this);
         this._taskManager       = new RoomTaskManager(this);
         this._itemManager       = new RoomItemManager(this);
+        this._botManager        = new RoomBotManager(this);
         this._petManager        = new RoomPetManager(this);
         this._securityManager   = new RoomSecurityManager(this);
         this._wiredManager      = new RoomWiredManager(this);
@@ -82,6 +85,7 @@ export class Room
             if(!this._taskManager.isLoaded)     this._taskManager.init();
             if(!this._unitManager.isLoaded)     this._unitManager.init();
             if(!this._itemManager.isLoaded)     await this._itemManager.init();
+            if(!this._botManager.isLoaded)      await this._botManager.init();
             if(!this._petManager.isLoaded)      await this._petManager.init();
             if(!this._securityManager.isLoaded) await this._securityManager.init();
             if(!this._wiredManager.isLoaded)    await this._wiredManager.init();
@@ -109,6 +113,7 @@ export class Room
             if(this._unitManager)       await this._unitManager.dispose();
             if(this._taskManager)       this._taskManager.dispose();
             if(this._itemManager)       await this._itemManager.dispose();
+            if(this._botManager)        await this._botManager.dispose();
             if(this._petManager)        await this._petManager.dispose();
             if(this._details)           await this._details.save();
 
@@ -221,6 +226,13 @@ export class Room
         return packet;
     }
 
+    public parseChatSettings(packet: OutgoingPacket): OutgoingPacket
+    {
+        if(!packet) return;
+        
+        return packet.writeInt(this._details.chatMode, this._details.chatWeight, this._details.chatSpeed, this._details.chatDistance, this._details.chatProtection);
+    }
+
     public get id(): number
     {
         return this._id;
@@ -269,6 +281,11 @@ export class Room
     public get itemManager(): RoomItemManager
     {
         return this._itemManager;
+    }
+
+    public get botManager(): RoomBotManager
+    {
+        return this._botManager;
     }
 
     public get petManager(): RoomPetManager

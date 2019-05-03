@@ -41,7 +41,7 @@ export class UserDetails
     public updateFigure(figure: string, gender: 'M' | 'F'): void
     {
         this._entity.figure = figure;
-        this._entity.gender = gender;
+        this._entity.gender = gender === 'M' ? 'M' : 'F';
 
         this.save();
 

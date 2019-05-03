@@ -103,6 +103,8 @@ export class UserPets
 
             pet.clearRoom();
 
+            this._pets.push(pet);
+
             this._user.connections.processOutgoing(new UserPetAddComposer(pet));
         }
     }

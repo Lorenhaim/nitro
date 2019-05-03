@@ -132,7 +132,7 @@ export class ChatEvent extends RoomEvent
                         }
                     }
 
-                    await this.room.wiredManager.processTrigger(WiredTriggerSaysSomething, this._unit.user, this._message);
+                    this.room.wiredManager.processTrigger(WiredTriggerSaysSomething, this._unit.user, this._message);
                 }
 
                 this._unit.lastChat = TimeHelper.currentTimestamp;

@@ -75,10 +75,19 @@ export const Config: ConfigOptions = {
                 checkItemBelow: true
             }
         },
+        rooms: {
+            maxUnitsPerRoom: 75
+        },
         unit: {
             idleTimerMs: 600000,
             handItemMs: 300000,
-            lookTimerMs: 4000
+            lookTimerMs: 4000,
+            roamTimerMs: 300000
+        },
+        furni: {
+            wired: {
+                maxItems: 5
+            }
         }
     },
     web: {

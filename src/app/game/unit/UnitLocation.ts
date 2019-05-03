@@ -154,7 +154,6 @@ export class UnitLocation
 
     public walkToUnit(unit: Unit, selfWalk: boolean = false): void
     {
-        console.log('walk!!');
         if(!unit || !this._unit.room || unit.room !== this._unit.room) return;
 
         const currentPosition = unit.location.position.copy();
@@ -274,6 +273,17 @@ export class UnitLocation
         else this._unit.timer.startHandTimer();
 
         this._unit.room.unitManager.processOutgoing(new UnitHandItemComposer(this._unit));
+    }
+
+    public roam(): void
+    {
+        if(!this._unit.room) return;
+
+        const randomTile = this._unit.room.map.getValidRandomTile(this._unit);
+
+        if(!randomTile) return;
+
+        this._unit.location.walkTo(randomTile.position);
     }
 
     public action(action: UnitAction): void

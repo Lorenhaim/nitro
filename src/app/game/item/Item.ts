@@ -5,7 +5,7 @@ import { AffectedPositions, Direction, Position } from '../pathfinder';
 import { Room, RoomTile, RoomTileState } from '../room';
 import { User } from '../user';
 import { BaseItem, BaseItemType } from './base';
-import { InteractionType } from './interaction';
+import { InteractionDice, InteractionGate, InteractionRoller, InteractionTeleport } from './interaction';
 import { ItemRolling } from './ItemRolling';
 
 export class Item
@@ -82,14 +82,14 @@ export class Item
         
         if(item.baseItem.canStack && !item.baseItem.canSit && !item.baseItem.canLay)
         {
-            if(item.baseItem.hasInteraction(InteractionType.ROLLER))
+            if(item.baseItem.hasInteraction(InteractionRoller))
             {
                 if(this._baseItem.width > 1 || this._baseItem.length > 1) return false;
             }
 
-            if(this._baseItem.hasInteraction(InteractionType.ROLLER))
+            if(this._baseItem.hasInteraction(InteractionRoller))
             {
-                if(item.baseItem.hasInteraction(InteractionType.ROLLER)) return false;
+                if(item.baseItem.hasInteraction(InteractionRoller)) return false;
 
                 if(item.baseItem.stackHeight > 0.01) return false;
             }
@@ -173,9 +173,21 @@ export class Item
 
     public setWiredData(wiredData: string)
     {
-        this._entity.wiredData = wiredData.toString();
+        this._entity.wiredData = wiredData;
 
         this.save();
+    }
+
+    public toggleState(): void
+    {
+        const totalStates = this._baseItem.totalStates;
+
+        if(!totalStates) return;
+
+        const currentState  = this._entity.extraData ? parseInt(this._entity.extraData) : 0;
+        const nextState     = (currentState + 1) % this._baseItem.totalStates;
+
+        this.setExtraData(nextState);
     }
 
     public setExtraData(extraData: string | number, send: boolean = true)
@@ -435,7 +447,7 @@ export class Item
 
     public get wiredData(): string
     {
-        return this._entity.wiredData || '0';
+        return this._entity.wiredData;
     }
 
     public get extraData(): string
@@ -445,7 +457,7 @@ export class Item
 
     public get isItemOpen(): boolean
     {
-        if(this._baseItem.hasInteraction(InteractionType.GATE, InteractionType.TELEPORT))
+        if(this._baseItem.hasInteraction(InteractionGate, InteractionTeleport))
         {
             if(this._entity.extraData === '1') return true;
         }
@@ -455,7 +467,7 @@ export class Item
 
     public get isItemClosed(): boolean
     {
-        return this._baseItem.hasInteraction(InteractionType.DICE, InteractionType.GATE, InteractionType.TELEPORT) && this._entity.extraData === '0';
+        return this._baseItem.hasInteraction(InteractionDice, InteractionGate, InteractionTeleport) && this._entity.extraData === '0';
     }
 
     public get timestampCreated(): Date

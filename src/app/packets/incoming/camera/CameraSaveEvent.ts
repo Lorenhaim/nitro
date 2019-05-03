@@ -7,14 +7,24 @@ export class CameraSaveEvent extends Incoming
         try
         {
             const pictureLength = this.packet.readInt();
-            const pictureData = this.packet.readBytes(pictureLength);
+            const pictureData   = this.packet.readBytes(pictureLength);
 
-            const something     = this.packet.readString();
-            const something2    = this.packet.readString();
-            const something3    = this.packet.readInt();
-            const something4    = this.packet.readInt();
+            // console.log(pictureLength, pictureData);
+            
+            // const buffer = Buffer.alloc(pictureLength);
 
-            console.log(something, something2, something3, something4);
+            // for(let i = 0; i < pictureLength; i++) buffer[i] = pictureData[i];
+
+            // writeFile('./camera/picture.png', buffer, 'binary', err =>
+            // {
+            //     if(err) console.log(err);
+            //     else console.log('done!');
+            // });
+
+            //const something     = this.packet.readString();
+            //const something2    = this.packet.readString();
+            //const something3    = this.packet.readInt();
+            //const something4    = this.packet.readInt();
             
             //this.client.processOutgoing(new CameraPriceComposer());
         }

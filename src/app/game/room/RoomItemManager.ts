@@ -151,6 +151,38 @@ export class RoomItemManager extends Manager
         return null;
     }
 
+    public getItemsByString(items: string): Item[]
+    {
+        if(!items) return null;
+
+        const parts = items.split(',');
+
+        if(!parts) return null;
+
+        const totalParts = parts.length;
+
+        if(!totalParts) return null;
+
+        const results: Item[] = [];
+
+        for(let i = 0; i < totalParts; i++)
+        {
+            const part = parseInt(parts[i]);
+
+            if(!part) continue;
+
+            const item = this.getItem(part);
+
+            if(!item) continue;
+
+            results.push(item);
+        }
+
+        if(results.length) return results;
+
+        return null;
+    }
+
     public getItemsByInteraction(interaction: typeof Interaction): Item[]
     {
         if(!interaction) return null;

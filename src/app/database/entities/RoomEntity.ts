@@ -85,7 +85,7 @@ export class RoomEntity
     public allowBan: RoomBanType;
 
     @Column({ name: 'allow_walkthrough', type: 'enum', enum: ['0', '1'], default: '0' })
-    public allowWalkthrough: '0' | '1';
+    public allowWalkThrough: '0' | '1';
 
     @Column({ name: 'chat_mode', type: 'enum', enum: ['0', '1'], default: '0' })
     public chatMode: RoomChatMode;

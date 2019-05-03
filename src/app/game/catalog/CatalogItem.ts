@@ -3,7 +3,7 @@ import { shuffleArray } from '../../common';
 import { CatalogItemDao, CatalogItemEntity, ItemDao } from '../../database';
 import { Emulator } from '../../Emulator';
 import { CatalogPurchaseComposer, CatalogPurchaseFailedComposer, CatalogPurchaseUnavailableComposer, CatalogSoldOutComposer, OutgoingPacket } from '../../packets';
-import { BaseItem, BaseItemType, InteractionType, Item } from '../item';
+import { BaseItem, BaseItemType, InteractionTeleport, Item } from '../item';
 import { CurrencyType, User } from '../user';
 import { CatalogPage } from './CatalogPage';
 import { CatalogPurchaseFailed } from './CatalogPurchaseFailed';
@@ -149,7 +149,7 @@ export class CatalogItem
 
                 if(!baseItem) continue;
 
-                if(baseItem.hasInteraction(InteractionType.TELEPORT))
+                if(baseItem.hasInteraction(InteractionTeleport))
                 {
                     const teleportOne = await Emulator.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
                     const teleportTwo = await Emulator.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
@@ -173,7 +173,6 @@ export class CatalogItem
 
         if(newItems.length)
         {
-            console.log(newItems.length);
             user.inventory.items.addItem(...newItems);
 
             user.connections.processOutgoing(new CatalogPurchaseComposer(this));

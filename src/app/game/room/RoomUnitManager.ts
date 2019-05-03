@@ -1,128 +1,117 @@
+import { Manager } from '../../common';
 import { Emulator } from '../../Emulator';
-import { DoorbellAddUserComposer, DoorbellCloseComposer, ItemFloorComposer, ItemWallComposer, Outgoing, RoomAccessDeniedComposer, RoomInfoComposer, RoomInfoOwnerComposer, RoomPaintComposer, RoomPromotionComposer, RoomScoreComposer, RoomThicknessComposer, UnitComposer, UnitDanceComposer, UnitEffectComposer, UnitHandItemComposer, UnitIdleComposer, UnitRemoveComposer, UnitStatusComposer } from '../../packets';
+import { ItemFloorComposer, ItemWallComposer, Outgoing, RoomInfoComposer, RoomInfoOwnerComposer, RoomPaintComposer, RoomPromotionComposer, RoomScoreComposer, RoomThicknessComposer, UnitComposer, UnitDanceComposer, UnitEffectComposer, UnitHandItemComposer, UnitIdleComposer, UnitRemoveComposer, UnitStatusComposer } from '../../packets';
+import { WiredTriggerEnterRoom } from '../item';
 import { Position } from '../pathfinder';
 import { Room } from '../room';
 import { Unit, UnitType } from '../unit';
 import { RoomPaintType } from './interfaces';
 
-export class RoomUnitManager
+export class RoomUnitManager extends Manager
 {
     private _room: Room;
+
     private _units: Unit[];
+    private _unitsArtifical: Unit[];
+    
     private _unitQueue: Unit[];
-
-    private _isLoaded: boolean;
-    private _isLoading: boolean;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
+    private _unitsSpectating: Unit[];
 
     constructor(room: Room)
     {
+        super('RoomUnitManager', room.logger);
+
         if(!(room instanceof Room)) throw new Error('invalid_room');
 
-        this._room          = room;
-        this._units         = [];
-        this._unitQueue     = [];
+        this._room              = room;
 
-        this._isLoaded      = false;
-        this._isLoading     = false;
+        this._units             = [];
+        this._unitsArtifical    = [];
 
-        this._isDisposed    = false;
-        this._isDisposing   = false;
+        this._unitQueue         = [];
+        this._unitsSpectating   = [];
     }
 
-    public init()
+    protected async onInit(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading && !this._isDisposing)
-        {
-            this._isLoading     = true;
 
-            this._isLoaded      = true;
-            this._isLoading     = false;
-            this._isDisposed    = false;
-        }
     }
 
-    public async dispose(): Promise<void>
+    protected async onDispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
-        {
-            this._isDisposing = true;
+        const totalUnits = this._units.length;
 
-            const totalUnits = this._units.length;
+        if(totalUnits) for(let i = 0; i < totalUnits; i++) await this._units[i].reset();
 
-            if(totalUnits) for(let i = 0; i < totalUnits; i++) await this._units[i].reset();
+        const totalSpectating = this._unitsSpectating.length;
 
-            const totalQueue = this._unitQueue.length;
+        if(totalSpectating) for(let i = 0; i < totalUnits; i++) await this._unitsSpectating[i].reset();
 
-            if(totalQueue > 0) for(let i = 0; i < totalQueue; i++) await this._unitQueue[i].reset();
+        const totalQueue = this._unitQueue.length;
 
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
-        }
+        if(totalQueue > 0) for(let i = 0; i < totalQueue; i++) await this._unitQueue[i].reset();
     }
 
     public getUnit(id: number): Unit
     {
-        if(id > 0)
+        if(!id) return null;
+        
+        const totalUnits = this._units.length;
+
+        if(!totalUnits) return null;
+
+        for(let i = 0; i < totalUnits; i++)
         {
-            const totalUnits = this._units.length;
+            const activeUnit = this._units[i];
 
-            if(totalUnits > 0)
-            {
-                for(let i = 0; i < totalUnits; i++)
-                {
-                    const activeUnit = this._units[i];
-
-                    if(activeUnit.id === id) return activeUnit;
-                }
-            }
+            if(activeUnit.id === id) return activeUnit;
         }
 
         return null;
     }
 
-    public async addUnit(unit: Unit, position: Position = null, password: string = null, skipStateCheck: boolean = false): Promise<void>
+    public async addUnit(unit: Unit, position: Position = null): Promise<void>
     {
         if(!unit) return;
 
         const room = Emulator.gameManager.roomManager.addRoom(this._room);
 
-        if(room !== this._room) return await room.unitManager.addUnit(unit, position, password, skipStateCheck);
+        if(room !== this._room) return await room.unitManager.addUnit(unit, position);
 
         await this._room.init();
 
-        if(unit.type === UnitType.USER)
-        {
-            if(unit.roomLoading !== this._room) return;
-        }
-        
+        if(unit.type === UnitType.USER && unit.roomLoading !== this._room) return;
+
         await unit.reset(false);
-            
+
         unit.room               = this._room;
         unit.location.position  = position ? position : this._room.model.doorPosition.copy();
 
-        console.log(unit.location.position);
+        if(!unit.isSpectating)
+        {
+            this.processOutgoing(new UnitComposer(unit), new UnitStatusComposer(unit));
 
-        this.processOutgoing(new UnitComposer(unit), new UnitStatusComposer(unit));
+            this._units.push(unit);
 
-        this._units.push(unit);
+            this._room.details.setUsersNow(this._units.length - this._unitsArtifical.length);
+        }
+        else this._unitsSpectating.push(unit);
 
-        this._room.details.setUsersNow(this._units.length); // dont for pets
-
-        const pendingOutgoing: Outgoing[] = [];
-
-        if(unit.type === UnitType.USER && unit.user)
+        if(unit.type === UnitType.BOT || unit.type === UnitType.PET)
+        {
+            this._unitsArtifical.push(unit);
+        }
+        else if(unit.type === UnitType.USER)
         {
             unit.loadRights();
+
+            const pendingOutgoing: Outgoing[] = [];
             
             pendingOutgoing.push(
                 new RoomPaintComposer(room, RoomPaintType.LANDSCAPE),
                 new RoomPaintComposer(room, RoomPaintType.FLOOR),
                 new RoomPaintComposer(room, RoomPaintType.WALLPAPER),
-                new RoomScoreComposer(100, false),
+                new RoomScoreComposer(0, false),
                 new RoomPromotionComposer(),
                 new UnitComposer(...this._units),
                 new UnitStatusComposer(...this._units),
@@ -134,11 +123,13 @@ export class RoomUnitManager
 
             const totalUnits = this._units.length;
 
-            if(totalUnits > 0)
+            if(totalUnits)
             {
                 for(let i = 0; i < totalUnits; i++)
                 {
                     const activeUnit = this._units[i];
+
+                    if(!activeUnit) continue;
 
                     if(activeUnit.location.danceType) pendingOutgoing.push(new UnitDanceComposer(activeUnit));
 
@@ -151,14 +142,15 @@ export class RoomUnitManager
             }
 
             if(pendingOutgoing.length) unit.user.connections.processOutgoing(...pendingOutgoing);
+
+            this.room.wiredManager.processTrigger(WiredTriggerEnterRoom, unit.user);
+
+            unit.timer.startTimers();
         }
-        
-        unit.timer.startTimers();
     }
 
     public async removeUnit(unit: Unit, runReset: boolean = true, sendHotelView: boolean = true): Promise<void>
     {
-        console.log(unit);
         if(!unit) return;
         
         const totalUnits = this._units.length;
@@ -171,7 +163,7 @@ export class RoomUnitManager
 
             if(!foundUnit) continue;
 
-            if(foundUnit.id !== unit.id) continue;
+            if(foundUnit !== unit) continue;
             
             this.processOutgoing(new UnitRemoveComposer(foundUnit.id));
 
@@ -193,9 +185,13 @@ export class RoomUnitManager
 
             if(runReset) await foundUnit.reset(sendHotelView);
 
+            if(unit.type === UnitType.BOT || unit.type === UnitType.PET) this.removeUnitArtificial(unit);
+
+            if(unit.isSpectating) this.removeSpectator(unit);
+
             this._units.splice(i, 1);
 
-            this._room.details.setUsersNow(this._units.length);
+            this._room.details.setUsersNow(this._units.length - this._unitsArtifical.length);
 
             break;
         }
@@ -203,85 +199,47 @@ export class RoomUnitManager
         this._room.tryDispose();
     }
 
-    private addQueuingUnit(unit: Unit): void
+    private removeUnitArtificial(unit: Unit): void
     {
-        this._unitQueue.push(unit);
+        if(!unit) return;
 
-        unit.roomQueue = this._room;
+        const totalUnits = this._unitsArtifical.length;
 
-        unit.user.connections.processOutgoing(new DoorbellAddUserComposer());
-    }
+        if(!totalUnits) return;
 
-    public async acceptQueuingUnit(username: string): Promise<void>
-    {
-        const totalQueuing = this._unitQueue.length;
-
-        if(totalQueuing)
+        for(let i = 0; i < totalUnits; i++)
         {
-            for(let i = 0; i < totalQueuing; i++)
-            {
-                const queuingUnit = this._unitQueue[i];
+            const foundUnit = this._unitsArtifical[i];
 
-                if(queuingUnit.user.details.username === username)
-                {
-                    const totalUnits = this._units.length;
+            if(!foundUnit) continue;
 
-                    if(totalUnits)
-                    {
-                        for(let j = 0; j < totalUnits; j++)
-                        {
-                            const activeUnit = this._units[i];
+            if(foundUnit.id !== unit.id) continue;
 
-                            if(activeUnit.hasRights) activeUnit.user.connections.processOutgoing(new DoorbellCloseComposer(queuingUnit.user.details.username));
-                        }
-                    }
+            this._unitsArtifical.splice(i, 1);
 
-                    queuingUnit.user.connections.processOutgoing(new DoorbellCloseComposer());
-
-                    await this.addUnit(queuingUnit, null, null, true);
-
-                    this._unitQueue.splice(i, 1);
-                }
-            }
+            return;
         }
     }
 
-    public async removeQueuingUnit(unit: Unit, username: string = null, runReset: boolean = true, wasAccepted: boolean = true): Promise<void>
+    private removeSpectator(unit: Unit): void
     {
-        if(unit || username)
+        if(!unit) return;
+
+        const totalUnits = this._unitsSpectating.length;
+
+        if(!totalUnits) return;
+
+        for(let i = 0; i < totalUnits; i++)
         {
-            const totalQueuing = this._unitQueue.length;
+            const foundUnit = this._unitsSpectating[i];
 
-            if(totalQueuing)
-            {
-                for(let i = 0; i < totalQueuing; i++)
-                {
-                    const queuingUnit = this._unitQueue[i];
+            if(!foundUnit) continue;
 
-                    if(unit && queuingUnit.id === unit.id || username && queuingUnit.user.details.username === username)
-                    {
-                        const totalUnits = this._units.length;
+            if(foundUnit.id !== unit.id) continue;
 
-                        if(totalUnits)
-                        {
-                            for(let j = 0; j < totalUnits; j++)
-                            {
-                                const activeUnit = this._units[j];
+            this._unitsSpectating.splice(i, 1);
 
-                                if(activeUnit.hasRights) activeUnit.user.connections.processOutgoing(new DoorbellCloseComposer(queuingUnit.user.details.username));
-                            }
-                        }
-
-                        if(!wasAccepted) queuingUnit.user.connections.processOutgoing(new RoomAccessDeniedComposer());
-
-                        if(runReset) await queuingUnit.reset();
-
-                        this._unitQueue.splice(i, 1);
-
-                        return;
-                    }
-                }
-            }
+            return;
         }
     }
 
@@ -289,17 +247,32 @@ export class RoomUnitManager
     {
         const totalUnits = this._units.length;
 
-        if(totalUnits > 0)
+        if(!totalUnits) return;
+        
+        for(let i = 0; i < totalUnits; i++)
         {
-            for(let i = 0; i < totalUnits; i++)
-            {
-                const unit = this._units[i];
+            const unit = this._units[i];
 
-                if(unit.type === UnitType.USER && unit.user !== null)
-                {
-                    if(unit.user.connections !== null && unit.user.connections.gameClient !== null) unit.user.connections.processOutgoing(...composers);
-                }
-            }
+            if(!unit) continue;
+
+            if(unit.type !== UnitType.USER || !unit.user) continue;
+            
+            unit.user.connections.processOutgoing(...composers);
+        }
+
+        const totalSpectating = this._unitsSpectating.length;
+
+        if(!totalSpectating) return;
+        
+        for(let i = 0; i < totalSpectating; i++)
+        {
+            const unit = this._unitsSpectating[i];
+
+            if(!unit) continue;
+
+            if(unit.type !== UnitType.USER || !unit.user) continue;
+            
+            unit.user.connections.processOutgoing(...composers);
         }
     }
 
@@ -308,27 +281,24 @@ export class RoomUnitManager
         const updatedPositions      = [ ...positions ];
         const updatedUnits: Unit[]  = [];
 
-        if(updatedPositions)
+        if(!updatedPositions) return;
+        
+        const totalPositions = updatedPositions.length;
+
+        if(!totalPositions) return;
+        
+        for(let i = 0; i < totalPositions; i++)
         {
-            const totalPositions = updatedPositions.length;
+            const tile = this._room.map.getTile(updatedPositions[i]);
 
-            if(totalPositions)
-            {
-                for(let i = 0; i < totalPositions; i++)
-                {
-                    const tile = this._room.map.getTile(updatedPositions[i]);
-
-                    if(tile) updatedUnits.push(...tile.units);
-                }
-            }
+            if(tile) updatedUnits.push(...tile.units);
         }
 
-        if(updatedUnits)
-        {
-            const totalUnits = updatedUnits.length;
+        const totalUnits = updatedUnits.length;
 
-            if(totalUnits) for(let i = 0; i < totalUnits; i++) updatedUnits[i].location.invokeCurrentItem();
-        }
+        if(!totalUnits) return;
+        
+        for(let i = 0; i < totalUnits; i++) updatedUnits[i].location.invokeCurrentItem();
     }
 
     public get room(): Room
@@ -339,15 +309,5 @@ export class RoomUnitManager
     public get units(): Unit[]
     {
         return this._units;
-    }
-
-    public get isLoaded(): boolean
-    {
-        return this._isLoaded;
-    }
-
-    public get isDisposed(): boolean
-    {
-        return this._isDisposed;
     }
 }

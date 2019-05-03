@@ -1,3 +1,4 @@
+import { NumberHelper } from '../../common';
 import { Emulator } from '../../Emulator';
 import { Unit } from './Unit';
 import { UnitHandItem } from './UnitHandItem';
@@ -9,6 +10,7 @@ export class UnitTimer
     private _idleTimer: NodeJS.Timeout;
     private _lookTimer: NodeJS.Timeout;
     private _handTimer: NodeJS.Timeout;
+    private _roamTimer: NodeJS.Timeout;
 
     constructor(unit: Unit)
     {
@@ -19,6 +21,7 @@ export class UnitTimer
         this._idleTimer = null;
         this._lookTimer = null;
         this._handTimer = null;
+        this._roamTimer = null;
     }
 
     public startTimers(): void
@@ -31,6 +34,7 @@ export class UnitTimer
         if(this._idleTimer) clearTimeout(this._idleTimer);
         if(this._lookTimer) clearTimeout(this._lookTimer);
         if(this._handTimer) clearTimeout(this._handTimer);
+        if(this._roamTimer) clearTimeout(this._roamTimer);
 
         if(this._unit.isIdle) this._unit.idle(false);
     }
@@ -56,6 +60,20 @@ export class UnitTimer
         this._handTimer = setTimeout(() => this._unit.location.hand(UnitHandItem.NONE), Emulator.config.game.unit.handItemMs);
     }
 
+    public startRoamTimer(): void
+    {
+        if(this._roamTimer) clearTimeout(this._roamTimer);
+
+        if(!this._unit.room) return;
+        
+        this._roamTimer = setTimeout(() =>
+        {
+            this._unit.location.roam();
+
+            this.startRoamTimer();
+        }, NumberHelper.randomNumber(1, Emulator.config.game.unit.roamTimerMs));
+    }
+
     public resetIdleTimer(): void
     {
         if(this._idleTimer) clearTimeout(this._idleTimer);
@@ -73,5 +91,10 @@ export class UnitTimer
     public stopHandTimer(): void
     {
         if(this._handTimer) clearTimeout(this._handTimer);
+    }
+
+    public stopRoamTimer(): void
+    {
+        if(this._roamTimer) clearTimeout(this._roamTimer);
     }
 }

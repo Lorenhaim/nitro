@@ -20,7 +20,7 @@ export class RoomSettingsComposer extends Outgoing
     {
         try
         {
-            return this.packet
+            this.packet
                 .writeInt(this._room.id)
                 .writeString(this._room.details.name)
                 .writeString(this._room.details.description)
@@ -32,15 +32,14 @@ export class RoomSettingsComposer extends Outgoing
                 .writeInt(this._room.details.tradeType)
                 .writeInt(this._room.details.allowPets ? 1 : 0)
                 .writeInt(this._room.details.allowPetsEat ? 1 : 0)
-                .writeInt(this._room.details.allowWalkthrough ? 1 : 0)
+                .writeInt(this._room.details.allowWalkThrough ? 1 : 0)
                 .writeInt(this._room.details.hideWalls ? 1 : 0)
                 .writeInt(this._room.details.thicknessWall)
-                .writeInt(this._room.details.thicknessFloor)
-                .writeInt(this._room.details.chatMode)
-                .writeInt(this._room.details.chatWeight)
-                .writeInt(this._room.details.chatSpeed)
-                .writeInt(this._room.details.chatDistance)
-                .writeInt(this._room.details.chatProtection)
+                .writeInt(this._room.details.thicknessFloor);
+
+            this._room.parseChatSettings(this.packet);
+
+            return this.packet
                 .writeBoolean(false)
                 .writeInt(this._room.details.allowMute)
                 .writeInt(this._room.details.allowKick)

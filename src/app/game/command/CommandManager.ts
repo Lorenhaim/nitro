@@ -6,6 +6,7 @@ import { ConnectUnitCommand } from './ConnectUnitCommand';
 import { CoordinatesCommand } from './CoordinatesCommand';
 import { CreditsCommand } from './CreditsCommand';
 import { EjectAllCommand } from './EjectAllCommand';
+import { GenerateAccountsCommand } from './GenerateAccountsCommand';
 import { GiveBadgeCommand } from './GiveBadgeCommand';
 import { HotelAlertCommand } from './HotelAlertCommand';
 import { LayCommand } from './LayCommand';
@@ -14,6 +15,7 @@ import { PullCommand } from './PullCommand';
 import { RebootCommand } from './RebootCommand';
 import { RefreshInventoryCommand } from './RefreshInventoryCommand';
 import { RollDiceCommand } from './RollDiceCommand';
+import { RoomSpectateCommand } from './RoomSpectateCommand';
 import { ShutdownCommand } from './ShutdownCommand';
 import { SitCommand } from './SitCommand';
 import { StopLocatingCommand } from './StopLocatingCommand';
@@ -143,5 +145,7 @@ export class CommandManager extends Manager
         this.registerCommand(new RollDiceCommand());
         this.registerCommand(new PullCommand());
         this.registerCommand(new ConnectUnitCommand());
+        this.registerCommand(new RoomSpectateCommand());
+        this.registerCommand(new GenerateAccountsCommand());
     }
 }

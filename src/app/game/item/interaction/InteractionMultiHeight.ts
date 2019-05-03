@@ -12,7 +12,7 @@ export class InteractionMultiHeight extends InteractionDefault implements OnClic
 
     public onClick(unit: Unit, item: Item)
     {
-        super.onClick(unit, item);
+        super.onClick(unit, item, true);
 
         const room = item.room;
 

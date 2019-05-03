@@ -1,3 +1,4 @@
+export * from './BotEntity';
 export * from './CatalogItemEntity';
 export * from './CatalogItemLimitedEntity';
 export * from './CatalogPageEntity';

@@ -2,7 +2,7 @@ import { getManager } from 'typeorm';
 import { Manager } from '../../common';
 import { ItemBaseDao, ItemEntity } from '../../database';
 import { BaseItem } from './base';
-import { Interaction, InteractionDefault, InteractionDice, InteractionExchange, InteractionGate, InteractionMultiHeight, InteractionPetJump, InteractionRoller, InteractionTeleport, InteractionVendingMachine, WiredEffectUnitTeleport, WiredTriggerSaysSomething, WiredTriggerStateChanged } from './interaction';
+import { Interaction, InteractionDefault, InteractionDice, InteractionExchange, InteractionGate, InteractionMultiHeight, InteractionPetJump, InteractionRoller, InteractionTeleport, InteractionVendingMachine, WiredEffectUnitTeleport, WiredTriggerEnterRoom, WiredTriggerSaysSomething, WiredTriggerStateChanged, WiredTriggerWalkOnFurni } from './interaction';
 import { Item } from './Item';
 
 export class ItemManager extends Manager
@@ -90,6 +90,8 @@ export class ItemManager extends Manager
         // TRIGGERS
         this._interactions.push(new WiredTriggerSaysSomething());
         this._interactions.push(new WiredTriggerStateChanged());
+        this._interactions.push(new WiredTriggerEnterRoom());
+        this._interactions.push(new WiredTriggerWalkOnFurni());
 
         this.logger.log(`Loaded ${ this._interactions.length } interactions`);
     }

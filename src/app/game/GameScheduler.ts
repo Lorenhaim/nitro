@@ -1,6 +1,6 @@
 import { getManager } from 'typeorm';
 import { Manager } from '../common';
-import { ItemEntity, PetEntity, RoomEntity, UserEntity } from '../database';
+import { BotEntity, ItemEntity, PetEntity, RoomEntity, UserEntity } from '../database';
 
 export class GameScheduler extends Manager
 {
@@ -15,6 +15,9 @@ export class GameScheduler extends Manager
 
     private _petEntities: PetEntity[];
     private _petInterval: NodeJS.Timeout;
+
+    private _botEntities: BotEntity[];
+    private _botInterval: NodeJS.Timeout;
 
     constructor()
     {
@@ -31,6 +34,9 @@ export class GameScheduler extends Manager
 
         this._petEntities   = [];
         this._petInterval   = null;
+
+        this._botEntities   = [];
+        this._botInterval   = null;
     }
 
     protected onInit(): void
@@ -42,6 +48,8 @@ export class GameScheduler extends Manager
         this._userInterval = setInterval(async () => await this.saveUserEntities(), 10000);
 
         this._petInterval = setInterval(async () => await this.savePetEntities(), 10000);
+
+        this._botInterval = setInterval(async () => await this.saveBotEntities(), 10000);
     }
 
     protected onDispose(): void
@@ -53,6 +61,8 @@ export class GameScheduler extends Manager
         if(this._userInterval) clearInterval(this._userInterval);
 
         if(this._petInterval) clearInterval(this._petInterval);
+
+        if(this._botInterval) clearInterval(this._botInterval);
     }
 
     public saveItem(entity: ItemEntity): void
@@ -137,6 +147,27 @@ export class GameScheduler extends Manager
         }
 
         this._petEntities.push(entity);
+    }
+
+    public saveBot(entity: BotEntity): void
+    {
+        if(!entity) return;
+
+        const totalBots = this._botEntities.length;
+
+        if(totalBots)
+        {
+            for(let i = 0; i < totalBots; i++)
+            {
+                const pendingEntity = this._botEntities[i];
+
+                if(!pendingEntity) continue;
+
+                if(pendingEntity === entity) return;
+            }
+        }
+
+        this._botEntities.push(entity);
     }
 
     private async saveItemEntities(): Promise<void>
@@ -231,6 +262,27 @@ export class GameScheduler extends Manager
             if(!totalEntities) return;
 
             for(let i = 0; i < totalEntities; i++) entities.push(this._petEntities.shift());
+
+            if(entities.length) await getManager().save(entities);
+        }
+
+        catch(err)
+        {
+            this.logger.error(err.message || err, err.stack);
+        }
+    }
+
+    private async saveBotEntities(): Promise<void>
+    {
+        try
+        {
+            const entities: BotEntity[] = [];
+
+            const totalEntities = this._botEntities.length;
+
+            if(!totalEntities) return;
+
+            for(let i = 0; i < totalEntities; i++) entities.push(this._botEntities.shift());
 
             if(entities.length) await getManager().save(entities);
         }

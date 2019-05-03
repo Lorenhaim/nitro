@@ -12,48 +12,45 @@ export class InteractionVendingMachine extends InteractionDefault implements OnC
 
     public onClick(unit: Unit, item: Item): void
     {
-        if(unit && item)
+        if(!unit || !item) return;
+
+        const room = item.room;
+
+        if(!room) return;
+
+        if(item.extraData !== '0') return;
+        
+        const positionInfront = item.position.getPositionInfront();
+
+        positionInfront.setDirection(item.position.directionOpposite);
+
+        if(!unit.location.position.compare(positionInfront))
         {
-            if(item.extraData === '0')
-            {
-                const room = item.room;
+            if(!room.map.getValidTile(unit, positionInfront)) return;
 
-                if(room)
-                {
-                    const positionInfront = item.position.getPositionInfront();
+            unit.location.setClickGoal(positionInfront, item);
 
-                    positionInfront.setDirection(item.position.directionOpposite);
+            unit.location.walkTo(positionInfront, false, item.position);
 
-                    if(!unit.location.position.compare(positionInfront))
-                    {
-                        if(!room.map.getValidTile(unit, positionInfront)) return;
+            return;
+        }
 
-                        unit.location.setClickGoal(positionInfront, item);
+        if(unit.location.position.direction !== positionInfront.direction)
+        {
+            unit.location.position.setDirection(positionInfront.direction);
 
-                        unit.location.walkTo(positionInfront, false, item.position);
+            unit.needsUpdate = true;
+        }
 
-                        return;
-                    }
+        const handItem = item.baseItem.getRandomVending();
 
-                    if(unit.location.position.direction !== positionInfront.direction)
-                    {
-                        unit.location.position.setDirection(positionInfront.direction);
+        if(handItem)
+        {
+            item.setExtraData(1);
+            
+            unit.location.hand(handItem);
 
-                        unit.needsUpdate = true;
-                    }
-
-                    const handItem = item.baseItem.getRandomVending();
-
-                    if(handItem)
-                    {
-                        item.setExtraData(1);
-                        
-                        unit.location.hand(handItem);
-
-                        setTimeout(() => item.setExtraData(0), 1000);
-                    }
-                }
-            }
+            setTimeout(() => item.setExtraData(0), 1000);
         }
     }
 }

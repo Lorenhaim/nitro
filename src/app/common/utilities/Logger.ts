@@ -25,6 +25,10 @@ export class Logger
     public error(message: any, trace?: any): void
     {
         this.printMessage(trace || message, clc.red);
+
+        // appendFile('./errors.txt', message, function (err) {
+        //     if (err) throw err;
+        //   });
     }
     
     public warn(message: any): void

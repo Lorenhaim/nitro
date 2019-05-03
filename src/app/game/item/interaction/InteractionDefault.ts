@@ -13,25 +13,17 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
         super(name || 'default');
     }
 
-    public onClick(unit: Unit, item: Item): void
+    public onClick(unit: Unit, item: Item, toggleState: boolean = false): void
     {
-        if(unit && item)
-        {
-            const room = item.room;
+        if(!unit || !item) return;
 
-            if(room)
-            {
-                const totalStates = item.baseItem.totalStates;
+        const room = item.room;
+        
+        if(!room) return;
 
-                if(totalStates)
-                {
-                    const currentState  = item.extraData ? parseInt(item.extraData) : 0;
-                    const nextState     = (currentState + 1) % item.baseItem.totalStates;
+        //room.wiredManager.processTrigger(WiredTriggerStateChanged, this);
 
-                    item.setExtraData(nextState);
-                }
-            }
-        }
+        if(toggleState) return item.toggleState();
     }
 
     public onEnter(unit: Unit, item: Item): void
@@ -87,12 +79,12 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
 
     public onMove(user: User, item: Item): void
     {
-        console.log('moved');
+        //console.log('moved');
     }
 
     public onStep(unit: Unit, item: Item): void
     {
-        console.log('stepped');
+        //console.log('stepped');
     }
 
     public onStop(unit: Unit, item: Item): void
@@ -159,5 +151,23 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
         }
 
         return null;
+    }
+
+    private toggleState(unit: Unit, item: Item): void
+    {
+        if(!unit || !item) return;
+
+        const room = item.room;
+
+        if(!room) releaseEvents;
+
+        const totalStates = item.baseItem.totalStates;
+
+        if(!totalStates) return;
+
+        const currentState  = item.extraData ? parseInt(item.extraData) : 0;
+        const nextState     = (currentState + 1) % item.baseItem.totalStates;
+
+        item.setExtraData(nextState);
     }
 }

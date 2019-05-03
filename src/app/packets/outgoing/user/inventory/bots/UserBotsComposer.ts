@@ -13,7 +13,7 @@ export class UserBotsComposer extends Outgoing
     {
         try
         {
-            const bots = null;
+            const bots = this.client.user.inventory.bots.bots;
 
             if(bots)
             {
