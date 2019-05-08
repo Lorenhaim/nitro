@@ -1,67 +1,32 @@
+import { Manager } from '../../../../common';
 import { BotDao } from '../../../../database';
 import { UserBotAddComposer, UserBotRemoveComposer } from '../../../../packets';
 import { Bot } from '../../../bot';
 import { User } from '../../User';
 
-export class UserBots
+export class UserBots extends Manager
 {
     private _user: User;
-
     private _bots: Bot[];
-
-    private _isLoaded: boolean;
-    private _isLoading: boolean;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
 
     constructor(user: User)
     {
+        super('UserBots', user.logger);
+
         if(!(user instanceof User)) throw new Error('invalid_user');
 
-        this._user              = user;
-        
-        this._bots              = [];
-
-        this._isLoaded          = false;
-        this._isLoading         = false;
-
-        this._isDisposed        = false;
-        this._isDisposing       = false;
+        this._user  = user;
+        this._bots  = [];
     }
 
-    public async init(): Promise<void>
+    protected async onInit(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading && !this._isDisposing)
-        {
-            this._isLoading = true;
-
-            await this.loadBots();
-
-            this._isLoaded      = true;
-            this._isLoading     = false;
-            this._isDisposed    = false;
-        }
+        await this.loadBots();
     }
 
-    public async reload(): Promise<void>
+    public async onDispose(): Promise<void>
     {
-        await this.dispose();
-        await this.init();
-    }
-
-    public async dispose(): Promise<void>
-    {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
-        {
-            this._isDisposing   = true;
-
-            this._bots          = [];
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
-        }
+        this._bots = [];
     }
 
     public getBot(id: number): Bot
@@ -124,6 +89,8 @@ export class UserBots
         {
             const bot = removedBots[i];
 
+            if(!bot) continue;
+
             for(let j = 0; j < totalActiveBots; j++)
             {
                 const activeBot = this._bots[j];
@@ -135,6 +102,8 @@ export class UserBots
                 this._user.connections.processOutgoing(new UserBotRemoveComposer(activeBot.id));
 
                 this._bots.splice(j, 1);
+
+                break;
             }
         }
     }
@@ -145,12 +114,13 @@ export class UserBots
 
         const results = await BotDao.loadUserBots(this._user.id);
 
-        if(results)
-        {
-            const totalResults = results.length;
+        if(!results) return;
+        
+        const totalResults = results.length;
 
-            if(totalResults) for(let i = 0; i < totalResults; i++) this._bots.push(new Bot(results[i]));
-        }
+        if(!totalResults) return;
+        
+        for(let i = 0; i < totalResults; i++) this._bots.push(new Bot(results[i]));
     }
 
     public get user(): User
@@ -161,15 +131,5 @@ export class UserBots
     public get bots(): Bot[]
     {
         return this._bots;
-    }
-
-    public get isLoaded(): boolean
-    {
-        return this._isLoaded;
-    }
-
-    public get isDisposed(): boolean
-    {
-        return this._isDisposed;
     }
 }

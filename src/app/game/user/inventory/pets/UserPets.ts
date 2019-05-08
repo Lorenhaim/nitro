@@ -1,67 +1,32 @@
+import { Manager } from '../../../../common';
 import { PetDao } from '../../../../database';
 import { UserPetAddComposer, UserPetRemoveComposer } from '../../../../packets';
 import { Pet } from '../../../pet';
 import { User } from '../../User';
 
-export class UserPets
+export class UserPets extends Manager
 {
     private _user: User;
-
     private _pets: Pet[];
-
-    private _isLoaded: boolean;
-    private _isLoading: boolean;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
 
     constructor(user: User)
     {
+        super('UserPets', user.logger);
+
         if(!(user instanceof User)) throw new Error('invalid_user');
 
-        this._user              = user;
-        
-        this._pets             = [];
-
-        this._isLoaded          = false;
-        this._isLoading         = false;
-
-        this._isDisposed        = false;
-        this._isDisposing       = false;
+        this._user  = user;
+        this._pets  = [];
     }
 
-    public async init(): Promise<void>
+    protected async onInit(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading && !this._isDisposing)
-        {
-            this._isLoading = true;
-
-            await this.loadPets();
-
-            this._isLoaded      = true;
-            this._isLoading     = false;
-            this._isDisposed    = false;
-        }
+        await this.loadPets();
     }
 
-    public async reload(): Promise<void>
+    protected async onDispose(): Promise<void>
     {
-        await this.dispose();
-        await this.init();
-    }
-
-    public async dispose(): Promise<void>
-    {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
-        {
-            this._isDisposing   = true;
-
-            this._pets         = [];
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
-        }
+        this._pets = [];
     }
 
     public getPet(id: number): Pet
@@ -124,6 +89,8 @@ export class UserPets
         {
             const pet = removedPets[i];
 
+            if(!pet) continue;
+
             for(let j = 0; j < totalActivePets; j++)
             {
                 const activePet = this._pets[j];
@@ -135,6 +102,8 @@ export class UserPets
                 this._user.connections.processOutgoing(new UserPetRemoveComposer(activePet.id));
 
                 this._pets.splice(j, 1);
+
+                break;
             }
         }
     }
@@ -145,12 +114,13 @@ export class UserPets
 
         const results = await PetDao.loadUserPets(this._user.id);
 
-        if(results)
-        {
-            const totalResults = results.length;
+        if(!results) return;
+        
+        const totalResults = results.length;
 
-            if(totalResults) for(let i = 0; i < totalResults; i++) this._pets.push(new Pet(results[i]));
-        }
+        if(!totalResults) return;
+
+        for(let i = 0; i < totalResults; i++) this._pets.push(new Pet(results[i]));
     }
 
     public get user(): User
@@ -161,15 +131,5 @@ export class UserPets
     public get pets(): Pet[]
     {
         return this._pets;
-    }
-
-    public get isLoaded(): boolean
-    {
-        return this._isLoaded;
-    }
-
-    public get isDisposed(): boolean
-    {
-        return this._isDisposed;
     }
 }

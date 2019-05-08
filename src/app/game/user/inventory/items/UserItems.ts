@@ -1,67 +1,32 @@
+import { Manager } from '../../../../common';
 import { ItemDao } from '../../../../database';
 import { UserItemAddComposer, UserItemRemoveComposer, UserItemsRefreshComposer } from '../../../../packets';
 import { Item } from '../../../item';
 import { User } from '../../User';
 
-export class UserItems
+export class UserItems extends Manager
 {
     private _user: User;
-
     private _items: Item[];
-
-    private _isLoaded: boolean;
-    private _isLoading: boolean;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
 
     constructor(user: User)
     {
+        super('UserItems', user.logger);
+
         if(!(user instanceof User)) throw new Error('invalid_user');
 
-        this._user              = user;
-        
-        this._items             = [];
-
-        this._isLoaded          = false;
-        this._isLoading         = false;
-
-        this._isDisposed        = false;
-        this._isDisposing       = false;
+        this._user  = user;
+        this._items = [];
     }
 
-    public async init(): Promise<void>
+    protected async onInit(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading && !this._isDisposing)
-        {
-            this._isLoading = true;
-
-            await this.loadItems();
-
-            this._isLoaded      = true;
-            this._isLoading     = false;
-            this._isDisposed    = false;
-        }
+        await this.loadItems();
     }
 
-    public async reload(): Promise<void>
+    protected async onDispose(): Promise<void>
     {
-        await this.dispose();
-        await this.init();
-    }
-
-    public async dispose(): Promise<void>
-    {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
-        {
-            this._isDisposing   = true;
-
-            this._items         = [];
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
-        }
+        this._items = [];
     }
 
     public getItem(id: number): Item
@@ -152,6 +117,8 @@ export class UserItems
                 this._user.connections.processOutgoing(new UserItemRemoveComposer(activeItem.id));
 
                 this._items.splice(j, 1);
+
+                break;
             }
         }
     }
@@ -162,12 +129,13 @@ export class UserItems
 
         const results = await ItemDao.loadUserItems(this._user.id);
 
-        if(results)
-        {
-            const totalResults = results.length;
+        if(!results) return;
+        
+        const totalResults = results.length;
 
-            if(totalResults) for(let i = 0; i < totalResults; i++) this._items.push(new Item(results[i]));
-        }
+        if(!totalResults) return;
+
+        for(let i = 0; i < totalResults; i++) this._items.push(new Item(results[i]));
     }
 
     public get user(): User
@@ -178,15 +146,5 @@ export class UserItems
     public get items(): Item[]
     {
         return this._items;
-    }
-
-    public get isLoaded(): boolean
-    {
-        return this._isLoaded;
-    }
-
-    public get isDisposed(): boolean
-    {
-        return this._isDisposed;
     }
 }

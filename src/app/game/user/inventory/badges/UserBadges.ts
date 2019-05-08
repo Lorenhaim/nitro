@@ -1,78 +1,50 @@
+import { Manager } from '../../../../common';
 import { UserBadgeDao } from '../../../../database';
 import { BadgeAddComposer, BadgesComposer, BadgesCurrentComposer } from '../../../../packets';
 import { User } from '../../User';
 import { Badge } from './Badge';
 
-export class UserBadges
+export class UserBadges extends Manager
 {
     private _user: User;
 
     private _badges: Badge[];
     private _currentBadges: Badge[];
 
-    private _isLoaded: boolean;
-    private _isLoading: boolean;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
-
     constructor(user: User)
     {
+        super('UserBadges', user.logger);
+
         if(!(user instanceof User)) throw new Error('invalid_user');
 
         this._user          = user;
         
         this._badges        = [];
         this._currentBadges = [];
-
-        this._isLoaded      = false;
-        this._isLoading     = false;
-
-        this._isDisposed    = false;
-        this._isDisposing   = false;
     }
 
-    public async init(): Promise<void>
+    protected async onInit(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading && !this._isDisposing)
-        {
-            this._isLoading     = true;
-
-            await this.loadBadges();
-
-            this._isLoaded      = true;
-            this._isLoading     = false;
-            this._isDisposed    = false;
-        }
+        await this.loadBadges();
     }
 
-    public async dispose(): Promise<void>
+    protected async onDispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
-        {
-            this._isDisposing   = true;
-
-            this._badges        = [];
-            this._currentBadges = [];
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
-        }
+        this._badges        = [];
+        this._currentBadges = [];
     }
 
     public getBadge(badgeCode: string): Badge
     {
         const totalBadges = this._badges.length;
 
-        if(totalBadges)
+        if(!totalBadges) return null;
+        
+        for(let i = 0; i < totalBadges; i++)
         {
-            for(let i = 0; i < totalBadges; i++)
-            {
-                const badge = this._badges[i];
+            const badge = this._badges[i];
 
-                if(badge.badgeCode === badgeCode) return badge;
-            }
+            if(badge.badgeCode === badgeCode) return badge;
         }
 
         return null;
@@ -98,6 +70,8 @@ export class UserBadges
         {
             const code = addedBadges[i];
 
+            if(!code) continue;
+
             if(this.hasBadge(code)) continue;
 
             validatedBadges.push(code);
@@ -118,6 +92,8 @@ export class UserBadges
         for(let i = 0; i < totalNewBadges; i++)
         {
             const entity = newBadges[i];
+
+            if(!entity) continue;
 
             const badge: Badge = {
                 id: entity.id,
@@ -203,12 +179,15 @@ export class UserBadges
                 if(activeBadge.badgeCode !== code) continue;
 
                 this._badges.splice(j, 1);
+
+                break;
             }
         }
 
         this.loadCurrentBadges();
 
         await UserBadgeDao.removeBadge(this._user.id, ...removedBadges);
+        
         this._user.connections.processOutgoing(new BadgesComposer());
     }
 
@@ -248,14 +227,13 @@ export class UserBadges
 
         const totalBadges = this._badges.length;
 
-        if(totalBadges)
-        {
-            for(let i = 0; i < totalBadges; i++)
-            {
-                const badge = this._badges[i];
+        if(!totalBadges) return;
 
-                if(badge.slotNumber && badge.slotNumber > 0 && badge.slotNumber <= 5) this._currentBadges.push(badge);
-            }
+        for(let i = 0; i < totalBadges; i++)
+        {
+            const badge = this._badges[i];
+
+            if(badge.slotNumber && badge.slotNumber > 0 && badge.slotNumber <= 5) this._currentBadges.push(badge);
         }
     }
 
@@ -272,15 +250,5 @@ export class UserBadges
     public get currentBadges(): Badge[]
     {
         return this._currentBadges;
-    }
-
-    public get isLoaded(): boolean
-    {
-        return this._isLoaded;
-    }
-
-    public get isDisposed(): boolean
-    {
-        return this._isDisposed;
     }
 }
