@@ -35,7 +35,7 @@ export class Pet
             this._entity.direction  = this._unit.location.position.direction || 0;
         }
 
-        Emulator.gameScheduler.savePet(this._entity);
+        Emulator.gameScheduler.savePet(this);
     }
 
     public savePosition(): void
@@ -157,6 +157,11 @@ export class Pet
     public get id(): number
     {
         return this._entity.id;
+    }
+
+    public get entity(): PetEntity
+    {
+        return this._entity;
     }
 
     public get userId(): number

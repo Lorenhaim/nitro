@@ -1,3 +1,4 @@
+import { getManager } from 'typeorm';
 import { NumberHelper } from '../../common';
 import { ItemEntity } from '../../database';
 import { Emulator } from '../../Emulator';
@@ -69,7 +70,14 @@ export class Item
             }
         }
         
-        Emulator.gameScheduler.saveItem(this._entity);
+        Emulator.gameScheduler.saveItem(this);
+    }
+
+    public async delete(): Promise<void>
+    {
+        if(this._entity.roomId || this._entity.userId) return;
+
+        await getManager().delete(ItemEntity, this._entity);
     }
 
     public getTile(): RoomTile
@@ -346,6 +354,11 @@ export class Item
     public get id(): number
     {
         return this._entity.id;
+    }
+
+    public get entity(): ItemEntity
+    {
+        return this._entity;
     }
 
     public get userId(): number

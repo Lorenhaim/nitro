@@ -19,7 +19,7 @@ export class RoomDetails
 
     public save(): void
     {
-        Emulator.gameScheduler.saveRoom(this._entity);
+        Emulator.gameScheduler.saveRoom(this._room);
     }
 
     public setUsersNow(count: number): void
@@ -99,6 +99,11 @@ export class RoomDetails
     public get id(): number
     {
         return this._entity.id;
+    }
+
+    public get entity(): RoomEntity
+    {
+        return this._entity;
     }
 
     public get ownerId(): number

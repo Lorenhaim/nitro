@@ -31,10 +31,6 @@ export class InteractionExchange extends InteractionDefault implements OnRedeem
             item.willRemove = true;
 
             item.room.itemManager.removeItem(unit.user, item);
-
-            item.clearUser();
-
-            item.save();
         }
     }
 }

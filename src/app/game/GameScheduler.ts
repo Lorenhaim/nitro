@@ -1,55 +1,60 @@
 import { getManager } from 'typeorm';
 import { Manager } from '../common';
 import { BotEntity, ItemEntity, PetEntity, RoomEntity, UserEntity } from '../database';
+import { Bot } from './bot';
+import { Item } from './item';
+import { Pet } from './pet';
+import { Room } from './room';
+import { User } from './user';
 
 export class GameScheduler extends Manager
 {
-    private _itemEntities: ItemEntity[];
+    private _items: Item[];
     private _itemInterval: NodeJS.Timeout;
 
-    private _roomEntities: RoomEntity[];
+    private _rooms: Room[];
     private _roomInterval: NodeJS.Timeout;
 
-    private _userEntities: UserEntity[];
+    private _users: User[];
     private _userInterval: NodeJS.Timeout;
 
-    private _petEntities: PetEntity[];
+    private _pets: Pet[];
     private _petInterval: NodeJS.Timeout;
 
-    private _botEntities: BotEntity[];
+    private _bots: Bot[];
     private _botInterval: NodeJS.Timeout;
 
     constructor()
     {
         super('GameScheduler');
 
-        this._itemEntities  = [];
+        this._items  = [];
         this._itemInterval  = null;
 
-        this._roomEntities  = [];
+        this._rooms  = [];
         this._roomInterval  = null;
 
-        this._userEntities  = [];
+        this._users  = [];
         this._userInterval  = null;
 
-        this._petEntities   = [];
+        this._pets   = [];
         this._petInterval   = null;
 
-        this._botEntities   = [];
+        this._bots   = [];
         this._botInterval   = null;
     }
 
     protected onInit(): void
     {
-        this._itemInterval = setInterval(async () => await this.saveItemEntities(), 10000);
+        this._itemInterval = setInterval(async () => await this.saveItems(), 10000);
 
-        this._roomInterval = setInterval(async () => await this.saveRoomEntities(), 10000);
+        this._roomInterval = setInterval(async () => await this.saveRooms(), 10000);
 
-        this._userInterval = setInterval(async () => await this.saveUserEntities(), 10000);
+        this._userInterval = setInterval(async () => await this.saveUsers(), 10000);
 
-        this._petInterval = setInterval(async () => await this.savePetEntities(), 10000);
+        this._petInterval = setInterval(async () => await this.savePets(), 10000);
 
-        this._botInterval = setInterval(async () => await this.saveBotEntities(), 10000);
+        this._botInterval = setInterval(async () => await this.saveBots(), 10000);
     }
 
     protected onDispose(): void
@@ -65,139 +70,135 @@ export class GameScheduler extends Manager
         if(this._botInterval) clearInterval(this._botInterval);
     }
 
-    public saveItem(entity: ItemEntity): void
+    public saveItem(item: Item): void
     {
-        if(!entity) return;
+        if(!item) return;
 
-        const totalItems = this._itemEntities.length;
+        const totalItems = this._items.length;
 
         if(totalItems)
         {
             for(let i = 0; i < totalItems; i++)
             {
-                const pendingEntity = this._itemEntities[i];
+                const pendingItem = this._items[i];
 
-                if(!pendingEntity) continue;
+                if(!pendingItem) continue;
 
-                if(pendingEntity === entity) return;
+                if(pendingItem === item) return;
             }
         }
 
-        this._itemEntities.push(entity);
+        this._items.push(item);
     }
 
-    public saveRoom(entity: RoomEntity): void
+    public saveRoom(room: Room): void
     {
-        if(!entity) return;
+        if(!room) return;
 
-        const totalRooms = this._roomEntities.length;
+        const totalRooms = this._rooms.length;
 
         if(totalRooms)
         {
             for(let i = 0; i < totalRooms; i++)
             {
-                const pendingEntity = this._roomEntities[i];
+                const pendingRoom = this._rooms[i];
 
-                if(!pendingEntity) continue;
+                if(!pendingRoom) continue;
 
-                if(pendingEntity === entity) return;
+                if(pendingRoom === room) return;
             }
         }
 
-        this._roomEntities.push(entity);
+        this._rooms.push(room);
     }
 
-    public saveUser(entity: UserEntity): void
+    public saveUser(user: User): void
     {
-        if(!entity) return;
+        if(!user) return;
 
-        const totalUsers = this._userEntities.length;
+        const totalUsers = this._users.length;
 
         if(totalUsers)
         {
             for(let i = 0; i < totalUsers; i++)
             {
-                const pendingEntity = this._userEntities[i];
+                const pendingUser = this._users[i];
 
-                if(!pendingEntity) continue;
+                if(!pendingUser) continue;
 
-                if(pendingEntity === entity) return;
+                if(pendingUser === user) return;
             }
         }
 
-        this._userEntities.push(entity);
+        this._users.push(user);
     }
 
-    public savePet(entity: PetEntity): void
+    public savePet(pet: Pet): void
     {
-        if(!entity) return;
+        if(!pet) return;
 
-        const totalPets = this._petEntities.length;
+        const totalPets = this._pets.length;
 
         if(totalPets)
         {
             for(let i = 0; i < totalPets; i++)
             {
-                const pendingEntity = this._petEntities[i];
+                const pendingPet = this._pets[i];
 
-                if(!pendingEntity) continue;
+                if(!pendingPet) continue;
 
-                if(pendingEntity === entity) return;
+                if(pendingPet === pet) return;
             }
         }
 
-        this._petEntities.push(entity);
+        this._pets.push(pet);
     }
 
-    public saveBot(entity: BotEntity): void
+    public saveBot(bot: Bot): void
     {
-        if(!entity) return;
+        if(!bot) return;
 
-        const totalBots = this._botEntities.length;
+        const totalBots = this._bots.length;
 
         if(totalBots)
         {
             for(let i = 0; i < totalBots; i++)
             {
-                const pendingEntity = this._botEntities[i];
+                const pendingBot = this._bots[i];
 
-                if(!pendingEntity) continue;
+                if(!pendingBot) continue;
 
-                if(pendingEntity === entity) return;
+                if(pendingBot === bot) return;
             }
         }
 
-        this._botEntities.push(entity);
+        this._bots.push(bot);
     }
 
-    private async saveItemEntities(): Promise<void>
+    private async saveItems(): Promise<void>
     {
         try
         {
             const entities: ItemEntity[] = [];
 
-            const totalEntities = this._itemEntities.length;
+            const totalItems = this._items.length;
 
-            if(!totalEntities) return;
+            if(!totalItems) return;
 
-            for(let i = 0; i < totalEntities; i++) entities.push(this._itemEntities.shift());
-
-            const totalSaveEntities = entities.length;
-
-            if(!totalSaveEntities) return;
-
-            for(let i = 0; i < totalSaveEntities; i++)
+            for(let i = 0; i < totalItems; i++)
             {
-                const entity = entities[i];
+                const item = this._items.shift();
 
-                if(!entity) continue;
+                if(!item) continue;
 
-                if(!entity.userId)
+                if(item.willRemove)
                 {
-                    await getManager().delete(ItemEntity, entity.id);
+                    await getManager().delete(ItemEntity, item.id);
 
-                    entities.splice(i, 1);
+                    continue;
                 }
+
+                entities.push(item.entity);
             }
 
             if(entities.length) await getManager().save(entities);
@@ -209,17 +210,17 @@ export class GameScheduler extends Manager
         }
     }
 
-    private async saveRoomEntities(): Promise<void>
+    private async saveRooms(): Promise<void>
     {
         try
         {
             const entities: RoomEntity[] = [];
 
-            const totalEntities = this._roomEntities.length;
+            const totalEntities = this._rooms.length;
 
             if(!totalEntities) return;
 
-            for(let i = 0; i < totalEntities; i++) entities.push(this._roomEntities.shift());
+            for(let i = 0; i < totalEntities; i++) entities.push(this._rooms.shift().details.entity);
 
             if(entities.length) await getManager().save(entities);
         }
@@ -230,17 +231,17 @@ export class GameScheduler extends Manager
         }
     }
 
-    private async saveUserEntities(): Promise<void>
+    private async saveUsers(): Promise<void>
     {
         try
         {
             const entities: UserEntity[] = [];
 
-            const totalEntities = this._userEntities.length;
+            const totalEntities = this._users.length;
 
             if(!totalEntities) return;
 
-            for(let i = 0; i < totalEntities; i++) entities.push(this._userEntities.shift());
+            for(let i = 0; i < totalEntities; i++) entities.push(this._users.shift().details.entity);
 
             if(entities.length) await getManager().save(entities);
         }
@@ -251,17 +252,17 @@ export class GameScheduler extends Manager
         }
     }
 
-    private async savePetEntities(): Promise<void>
+    private async savePets(): Promise<void>
     {
         try
         {
             const entities: PetEntity[] = [];
 
-            const totalEntities = this._petEntities.length;
+            const totalPets = this._pets.length;
 
-            if(!totalEntities) return;
+            if(!totalPets) return;
 
-            for(let i = 0; i < totalEntities; i++) entities.push(this._petEntities.shift());
+            for(let i = 0; i < totalPets; i++) entities.push(this._pets.shift().entity);
 
             if(entities.length) await getManager().save(entities);
         }
@@ -272,19 +273,19 @@ export class GameScheduler extends Manager
         }
     }
 
-    private async saveBotEntities(): Promise<void>
+    private async saveBots(): Promise<void>
     {
         try
         {
             const entities: BotEntity[] = [];
 
-            const totalEntities = this._botEntities.length;
+            const totalBots = this._bots.length;
 
-            if(!totalEntities) return;
+            if(!totalBots) return;
 
-            for(let i = 0; i < totalEntities; i++) entities.push(this._botEntities.shift());
+            for(let i = 0; i < totalBots; i++) entities.push(this._bots.shift().entity);
 
-            if(entities.length) await getManager().save(entities);
+            if(entities.length) await getManager().save(entities)
         }
 
         catch(err)

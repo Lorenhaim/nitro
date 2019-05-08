@@ -30,7 +30,7 @@ export class Bot
             this._entity.direction  = this._unit.location.position.direction || 0;
         }
 
-        Emulator.gameScheduler.saveBot(this._entity);
+        Emulator.gameScheduler.saveBot(this);
     }
 
     public savePosition(): void
@@ -144,6 +144,11 @@ export class Bot
     public get id(): number
     {
         return this._entity.id;
+    }
+
+    public get entity(): BotEntity
+    {
+        return this._entity;
     }
 
     public get userId(): number
