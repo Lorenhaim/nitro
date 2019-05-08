@@ -18,11 +18,11 @@ export class SecurityLoginEvent extends Incoming
 
                 const userId = await Emulator.gameManager.securityManager.authenticationManager.checkCredentials(this.packet.readString(), this.packet.readString());
 
-                if(!userId) return;
+                if(!userId) return this.client.processOutgoing(new SecurityTicketComposer(false));
                 
                 const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
 
-                if(!user) return;
+                if(!user) return this.client.processOutgoing(new SecurityTicketComposer(false));
 
                 if(user.isLoaded)
                 {

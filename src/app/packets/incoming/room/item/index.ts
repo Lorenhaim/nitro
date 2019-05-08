@@ -5,5 +5,7 @@ export * from './ItemPaintEvent';
 export * from './ItemPickupEvent';
 export * from './ItemPlaceEvent';
 export * from './ItemRedeemEvent';
+export * from './ItemStackHelperEvent';
 export * from './wall';
 export * from './wired';
+

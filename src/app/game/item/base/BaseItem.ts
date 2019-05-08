@@ -2,7 +2,7 @@ import { shuffleArray } from '../../../common';
 import { ItemBaseEntity } from '../../../database';
 import { Emulator } from '../../../Emulator';
 import { UnitEffect, UnitHandItem } from '../../unit';
-import { Interaction, InteractionMultiHeight, InteractionType, InteractionVendingMachine } from '../interaction';
+import { Interaction, InteractionMultiHeight, InteractionRoller, InteractionType, InteractionVendingMachine } from '../interaction';
 import { BaseItemType } from './BaseItemType';
 
 export class BaseItem
@@ -284,7 +284,7 @@ export class BaseItem
 
     public get canToggle(): boolean
     {
-        return this.totalStates > 1;
+        return this.totalStates > 1 && !this.hasInteraction(InteractionRoller);
     }
 
     public get canStack(): boolean

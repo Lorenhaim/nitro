@@ -60,6 +60,8 @@ export class UnitActionTask extends Task
     {
         if(unit)
         {
+            if(unit.location.rolling) return;
+            
             if(unit.location.isWalking)
             {
                 if(unit.location.positionNext)
@@ -130,21 +132,25 @@ export class UnitActionTask extends Task
 
                         nextTile.addUnit(unit);
 
-                        unit.location.removeStatus(UnitStatusType.LAY, UnitStatusType.SIT, UnitStatusType.JUMP);
+                        unit.location.removeStatus(UnitStatusType.LAY, UnitStatusType.SIT);
                         unit.location.position.setDirection(unit.location.position.calculateWalkDirection(nextPosition));
                         unit.location.addStatus(new UnitStatus(UnitStatusType.MOVE, `${ nextTile.position.x },${ nextTile.position.y },${ nextTile.walkingHeight + unit.location.additionalHeight }`));
                         unit.location.positionNext = nextPosition;
 
                         if(nextItem)
                         {
-                            if(nextItem !== currentItem)
-                            {
-                                const interaction: any = nextItem.baseItem.interaction;
+                            const interaction: any = nextItem.baseItem.interaction;
 
-                                if(interaction)
+                            if(interaction)
+                            {
+                                if(nextItem !== currentItem)
                                 {
+                                    const interaction: any = nextItem.baseItem.interaction;
+
                                     if(interaction.onEnter && unit.type !== UnitType.PET) interaction.onEnter(unit, nextItem);
                                 }
+
+                                if(interaction.beforeStep) interaction.beforeStep(unit, nextItem);
                             }
                         }
                     }

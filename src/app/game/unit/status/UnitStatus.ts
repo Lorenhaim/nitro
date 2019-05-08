@@ -21,6 +21,11 @@ export class UnitStatus
         this._lifetimeCountdown     = lifetimeCountdown || -1;
     }
 
+    public setValue(value: string)
+    {
+        this._value = value;
+    }
+
     public swapKeys(): void
     {
         [ this._key, this._swap ] = [ this._swap, this._key ];

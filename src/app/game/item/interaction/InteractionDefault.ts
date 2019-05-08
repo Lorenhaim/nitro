@@ -3,10 +3,10 @@ import { AffectedPositions, Position } from '../../pathfinder';
 import { Unit, UnitEffect } from '../../unit';
 import { User } from '../../user';
 import { Item } from '../Item';
-import { OnClick, OnEnter, OnLeave, OnMove, OnStep, OnStop, ParseExtraData } from './actions';
+import { BeforeStep, OnClick, OnEnter, OnLeave, OnMove, OnStep, OnStop, ParseExtraData } from './actions';
 import { Interaction } from './Interaction';
 
-export class InteractionDefault extends Interaction implements OnClick, OnEnter, OnLeave, OnMove, OnStep, OnStop, ParseExtraData
+export class InteractionDefault extends Interaction implements OnClick, OnEnter, OnLeave, OnMove, OnStep, OnStop, ParseExtraData, BeforeStep
 {
     constructor(name: string = null)
     {
@@ -87,6 +87,11 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
         //console.log('stepped');
     }
 
+    public beforeStep(unit: Unit, item: Item): void
+    {
+        //console.log('before step');
+    }
+
     public onStop(unit: Unit, item: Item): void
     {        
         if(unit && item)
@@ -159,7 +164,7 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
 
         const room = item.room;
 
-        if(!room) releaseEvents;
+        if(!room) return;
 
         const totalStates = item.baseItem.totalStates;
 

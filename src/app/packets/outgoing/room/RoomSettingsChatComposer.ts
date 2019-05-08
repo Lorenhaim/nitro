@@ -22,8 +22,6 @@ export class RoomSettingsChatComposer extends Outgoing
         {
             this._room.parseChatSettings(this.packet);
 
-            console.log(this.packet.encoded);
-
             return this.packet.prepare();
         }
 

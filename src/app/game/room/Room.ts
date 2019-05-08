@@ -1,5 +1,5 @@
 import { Subject, Subscription } from 'rxjs';
-import { Logger } from '../../common';
+import { Manager } from '../../common';
 import { RoomEntity } from '../../database';
 import { Emulator } from '../../Emulator';
 import { OutgoingPacket } from '../../packets';
@@ -16,10 +16,9 @@ import { RoomUnitManager } from './RoomUnitManager';
 import { RoomWiredManager } from './RoomWiredManager';
 import { RoomTaskManager } from './tasks';
 
-export class Room
+export class Room extends Manager
 {
     private _id: number;
-    private _logger: Logger;
 
     private _events: Subject<RoomEvent>;
     private _subscription: Subscription;
@@ -37,18 +36,15 @@ export class Room
     private _securityManager: RoomSecurityManager;
     private _wiredManager: RoomWiredManager;
 
-    private _isLoaded: boolean;
-    private _isLoading: boolean;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
+    private _objectOwners: { id: number, username: string }[];
 
     constructor(entity: RoomEntity)
     {
+        super(`Room ${ entity.id }`);
+
         if(!(entity instanceof RoomEntity)) throw new Error('invalid_room');
 
         this._id                = entity.id;
-        this._logger            = new Logger('Room', entity.id.toString());
 
         this._events            = new Subject();
         this._subscription      = null;
@@ -67,62 +63,42 @@ export class Room
         this._petManager        = new RoomPetManager(this);
         this._securityManager   = new RoomSecurityManager(this);
         this._wiredManager      = new RoomWiredManager(this);
-        
-        this._isLoaded          = false;
-        this._isLoading         = false;
-        
-        this._isDisposed        = false;
-        this._isDisposing       = false;
+
+        this._objectOwners      = [];
     }
 
-    public async init(): Promise<void>
+    protected async onInit(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading && !this._isDisposing)
-        {
-            this._isLoading = true;
+        this._map = new RoomMap(this);
 
-            if(!this._map)                      this._map = new RoomMap(this);
-            if(!this._taskManager.isLoaded)     this._taskManager.init();
-            if(!this._unitManager.isLoaded)     this._unitManager.init();
-            if(!this._itemManager.isLoaded)     await this._itemManager.init();
-            if(!this._botManager.isLoaded)      await this._botManager.init();
-            if(!this._petManager.isLoaded)      await this._petManager.init();
-            if(!this._securityManager.isLoaded) await this._securityManager.init();
-            if(!this._wiredManager.isLoaded)    await this._wiredManager.init();
+        this._taskManager.init();
+        this._unitManager.init();
 
-            this._map.generateMap();
+        await this._itemManager.init();
+        await this._botManager.init();
+        await this._petManager.init();
+        await this._securityManager.init();
+        await this._wiredManager.init();
 
-            this._subscription  = this._events.subscribe(async roomEvent => await this.handleEvent(roomEvent));
+        this._subscription  = this._events.subscribe(async roomEvent => await this.handleEvent(roomEvent));
 
-            this._isLoaded      = true;
-            this._isLoading     = false;
-            this._isDisposed    = false;
-        }
+        this._map.generateMap();
     }
 
-    public async dispose(): Promise<void>
+    protected async onDispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
-        {
-            this._isDisposing = true;
+        if(this._subscription) this._subscription.unsubscribe();
 
-            if(this._subscription)      this._subscription.unsubscribe();
-            
-            if(this._wiredManager)      await this._wiredManager.dispose();
-            if(this._securityManager)   await this._securityManager.dispose();
-            if(this._unitManager)       await this._unitManager.dispose();
-            if(this._taskManager)       this._taskManager.dispose();
-            if(this._itemManager)       await this._itemManager.dispose();
-            if(this._botManager)        await this._botManager.dispose();
-            if(this._petManager)        await this._petManager.dispose();
-            if(this._details)           await this._details.save();
+        await this._wiredManager.dispose();
+        await this._securityManager.dispose();
+        await this._unitManager.dispose();
+        this._taskManager.dispose();
+        await this._itemManager.dispose();
+        await this._botManager.dispose();
+        await this._petManager.dispose();
+        await this._details.save();
 
-            this._map = null;
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
-        }
+        this._map = null;
     }
 
     public tryDispose(): void
@@ -233,14 +209,29 @@ export class Room
         return packet.writeInt(this._details.chatMode, this._details.chatWeight, this._details.chatSpeed, this._details.chatDistance, this._details.chatProtection);
     }
 
+    public getObjectOwnerName(userId: number): string
+    {
+        const totalOwners = this._objectOwners.length;
+
+        if(!totalOwners) return null;
+
+        for(let i = 0; i < totalOwners; i++)
+        {
+            const owner = this._objectOwners[i];
+
+            if(!owner) continue;
+
+            if(owner.id !== userId) continue;
+
+            return owner.username;
+        }
+
+        return null;
+    }
+
     public get id(): number
     {
         return this._id;
-    }
-
-    public get logger(): Logger
-    {
-        return this._logger;
     }
 
     public get events(): Subject<RoomEvent>
@@ -303,23 +294,8 @@ export class Room
         return this._wiredManager;
     }
 
-    public get isLoaded(): boolean
+    public get objectOwners(): { id: number, username: string }[]
     {
-        return this._isLoaded;
-    }
-
-    public get isLoading(): boolean
-    {
-        return this._isLoading;
-    }
-
-    public get isDisposed(): boolean
-    {
-        return this._isDisposed;
-    }
-
-    public get isDisposing(): boolean
-    {
-        return this._isDisposing;
+        return this._objectOwners;
     }
 }

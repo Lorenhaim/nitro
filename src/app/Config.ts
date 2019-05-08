@@ -4,7 +4,7 @@ export const Config: ConfigOptions = {
     general: {
         siteName: 'HabboAPI',
         siteUrl: 'http://emulator.habboapi.com:4200',
-        production: 'PRODUCTION-201611291003-338511768'
+        production: 'ARCTURUS-20180113'
     },
     captcha: {
         enabled: false,
@@ -32,10 +32,11 @@ export const Config: ConfigOptions = {
             figureData: 'http://emulator.habboapi.com:3000/gamedata/figuredata.xml',
             furniData: 'http://emulator.habboapi.com:3000/gamedata/furnidata.xml',
             productData: 'http://emulator.habboapi.com:3000/gamedata/productdata.txt',
-            swf: 'http://emulator.habboapi.com:3000/local/edit/habbo/Habbo.swf',
+            swf: 'http://emulator.habboapi.com:3000/swf/edit/habbo/habbo.swf',
             swfBase: 'http://emulator.habboapi.com:3000/gordon/',
             texts: 'http://emulator.habboapi.com:3000/gamedata/external_texts.txt',
-            variables: 'http://emulator.habboapi.com:3000/gamedata/external_variables.txt'
+            variables: 'http://emulator.habboapi.com:3000/gamedata/external_variables.txt',
+            avatarUrl: 'http://www.habbo.com/habbo-imaging/avatarimage?figure='
         }
     },
     game: {
@@ -50,7 +51,7 @@ export const Config: ConfigOptions = {
         },
         login: {
             security: {
-                validateProduction: true,
+                validateProduction: false,
                 validateVariables: false
             },
             alert: {
@@ -91,7 +92,7 @@ export const Config: ConfigOptions = {
         }
     },
     web: {
-        enabled: false,
+        enabled: true,
         ip: '0.0.0.0',
         port: 443,
         ticket: {

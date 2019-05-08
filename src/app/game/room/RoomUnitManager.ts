@@ -299,6 +299,46 @@ export class RoomUnitManager extends Manager
         if(!totalUnits) return;
         
         for(let i = 0; i < totalUnits; i++) updatedUnits[i].location.invokeCurrentItem();
+
+        this.processOutgoing(new UnitStatusComposer(...updatedUnits));
+    }
+
+    public updateUnits(...units: Unit[]): void
+    {
+        const updatedUnits              = [ ...units ];
+        const validatedUnits: Unit[]    = [];
+
+        if(!updatedUnits) return;
+        
+        const totalUnits = updatedUnits.length;
+
+        if(!totalUnits) return;
+        
+        for(let i = 0; i < totalUnits; i++)
+        {
+            const unit = this.getUnit(updatedUnits[i].id);
+
+            if(!unit) continue;
+
+            validatedUnits.push(unit);
+        }
+
+        const totalValidated = validatedUnits.length;
+
+        if(!totalValidated) return;
+        
+        for(let i = 0; i < totalValidated; i++)
+        {
+            const unit = validatedUnits[i];
+
+            if(!unit) continue;
+
+            unit.location.invokeCurrentItem();
+
+            unit.needsUpdate = false;
+        }
+
+        this.processOutgoing(new UnitStatusComposer(...validatedUnits));
     }
 
     public get room(): Room

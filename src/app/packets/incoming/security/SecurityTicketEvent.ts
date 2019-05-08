@@ -14,11 +14,11 @@ export class SecurityTicketEvent extends Incoming
             {
                 const userId = await Emulator.gameManager.securityManager.ticketManager.checkGameTicket(this.packet.readString(), this.client.ip);
 
-                if(!userId) return;
+                if(!userId) return await this.client.dispose();
                 
                 const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
 
-                if(!user) return;
+                if(!user) return await this.client.dispose();
 
                 if(user.isLoaded)
                 {

@@ -65,7 +65,7 @@ export class PickupAllCommand extends Command
                     }
                 }
 
-                if(affectedPositions.length) room.map.updatePositions(...affectedPositions);
+                if(affectedPositions.length) room.map.updatePositions(true, ...affectedPositions);
                 
                 if(itemsRemoved.length) user.inventory.items.addItem(...itemsRemoved);
             }

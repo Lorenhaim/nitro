@@ -28,4 +28,18 @@ export class PetDao
 
         return null;
     }
+
+    public static async getOwnerUsername(petId: number): Promise<string>
+    {
+        const result = await getManager()
+            .createQueryBuilder(PetEntity, 'pet')
+            .select(['pet.id', 'pet.userId', 'user.id', 'user.username' ])
+            .where('pet.id = :petId', { petId })
+            .innerJoin('pet.user', 'user')
+            .getOne();
+
+        if(result) return result.user.username;
+
+        return null;
+    }
 }

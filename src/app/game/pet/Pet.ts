@@ -12,6 +12,8 @@ export class Pet
 
     private _unit: Unit;
 
+    private _rideCheckInterval: NodeJS.Timer;
+
     constructor(entity: PetEntity)
     {
         if(!(entity instanceof PetEntity)) throw new Error('invalid_entity');
@@ -19,13 +21,8 @@ export class Pet
         this._entity = entity;
 
         this._unit = new Unit(UnitType.PET, this);
-    }
 
-    public ridePet(unit: Unit)
-    {
-        if(!unit) return;
-
-        unit.connectUnit(this._unit);
+        this._rideCheckInterval = null;
     }
 
     public save(): void
@@ -42,6 +39,54 @@ export class Pet
         }
 
         Emulator.gameScheduler.savePet(this._entity);
+    }
+
+    public ridePet(unit: Unit)
+    {
+        if(!unit) return;
+
+        const positions = this._unit.location.position.getPositionsAround();
+
+        if(!positions) return;
+
+        const totalPositions = positions.length;
+
+        if(!totalPositions) return;
+
+        for(let i = 0; i < totalPositions; i++)
+        {
+            const position = positions[i];
+
+            if(!position) continue;
+
+            if(!unit.location.position.compare(position)) continue;
+
+            return unit.connectUnit(this._unit);
+        }
+
+        const positionInfront = this._unit.location.position.getPositionInfront();
+
+        unit.location.walkTo(positionInfront);
+
+        this._rideCheckInterval = setInterval(() => this.checkRide(unit), 250);
+    }
+
+    private checkRide(unit: Unit): void
+    {
+        if(!unit) return;
+
+        const positionInfront = this._unit.location.position.getPositionInfront();
+
+        if(unit.location.position.compare(positionInfront))
+        {
+            clearInterval(this._rideCheckInterval);
+
+            unit.connectUnit(this._unit);
+
+            return;
+        }
+
+        if(!unit.location.positionGoal || !unit.location.positionGoal.compare(positionInfront)) return clearInterval(this._rideCheckInterval);
     }
 
     public setUser(user: User): void

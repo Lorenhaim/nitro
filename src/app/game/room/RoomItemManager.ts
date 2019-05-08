@@ -14,7 +14,6 @@ export class RoomItemManager extends Manager
     private _room: Room;
 
     private _items: Item[];
-    private _itemOwners: { id: number, username: string }[];
 
     constructor(room: Room)
     {
@@ -22,10 +21,9 @@ export class RoomItemManager extends Manager
 
         if(!(room instanceof Room)) throw new Error('invalid_room');
 
-        this._room          = room;
+        this._room  = room;
 
-        this._items         = [];
-        this._itemOwners    = [];
+        this._items = [];
     }
 
     protected async onInit(): Promise<void>
@@ -35,8 +33,7 @@ export class RoomItemManager extends Manager
     
     protected async onDispose(): Promise<void>
     {
-        this._items         = [];
-        this._itemOwners    = [];
+        this._items = [];
     }
 
     public getItem(id: number): Item
@@ -103,26 +100,6 @@ export class RoomItemManager extends Manager
         }
 
         if(results.length) return results;
-
-        return null;
-    }
-
-    public getRandomChair(): Item
-    {
-        const totalItems = this._items.length;
-
-        if(!totalItems) return null;
-
-        for(let i = 0; i < totalItems; i++)
-        {
-            const item = this._items[i];
-
-            if(!item) continue;
-
-            if(!item.baseItem.canSit) continue;
-
-            return item;
-        }
 
         return null;
     }
@@ -214,26 +191,6 @@ export class RoomItemManager extends Manager
         return this.getItem(id) !== null;
     }
 
-    public getOwnerUsername(id: number): string
-    {
-        if(!id) return null;
-        
-        const totalOwners = this._itemOwners.length;
-
-        if(!totalOwners) return null;
-        
-        for(let i = 0; i < totalOwners; i++)
-        {
-            const owner = this._itemOwners[i];
-
-            if(!owner) continue;
-
-            if(owner.id === id) return owner.username;
-        }
-
-        return null;
-    }
-
     public placeItem(user: User, itemId: number, position: Position): void
     {
         if(!user || !itemId || !position) return;
@@ -252,7 +209,7 @@ export class RoomItemManager extends Manager
             {
                 item.wallPosition = position;
 
-                if(!this.getOwnerUsername(item.userId) && user.details.username) this._itemOwners.push({ id: item.userId, username: user.details.username });
+                if(!this._room.getObjectOwnerName(item.userId) && user.details.username) this._room.objectOwners.push({ id: item.userId, username: user.details.username });
 
                 item.setRoom(this._room);
 
@@ -277,7 +234,7 @@ export class RoomItemManager extends Manager
             item.position   = position.copy();
             item.position.z = tile.tileHeight;
 
-            if(!this.getOwnerUsername(item.userId) && user.details.username) this._itemOwners.push({ id: item.userId, username: user.details.username });
+            if(!this._room.getObjectOwnerName(item.userId) && user.details.username) this._room.objectOwners.push({ id: item.userId, username: user.details.username });
 
             item.setRoom(this._room);
 
@@ -289,7 +246,7 @@ export class RoomItemManager extends Manager
 
             const affectedPositions = [ ...AffectedPositions.getPositions(item) ];
 
-            if(affectedPositions.length) this._room.map.updatePositions(...affectedPositions);
+            if(affectedPositions.length) this._room.map.updatePositions(true, ...affectedPositions);
 
             this._room.unitManager.processOutgoing(new ItemFloorAddComposer(item, user.details.username));
         }
@@ -349,10 +306,10 @@ export class RoomItemManager extends Manager
             const affectedPositions = [ ...AffectedPositions.getPositions(item, oldPosition), ...AffectedPositions.getPositions(item) ];
 
             item.save();
-
-            if(affectedPositions.length) this._room.map.updatePositions(...affectedPositions);
             
             this._room.unitManager.processOutgoing(new ItemFloorUpdateComposer(item));
+
+            if(affectedPositions.length) this._room.map.updatePositions(true, ...affectedPositions);
         }
 
         const interaction: any = item.baseItem.interaction;
@@ -445,7 +402,7 @@ export class RoomItemManager extends Manager
 
         if(totalValidated) user.inventory.items.addItem(...validatedItems);
 
-        if(affectedPositions.length) this._room.map.updatePositions(...affectedPositions);
+        if(affectedPositions.length) this._room.map.updatePositions(true, ...affectedPositions);
     }
 
     public paintRoom(user: User, itemId: number): void
@@ -498,11 +455,11 @@ export class RoomItemManager extends Manager
                 {
                     const result = results[i];
 
-                    if(!this.getOwnerUsername(result.userId))
+                    if(!this._room.getObjectOwnerName(result.userId))
                     {
                         const username = await ItemDao.getOwnerUsername(result.id);
 
-                        this._itemOwners.push({ id: result.userId, username });
+                        this._room.objectOwners.push({ id: result.userId, username });
                     }
 
                     const item = new Item(result);
@@ -523,10 +480,5 @@ export class RoomItemManager extends Manager
     public get items(): Item[]
     {
         return this._items;
-    }
-
-    public get itemOwners(): { id: number, username: string }[]
-    {
-        return this._itemOwners;
     }
 }

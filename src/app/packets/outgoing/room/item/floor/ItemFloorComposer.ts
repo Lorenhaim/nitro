@@ -20,7 +20,7 @@ export class ItemFloorComposer extends Outgoing
     {
         try
         {
-            const itemOwners = this._room.itemManager.itemOwners;
+            const itemOwners = this._room.objectOwners;
 
             if(itemOwners)
             {

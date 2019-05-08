@@ -6,6 +6,7 @@ import * as IncomingCatalog from './incoming/catalog';
 import * as IncomingClient from './incoming/client';
 import * as IncomingGames from './incoming/games';
 import * as IncomingHotelView from './incoming/hotelview';
+import * as IncomingModeration from './incoming/moderation';
 import * as IncomingNavigator from './incoming/navigator';
 import * as IncomingPet from './incoming/pet';
 import * as IncomingRoom from './incoming/room';
@@ -33,6 +34,7 @@ export class PacketManager
         this.registerPet();
         this.registerRoom();
         this.registerMessenger();
+        this.registerModeration();
         this.registerUser();
         this.registerWebSocket();
         this.registerWired();
@@ -203,6 +205,7 @@ export class PacketManager
         this.addHandler(IncomingHeader.UNIT_GIVE_HANDITEM, IncomingRoom.UnitGiveHandItemEvent);
         this.addHandler(IncomingHeader.UNIT_DROP_HAND_ITEM, IncomingRoom.UnitDropHandItemEvent);
         this.addHandler(IncomingHeader.ROOM_SETTINGS_SAVE, IncomingRoom.RoomSettingsSaveEvent);
+        this.addHandler(IncomingHeader.ITEM_STACK_HELPER, IncomingRoom.ItemStackHelperEvent);
     }
 
     private registerMessenger(): void
@@ -219,6 +222,11 @@ export class PacketManager
         this.addHandler(IncomingHeader.MESSENGER_SEARCH, IncomingUser.MessengerSearchEvent);
         this.addHandler(IncomingHeader.MESSENGER_RELATIONSHIPS_UPDATE, IncomingUser.MessengerRelationshipUpdateEvent);
         this.addHandler(IncomingHeader.MESSENGER_UPDATES, IncomingUser.MessengerUpdatesEvent);
+    }
+
+    private registerModeration(): void
+    {
+        this.addHandler(IncomingHeader.MOD_TOOL_USER_INFO, IncomingModeration.ModerationUserInfoEvent);
     }
 
     private registerUser(): void
@@ -248,6 +256,7 @@ export class PacketManager
         this.addHandler(IncomingHeader.USER_OUTFIT_SAVE, IncomingUser.OutfitSaveEvent);
         this.addHandler(IncomingHeader.USER_MOTTO, IncomingUser.UserMottoEvent);
         this.addHandler(IncomingHeader.USER_HOME_ROOM, IncomingUser.UserHomeRoomEvent);
+        this.addHandler(IncomingHeader.USER_FOLLOW, IncomingUser.UserFollowEvent);
     }
 
     private registerWebSocket(): void

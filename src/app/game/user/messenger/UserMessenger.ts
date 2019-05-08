@@ -1,5 +1,5 @@
 import { getManager } from 'typeorm';
-import { TimeHelper } from '../../../common';
+import { Manager, TimeHelper } from '../../../common';
 import { MessengerDao, MessengerFriendEntity, MessengerRequestEntity } from '../../../database';
 import { Emulator } from '../../../Emulator';
 import { MessengerChatComposer, MessengerRequestComposer, MessengerUpdateComposer } from '../../../packets';
@@ -9,7 +9,7 @@ import { MessengerCategory } from './MessengerCategory';
 import { MessengerFriend } from './MessengerFriend';
 import { MessengerRequest } from './MessengerRequest';
 
-export class UserMessenger
+export class UserMessenger extends Manager
 {
     private _user: User;
 
@@ -18,14 +18,10 @@ export class UserMessenger
     private _requests: MessengerRequest[];
     private _requestsSent: number[];
 
-    private _isLoaded: boolean;
-    private _isLoading: boolean;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
-
     constructor(user: User)
     {
+        super('UserMessenger', user.logger);
+
         if(!(user instanceof User)) throw new Error('invalid_user');
 
         this._user          = user;
@@ -34,46 +30,22 @@ export class UserMessenger
         this._friends       = [];
         this._requests      = [];
         this._requestsSent  = [];
-
-        this._isLoaded      = false;
-        this._isLoading     = false;
-
-        this._isDisposed    = false;
-        this._isDisposing   = false;
     }
 
-    public async init(): Promise<void>
+    protected async onInit(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading && !this._isDisposing)
-        {
-            this._isLoading = true;
-
-            await this.loadCategories();
-            await this.loadFriends();
-            await this.loadRequests();
-            await this.loadRequestsSent();
-
-            this._isLoaded      = true;
-            this._isLoading     = false;
-            this._isDisposed    = false;
-        }
+        await this.loadCategories();
+        await this.loadFriends();
+        await this.loadRequests();
+        await this.loadRequestsSent();
     }
 
-    public async dispose(): Promise<void>
+    protected async onDispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
-        {
-            this._isDisposing = true;
-            
-            this._categories    = [];
-            this._friends       = [];
-            this._requests      = [];
-            this._requestsSent  = [];
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
-        }
+        this._categories    = [];
+        this._friends       = [];
+        this._requests      = [];
+        this._requestsSent  = [];
     }
 
     public getFriend(friendId: number): MessengerFriend
@@ -181,6 +153,7 @@ export class UserMessenger
         friend.gender   = user.details.gender;
         friend.figure   = user.details.figure;
         friend.online   = user.details.online;
+        friend.inRoom   = user.unit !== null && user.unit.room !== null;
 
         this._user.connections.processOutgoing(new MessengerUpdateComposer({
             type: MessengerUpdateType.UPDATE,
@@ -592,25 +565,5 @@ export class UserMessenger
     public get requestsSent(): number[]
     {
         return this._requestsSent;
-    }
-
-    public get isLoaded(): boolean
-    {
-        return this._isLoaded;
-    }
-
-    public get isLoading(): boolean
-    {
-        return this._isLoading;
-    }
-
-    public get isDisposed(): boolean
-    {
-        return this._isDisposed;
-    }
-
-    public get isDisposing(): boolean
-    {
-        return this._isDisposing;
     }
 }

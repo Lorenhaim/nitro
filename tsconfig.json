@@ -14,6 +14,10 @@
         "baseUrl": "./src",
         "outDir": "./dist"
     },
+    "typedocOptions": {
+        "mode": "modules",
+        "out": "docs"
+    },
     "exclude": [
         "node_modules",
         "dist",

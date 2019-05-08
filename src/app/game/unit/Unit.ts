@@ -1,9 +1,10 @@
 import { NumberHelper } from '../../common';
 import { Emulator } from '../../Emulator';
-import { HotelViewComposer, RoomEnterComposer, RoomModelNameComposer, RoomOwnerComposer, RoomRightsComposer, RoomRightsListComposer, RoomSpectatorComposer, UnitIdleComposer, UserFowardRoomComposer } from '../../packets';
+import { DoorbellAddUserComposer, DoorbellCloseComposer, HotelViewComposer, RoomAccessDeniedComposer, RoomEnterComposer, RoomModelNameComposer, RoomOwnerComposer, RoomRightsComposer, RoomRightsListComposer, RoomSpectatorComposer, UnitIdleComposer, UserFowardRoomComposer } from '../../packets';
 import { Bot } from '../bot';
+import { Position } from '../pathfinder';
 import { Pet } from '../pet';
-import { Room, RoomRightsType } from '../room';
+import { Room, RoomRightsType, RoomState } from '../room';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { UnitStatus, UnitStatusType } from './status';
@@ -137,12 +138,19 @@ export class Unit
 
     public fowardRoom(id: number): void
     {
-        if(id && this._type === UnitType.USER) this._user.connections.processOutgoing(new UserFowardRoomComposer(id));
+        if(id && this._type === UnitType.USER)
+        {
+            if(this._room && this._room.id === id) return;
+
+            this._user.connections.processOutgoing(new UserFowardRoomComposer(id));
+        }
     }
 
     public async enterRoomPartOne(id: number, password: string, skipStateCheck: boolean = false)
     {
         if(!id) return;
+
+        if(this._room && this._room.id === id) return;
 
         const room = await Emulator.gameManager.roomManager.getRoom(id);
 
@@ -152,9 +160,41 @@ export class Unit
 
         Emulator.gameManager.roomManager.addRoom(room);
 
-        this._roomLoading = room;
+        this._roomLoading = room; //clear this if bye
+
+        if(!skipStateCheck && !room.securityManager.hasRights(this._user.id))
+        {
+            if(room.details.state === RoomState.LOCKED)
+            {
+                const totalUnits = room.unitManager.units.length;
+
+                if(!totalUnits) return this._user.connections.processOutgoing(new RoomAccessDeniedComposer());
+
+                let foundUser = false;
+
+                for(let i = 0; i < totalUnits; i++)
+                {
+                    const unit = room.unitManager.units[i];
+
+                    if(!unit) continue;
+
+                    if(unit.type !== UnitType.USER) continue;
+
+                    if(!unit.hasRights()) continue;
+
+                    unit.user.connections.processOutgoing(new DoorbellAddUserComposer(this._user.details.username));
+
+                    foundUser = true;
+                }
+
+                if(!foundUser) return this._user.connections.processOutgoing(new RoomAccessDeniedComposer());
+                else return this._user.connections.processOutgoing(new DoorbellAddUserComposer());
+            }
+        }
 
         this._user.connections.processOutgoing(new RoomEnterComposer());
+
+        if(room.details.state === RoomState.LOCKED) this._user.connections.processOutgoing(new DoorbellCloseComposer());
 
         if(this._isSpectating) this._user.connections.processOutgoing(new RoomSpectatorComposer());
 
@@ -167,19 +207,22 @@ export class Unit
 
         if(!room) return;
 
-        // if(this._location.teleporting)
-        // {
-        //     if(this._location.teleporting.teleportGoal.roomId === id)
-        //     {
-        //         position = new Position(this._location.teleporting.teleportGoal.position.x, this._location.teleporting.teleportGoal.position.y);
+        let position: Position = null;
 
-        //         position.setDirection(this._location.teleporting.teleportGoal.position.direction);
+        if(this._location.teleporting)
+        {
+            if(this._location.teleporting.teleportGoal.room === room)
+            {
+                position = new Position(this._location.teleporting.teleportGoal.position.x, this._location.teleporting.teleportGoal.position.y);
 
-        //         skipStateCheck = true;
-        //     }
-        // }
+                position.setDirection(this._location.teleporting.teleportGoal.position.direction);
+            }
+            else this._location.teleporting.stopTeleporting();
+        }
 
-        await room.unitManager.addUnit(this);
+        await room.unitManager.addUnit(this, position);
+
+        this._user.messenger.updateAllFriends();
     }
 
     public isOwner(): boolean
@@ -221,7 +264,6 @@ export class Unit
 
         if(this.isOwner())
         {
-            console.log('owner');
             rightsType = RoomRightsType.MODERATOR;
 
             this._user.connections.processOutgoing(new RoomOwnerComposer());

@@ -22,15 +22,12 @@ export class Bot
 
     public save(): void
     {
-        if(this._entity.roomId)
+        if(this._unit && this._unit.location.position)
         {
-            if(this._unit && this._unit.location.position)
-            {
-                this._entity.x          = this._unit.location.position.x || 0;
-                this._entity.y          = this._unit.location.position.y || 0;
-                this._entity.z          = this._unit.location.position.z.toString() || '0.00';
-                this._entity.direction  = this._unit.location.position.direction || 0;
-            }
+            this._entity.x          = this._unit.location.position.x || 0;
+            this._entity.y          = this._unit.location.position.y || 0;
+            this._entity.z          = this._unit.location.position.z.toString() || '0.00';
+            this._entity.direction  = this._unit.location.position.direction || 0;
         }
 
         Emulator.gameScheduler.saveBot(this._entity);
@@ -63,7 +60,7 @@ export class Bot
 
         if(status)
         {
-            if(this._unit.room)
+            if(this._unit && this._unit.room)
             {
                 this._unit.location.roam();
 
@@ -72,7 +69,7 @@ export class Bot
         }
         else
         {
-            if(this._unit.room)
+            if(this._unit && this._unit.room)
             {
                 this._unit.timer.stopRoamTimer();
             }
@@ -121,14 +118,12 @@ export class Bot
     {
         if(!packet) return;
 
-        packet
+        return packet
             .writeInt(this._entity.id)
             .writeString(this._entity.name)
             .writeString(this._entity.motto)
             .writeString(this._entity.gender.toLocaleLowerCase())
             .writeString(this._entity.figure);
-
-        return packet;
     }
 
     public get id(): number

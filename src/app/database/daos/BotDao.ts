@@ -28,4 +28,18 @@ export class BotDao
 
         return null;
     }
+
+    public static async getOwnerUsername(botId: number): Promise<string>
+    {
+        const result = await getManager()
+            .createQueryBuilder(BotEntity, 'bot')
+            .select(['bot.id', 'bot.userId', 'user.id', 'user.username' ])
+            .where('bot.id = :botId', { botId })
+            .innerJoin('bot.user', 'user')
+            .getOne();
+
+        if(result) return result.user.username;
+
+        return null;
+    }
 }

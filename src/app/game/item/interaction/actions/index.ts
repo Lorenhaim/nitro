@@ -1,3 +1,4 @@
+export * from './BeforeStep';
 export * from './CanTrigger';
 export * from './OnClick';
 export * from './OnClickAlternative';
@@ -5,6 +6,7 @@ export * from './OnEnter';
 export * from './OnLeave';
 export * from './OnMove';
 export * from './OnPickup';
+export * from './OnRedeem';
 export * from './OnStep';
 export * from './OnStop';
 export * from './OnTriggered';

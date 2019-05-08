@@ -142,5 +142,8 @@ export enum OutgoingHeader
     WIRED_TRIGGER_CONFIG         = 383,
     WIRED_SAVE                   = 1155,
     PET_INFO                     = 2901,
-    ROOM_SPECTATOR               = 1033
+    ROOM_SPECTATOR               = 1033,
+    ITEM_STACK_HELPER            = 2816,
+    MOD_TOOL_USER_INFO           = 2866
+
 }

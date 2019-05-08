@@ -13,8 +13,6 @@ export class BotPickupEvent extends Incoming
             const botId = this.packet.readInt();
 
             if(!botId) return;
-
-            console.log(botId);
             
             await currentRoom.botManager.pickupBot(this.client.user, botId);
         }

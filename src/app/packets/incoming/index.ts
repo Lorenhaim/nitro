@@ -7,7 +7,7 @@ export * from './hotelview';
 export * from './Incoming';
 export * from './IncomingHeader';
 export * from './IncomingPacket';
-//export * from './moderation';
+export * from './moderation';
 export * from './navigator';
 export * from './pet';
 export * from './room';

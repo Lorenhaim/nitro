@@ -41,6 +41,7 @@ export const enum IncomingHeader
     ITEM_REDEEM                    = 3115,
     ITEM_WALL_CLICK                = 210,
     ITEM_WALL_UPDATE               = 168,
+    ITEM_STACK_HELPER              = 3839,
     PET_PLACE                      = 2647,
     MARKETPLACE_CONFIG             = 2597,
     MESSENGER_ACCEPT               = 137,
@@ -102,6 +103,7 @@ export const enum IncomingHeader
     USER_CLUB                      = 3166,
     USER_CURRENCY                  = 273,
     USER_FIGURE                    = 2730,
+    USER_FOLLOW                    = 3997,
     USER_HOME_ROOM                 = 1740,
     USER_IGNORED                   = 1371,
     USER_INFO                      = 357,
@@ -124,5 +126,6 @@ export const enum IncomingHeader
     BOT_PLACE                      = 1592,
     BOT_PICKUP                     = 3323,
     BOT_INFO                       = 1986,
-    BOT_SETTINGS_SAVE              = 2624
+    BOT_SETTINGS_SAVE              = 2624,
+    MOD_TOOL_USER_INFO             = 3295
 }

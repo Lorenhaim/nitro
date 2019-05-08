@@ -98,6 +98,8 @@ export class RoomPetManager extends Manager
 
         user.inventory.pets.removePet(pet);
 
+        if(!this._room.getObjectOwnerName(pet.userId) && user.details.username) this._room.objectOwners.push({ id: pet.userId, username: user.details.username });
+
         await this._room.unitManager.addUnit(pet.unit, null);
 
         pet.save();
@@ -150,6 +152,13 @@ export class RoomPetManager extends Manager
             const result = results[i];
 
             const pet = new Pet(result);
+
+            if(!this._room.getObjectOwnerName(result.userId))
+            {
+                const username = await PetDao.getOwnerUsername(result.id);
+
+                this._room.objectOwners.push({ id: pet.userId, username });
+            }
 
             pet.unit.room               = this._room;
             pet.unit.location.position  = new Position(result.x, result.y, parseFloat(result.z), result.direction, result.direction);

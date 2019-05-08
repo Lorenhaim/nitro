@@ -106,20 +106,19 @@ export class UnitTeleporting
         {
             const goalRoom = this._teleportGoal.room;
 
-            if(goalRoom)
+            if(!goalRoom) return this.stopTeleporting();
+            
+            if(this._unit.room === goalRoom)
             {
-                if(this._unit.room === goalRoom)
-                {
-                    this._unit.location.position.x = this._teleportGoal.position.x;
-                    this._unit.location.position.y = this._teleportGoal.position.y;
-                    this._unit.location.position.setDirection(this._teleportGoal.position.direction);
-    
-                    this._unit.needsUpdate = true;
-                }
-                else
-                {
-                    this._unit.fowardRoom(this._teleportGoal.roomId);
-                }
+                this._unit.location.position.x = this._teleportGoal.position.x;
+                this._unit.location.position.y = this._teleportGoal.position.y;
+                this._unit.location.position.setDirection(this._teleportGoal.position.direction);
+
+                this._unit.needsUpdate = true;
+            }
+            else
+            {
+                this._unit.fowardRoom(this._teleportGoal.roomId);
             }
 
             this._stepThree = true;
@@ -127,57 +126,32 @@ export class UnitTeleporting
 
         else if(this._stepOne)
         {
-            if(this._didFail)
-            {
-                if(!this._unit.location.position.compare(this._teleport.position))
-                {
-                    this._teleport.setExtraData('0');
+            if(!this._unit.location.position.compare(this._teleport.position)) return this.stopTeleporting();
 
-                    this._unit.location.teleporting = null;
+            if(!this._teleport.baseItem.canWalk) this._teleport.setExtraData('2');
 
-                    this._unit.canLocate = true;
-                }
-            }
-            else
-            {
-                if(!this._teleport.baseItem.canWalk) this._teleport.setExtraData('2');
+            if(!this._teleportGoal.baseItem.canWalk) this._teleportGoal.setExtraData('2');
+            else this._teleportGoal.setExtraData('1');
 
-                if(!this._teleportGoal.baseItem.canWalk) this._teleportGoal.setExtraData('2');
-                else this._teleportGoal.setExtraData('1');
-
-                this._stepTwo = true;
-            }
+            this._stepTwo = true;
         }
 
         else if(!this._stepOne)
         {
             const room = this._teleport.room;
 
-            if(room)
+            if(!room) return this.stopTeleporting();
+
+            if(this._unit.location.position.compare(this._teleport.position))
             {
-                if(this._didFail)
-                {
-                    const positionFront = this._teleport.position.getPositionInfront();
+                if(!this._teleport.baseItem.canWalk) this._teleport.setExtraData('0');
 
-                    if(!this._unit.location.position.compare(positionFront))
-                    {
-                        this._unit.location.walkTo(positionFront);
+                this._stepOne = true;
 
-                        this._stepOne = true;
-                    }
-                }
-
-                else if(this._unit.location.position.compare(this._teleport.position))
-                {
-                    if(!this._teleport.baseItem.canWalk)
-                    {
-                        this._teleport.setExtraData('0');
-                    }
-
-                    this._stepOne = true;
-                }
-                else this.stopTeleporting();
+                return;
             }
+
+            this.stopTeleporting();
         }
     }
 

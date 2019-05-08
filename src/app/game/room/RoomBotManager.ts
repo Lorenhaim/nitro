@@ -10,6 +10,7 @@ export class RoomBotManager extends Manager
     private _room: Room;
 
     private _bots: Bot[];
+    private _botOwners: { id: number, username: string }[];
 
     constructor(room: Room)
     {
@@ -19,7 +20,8 @@ export class RoomBotManager extends Manager
 
         this._room  = room;
 
-        this._bots  = [];
+        this._bots      = [];
+        this._botOwners = [];
     }
 
     protected async onInit(): Promise<void>
@@ -102,13 +104,15 @@ export class RoomBotManager extends Manager
 
         user.inventory.bots.removeBot(bot);
 
+        if(!this._room.getObjectOwnerName(bot.userId) && user.details.username) this._room.objectOwners.push({ id: bot.userId, username: user.details.username });
+
         await this._room.unitManager.addUnit(bot.unit, position);
 
         this._bots.push(bot);
 
         bot.unit.location.dance(bot.dance);
 
-        this._room.map.updatePositions(position);
+        this._room.map.updatePositions(true, position);
 
         if(bot.freeRoam)
         {
@@ -169,6 +173,13 @@ export class RoomBotManager extends Manager
             if(!result) continue;
 
             const bot = new Bot(result);
+
+            if(!this._room.getObjectOwnerName(result.userId))
+            {
+                const username = await BotDao.getOwnerUsername(result.id);
+
+                this._room.objectOwners.push({ id: bot.userId, username });
+            }
 
             await this._room.unitManager.addUnit(bot.unit, new Position(result.x, result.y, parseFloat(result.z), result.direction, result.direction));
 

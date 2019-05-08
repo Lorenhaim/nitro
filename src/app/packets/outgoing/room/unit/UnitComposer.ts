@@ -54,7 +54,8 @@ export class UnitComposer extends Outgoing
 
                         else if(unit.type === UnitType.BOT)
                         {
-                            console.log(unit.bot);
+                            const ownerUsername = unit.room.getObjectOwnerName(unit.bot.userId);
+
                             this.packet
                                 .writeInt(unit.bot.id)
                                 .writeString(unit.bot.name)
@@ -67,8 +68,8 @@ export class UnitComposer extends Outgoing
                                 .writeInt(unit.location.position.direction)
                                 .writeInt(4) // 2 pet 4 bot
                                 .writeString(unit.bot.gender.toUpperCase())
-                                .writeInt(1) // owner id
-                                .writeString('BIll') // owner username
+                                .writeInt(unit.bot.userId) // owner id
+                                .writeString(ownerUsername || '')
                                 .writeInt(10)
                                 .writeShort(0)
                                 .writeShort(1)
@@ -84,6 +85,8 @@ export class UnitComposer extends Outgoing
 
                         else if(unit.type === UnitType.PET)
                         {
+                            const ownerUsername = unit.room.getObjectOwnerName(unit.pet.userId);
+
                             this.packet
                                 .writeInt(unit.pet.id) // pet id
                                 .writeString(unit.pet.name) // pet name
@@ -96,7 +99,7 @@ export class UnitComposer extends Outgoing
                                 .writeInt(0, 2)
                                 .writeInt(unit.pet.breed) // type
                                 .writeInt(unit.pet.userId) // user id
-                                .writeString('Bill') // username
+                                .writeString(ownerUsername || '')
                                 .writeInt(1) // rarity for monster
                                 .writeBoolean(true) // has saddle true
                                 .writeBoolean(false)

@@ -24,11 +24,9 @@ export class UserDetails
         this._firstLoginOfDay   = false;
     }
 
-    public save(destroy: boolean = false): void
+    public save(): void
     {
         Emulator.gameScheduler.saveUser(this._entity);
-
-        if(destroy) this._entity = null;
     }
 
     public async saveNow(destroy: boolean = false): Promise<void>
@@ -40,6 +38,8 @@ export class UserDetails
 
     public updateFigure(figure: string, gender: 'M' | 'F'): void
     {
+        if(!figure || !gender) return;
+        
         this._entity.figure = figure;
         this._entity.gender = gender === 'M' ? 'M' : 'F';
 

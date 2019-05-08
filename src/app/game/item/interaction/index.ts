@@ -7,6 +7,7 @@ export * from './InteractionGate';
 export * from './InteractionMultiHeight';
 export * from './InteractionPetJump';
 export * from './InteractionRoller';
+export * from './InteractionStackHelper';
 export * from './InteractionTeleport';
 export * from './InteractionType';
 export * from './InteractionVendingMachine';

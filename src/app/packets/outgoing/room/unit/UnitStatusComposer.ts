@@ -30,6 +30,8 @@ export class UnitStatusComposer extends Outgoing
                     for(let i = 0; i < totalUnits; i++)
                     {
                         const unit = this._units[i];
+
+                        if(!unit) continue;
                         
                         this.packet
                             .writeInt(unit.id)

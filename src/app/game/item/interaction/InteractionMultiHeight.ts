@@ -18,6 +18,6 @@ export class InteractionMultiHeight extends InteractionDefault implements OnClic
 
         if(!room) return;
 
-        room.map.updatePositions(item.position);
+        room.map.updatePositions(true, item.position);
     }
 }

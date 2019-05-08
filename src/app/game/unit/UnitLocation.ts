@@ -439,7 +439,7 @@ export class UnitLocation
 
         if(!currentItem || !currentItem.baseItem.canSit || !currentItem.baseItem.canLay)
         {
-            this.sit(false)
+            this.sit(false);
             this.lay(false);
         }
 
@@ -468,7 +468,7 @@ export class UnitLocation
                     
                     this._unit.room.unitManager.processOutgoing(new UnitStatusComposer(this._unit));
                 }
-            }, 450);
+            }, 250);
         }
     }
 

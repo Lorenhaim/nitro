@@ -1,3 +1,4 @@
+import { Interaction } from '../../item';
 import { Item } from '../../item/Item';
 import { Position } from '../../pathfinder';
 import { Unit } from '../../unit';
@@ -98,6 +99,39 @@ export class RoomTile
         }
 
         return null;
+    }
+
+    public hasInteraction(...interactions: typeof Interaction[]): boolean
+    {
+        const types = [ ...interactions ];
+
+        if(!types) return false;
+        
+        const totalTypes = types.length;
+
+        if(!totalTypes) return false;
+
+        const totalItems = this._items.length;
+
+        if(!totalItems) return false;
+        
+        for(let i = 0; i < totalTypes; i++)
+        {
+            const type = types[i];
+
+            if(!type) continue;
+
+            for(let j = 0; j < totalItems; j++)
+            {
+                const item = this._items[j];
+
+                if(!item) continue;
+
+                if(item.baseItem.interaction instanceof type) return true;
+            }
+        }
+
+        return false;
     }
 
     public addItem(item: Item): void

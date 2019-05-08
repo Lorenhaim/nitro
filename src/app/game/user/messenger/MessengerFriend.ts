@@ -1,4 +1,5 @@
 import { MessengerFriendEntity } from '../../../database';
+import { Emulator } from '../../../Emulator';
 import { OutgoingPacket } from '../../../packets';
 import { MessengerRelationshipType } from './interfaces';
 
@@ -13,6 +14,7 @@ export class MessengerFriend
     private _relation: MessengerRelationshipType;
 
     private _categoryId: number;
+    private _inRoom: boolean;
 
     constructor(entity: MessengerFriendEntity)
     {
@@ -27,6 +29,10 @@ export class MessengerFriend
         this._relation      = parseInt(<any> entity.relation);
 
         this._categoryId    = entity.categoryId || 0;
+
+        const user = Emulator.gameManager.userManager.getUserById(this._id);
+
+        this._inRoom = user && user.unit !== null && user.unit.room !== null;
     }
 
     public parseFriend(packet: OutgoingPacket): OutgoingPacket
@@ -38,7 +44,7 @@ export class MessengerFriend
             .writeString(this._username) // group name
             .writeInt(this._gender === 'M' ? 0 : 1) // group 0
             .writeBoolean(this._online) // group true/false ??
-            .writeBoolean(false) // in room
+            .writeBoolean(this._inRoom) // in room
             .writeString(this._figure) // group badge code
             .writeInt(this._categoryId)
             .writeString(this._motto)
@@ -117,5 +123,15 @@ export class MessengerFriend
     public set relation(relation: 0 | 1 | 2 | 3)
     {
         this._relation = relation;
+    }
+
+    public get inRoom(): boolean
+    {
+        return this._inRoom;
+    }
+
+    public set inRoom(status: boolean)
+    {
+        this._inRoom = status;
     }
 }

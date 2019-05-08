@@ -378,7 +378,7 @@ export class RoomMap
         return null;
     }
 
-    public updatePositions(...positions: Position[]): void
+    public updatePositions(updateUnits: boolean, ...positions: Position[]): void
     {
         const updatedPositions = [ ...positions ];
 
@@ -389,7 +389,8 @@ export class RoomMap
         if(!totalPositions) return;
 
         this._room.map.generateCollisions();
-        this._room.unitManager.updateUnitsAt(...updatedPositions);
+        
+        if(updateUnits) this._room.unitManager.updateUnitsAt(...updatedPositions);
 
         const affectedTiles: RoomTile[] = [];
 

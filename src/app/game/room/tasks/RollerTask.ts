@@ -1,7 +1,7 @@
-import { Outgoing, UnitRollingComposer } from '../../../packets';
-import { InteractionRoller, Item } from '../../item';
+import { ItemRollingComposer, Outgoing, UnitRollingComposer } from '../../../packets';
+import { InteractionRoller, Item, ItemRolling } from '../../item';
 import { Position } from '../../pathfinder';
-import { Unit, UnitRolling } from '../../unit';
+import { Unit, UnitRolling, UnitStatusType } from '../../unit';
 import { Room } from '../Room';
 import { Task } from './Task';
 
@@ -28,9 +28,12 @@ export class RollerTask extends Task
 
         if(!totalRollers) return;
 
-        const pendingOutgoing: Outgoing[] = [];
+        const updatedPositions: Position[] = [];
 
+        const itemsRolling: Item[]  = [];
         const unitsRolling: Unit[]  = [];
+
+        const pendingOutgoing: Outgoing[] = [];
         
         for(let i = 0; i < totalRollers; i++)
         {
@@ -42,7 +45,31 @@ export class RollerTask extends Task
 
             if(!tile) continue;
 
+            const tileItems = tile.items;
             const tileUnits = tile.units;
+
+            if(tileItems)
+            {
+                const totalItems = tileItems.length;
+
+                if(totalItems)
+                {
+                    for(let j = 0; j < totalItems; j++)
+                    {
+                        const item = tileItems[j];
+
+                        if(!item) continue;
+
+                        if(item === roller) continue;
+
+                        if(item.baseItem.hasInteraction(InteractionRoller)) continue;
+
+                        const nextPosition = this.processItem(item, roller);
+
+                        if(nextPosition) itemsRolling.push(item);
+                    }
+                }
+            }
 
             if(tileUnits)
             {
@@ -58,17 +85,14 @@ export class RollerTask extends Task
 
                         const positionNext = this.processUnit(unit, roller);
 
-                        if(!positionNext) continue;
-                        
-                        unit.location.rolling = new UnitRolling(unit, roller, unit.location.position.copy(), positionNext);
-                            
-                        unitsRolling.push(unit);
+                        if(positionNext) unitsRolling.push(unit);
                     }
                 }
             }
         }
 
-        const totalUnits = unitsRolling.length;
+        const totalUnits    = unitsRolling.length;
+        const totalItems    = itemsRolling.length;
 
         if(totalUnits)
         {
@@ -80,28 +104,142 @@ export class RollerTask extends Task
 
                 if(!unit.location.rolling) continue;
 
-                unit.location.position.x = unit.location.rolling.positionNext.x;
-                unit.location.position.y = unit.location.rolling.positionNext.y;
-                unit.location.position.z = unit.location.rolling.positionNext.z;
-
-                unit.room.map.getTile(unit.location.rolling.position).removeUnit(unit);
-                unit.room.map.getTile(unit.location.rolling.positionNext).addUnit(unit);
-                
-                unit.skipUpdate = true;
-                unit.location.fastInvoke();
+                this.finishUnitRoll(unit);
 
                 pendingOutgoing.push(new UnitRollingComposer(unit));
             }
         }
 
+        if(totalItems)
+        {
+            for(let i = 0; i < totalItems; i++)
+            {
+                const item = itemsRolling[i];
+
+                if(!item) continue;
+
+                if(!item.rolling) continue;
+
+                this.finishItemRoll(item);
+
+                pendingOutgoing.push(new ItemRollingComposer(item));
+
+                updatedPositions.push(item.rolling.position, item.rolling.positionNext);
+            }
+        }
+
         this._room.map.generateCollisions();
+
+        if(updatedPositions.length) this._room.map.updatePositions(false, ...updatedPositions);
 
         if(pendingOutgoing.length) this._room.unitManager.processOutgoing(...pendingOutgoing);
 
+        if(totalUnits) for(let i = 0; i < totalUnits; i++) unitsRolling[i].location.rolling = null;
+
+        if(totalItems) for(let i = 0; i < totalItems; i++) itemsRolling[i].rolling = null;
+
+        setTimeout(() =>
+        {
+            if(unitsRolling.length)
+            {
+                this._room.unitManager.updateUnits(...unitsRolling);
+
+                if(totalUnits) for(let i = 0; i < totalUnits; i++) unitsRolling[i].location.rolling = null;
+            }
+
+            if(totalItems) for(let i = 0; i < totalItems; i++) itemsRolling[i].rolling = null;
+        }, 500);
+    }
+
+    private processItem(item: Item, roller: Item): Position
+    {
+        if(!item || !roller) return null;
+
+        if(item.id === roller.id) return null;
+
+        if(item.position.z < roller.position.z) return null;
+
+        const currentTile   = item.getTile();
+        const goalTile      = this._room.map.getTile(roller.position.getPositionInfront());
+
+        if(!currentTile || !goalTile) return null;
+
+        const totalUnits = this._room.unitManager.units.length;
+
         if(totalUnits)
         {
-            for(let i = 0; i < totalUnits; i++) unitsRolling[i].location.rolling = null;
+            for(let i = 0; i < totalUnits; i++)
+            {
+                const unit = this._room.unitManager.units[i];
+
+                if(!unit) continue;
+
+                if(unit.location.positionNext)
+                {
+                    if(unit.location.positionNext.compare(goalTile.position)) return null;
+                }
+
+                if(unit.location.isWalking) continue;
+
+                if(unit.location.rolling)
+                {
+                    if(unit.location.rolling.positionNext.compare(goalTile.position)) return null;
+                }
+
+                if(unit.location.position.compare(goalTile.position)) return null;
+            }
         }
+
+        const floorItems = this._room.itemManager.getFloorItems();
+
+        if(floorItems)
+        {
+            const totalItems = floorItems.length;
+
+            if(totalItems)
+            {
+                for(let i = 0; i < totalItems; i++)
+                {
+                    const activeItem = floorItems[i];
+
+                    if(!activeItem) continue;
+
+                    if(activeItem.rolling)
+                    {
+                        if(activeItem.position.compare(roller.position)) continue;
+
+                        if(activeItem.rolling.positionNext.compare(goalTile.position)) return null;
+                    }
+                }
+            }
+        }
+
+        if(!item.isValidPlacement(goalTile.position, null, true)) return null;
+
+        let nextHeight = item.position.z + 0;
+
+        if(!goalTile.hasInteraction(InteractionRoller)) nextHeight -= roller.baseItem.stackHeight;
+
+        const nextPosition = new Position(goalTile.position.x, goalTile.position.y, nextHeight);
+
+        item.rolling = new ItemRolling(item, roller, item.position.copy(), nextPosition);
+
+        return nextPosition;
+    }
+
+    private finishItemRoll(item: Item): void
+    {
+        if(!item) return;
+
+        const rollingData = item.rolling;
+
+        if(!rollingData) return;
+
+        item.position.x = rollingData.positionNext.x;
+        item.position.y = rollingData.positionNext.y;
+        item.position.z = rollingData.positionNext.z;
+
+        item.save();
     }
 
     private processUnit(unit: Unit, roller: Item): Position
@@ -156,81 +294,57 @@ export class RollerTask extends Task
             }
         }
 
-        let nextHeight          = unitPosition.z;
-        let nextRoller: Item    = null;
-        let substractRoller     = true;
+        if(!roller.room.map.getValidTile(unit, nextPosition)) return;
 
-        const totalItemsNext = nextTile.items.length;
+        const currentItem = unit.location.getCurrentItem();
 
-        if(totalItemsNext)
+        if(currentItem)
         {
-            for(let i = 0; i < totalItemsNext; i++)
+            if(!currentItem.baseItem.hasInteraction(InteractionRoller))
             {
-                const item = nextTile.items[i];
-
-                if(!item) continue;
-
-                if(!item.baseItem.hasInteraction(InteractionRoller)) continue;
-
-                nextRoller = item;
-
-                break;
+                if(this.processItem(currentItem, roller) === null) return null;
             }
         }
 
-        if(nextRoller)
-        {
-            substractRoller = false;
+        let nextHeight = unit.location.position.z + 0;
 
-            if(nextRoller.position.z !== roller.position.z)
-            {
-                if(Math.abs(nextRoller.position.z - roller.position.z) > 0.1) return;
-            }
-
-            const nextTileItems = nextTile.items;
-
-            if(nextTileItems)
-            {
-                const totalItems = nextTileItems.length;
-
-                if(totalItems)
-                {
-                    for(let i = 0; i < totalItems; i++)
-                    {
-                        const item = nextTileItems[i];
-
-                        if(!item) continue;
-
-                        if(item.position.z < nextRoller.position.z) continue;
-
-                        if(item.baseItem.hasInteraction(InteractionRoller))
-                        {
-                            const itemNextPosition = item.position.getPositionInfront();
-
-                            if(!itemNextPosition) continue;
-
-                            if(itemNextPosition.compare(unit.location.position))
-                            {
-                                if(nextTile.items.length > 1 || nextTile.units.length > 0) return;
-                            }
-                        }
-                        else
-                        {
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            if(!roller.room.map.getValidTile(unit, nextPosition)) return;
-        }
-
-        if(substractRoller) nextHeight -= roller.baseItem.stackHeight;
+        if(!nextTile.hasInteraction(InteractionRoller)) nextHeight -= roller.baseItem.stackHeight;
 
         nextPosition.z = nextHeight;
 
+        unit.location.rolling = new UnitRolling(unit, roller, unitPosition, nextPosition);
+
         return nextPosition;
+    }
+
+    private finishUnitRoll(unit: Unit): void
+    {
+        if(!unit) return;
+
+        const rollingData = unit.location.rolling;
+
+        if(!rollingData) return;
+
+        const currentTile   = unit.location.getCurrentTile();
+        const nextTile      = this._room.map.getTile(rollingData.positionNext);
+
+        if(!currentTile || !nextTile) return;
+
+        const sitStatus = unit.location.getStatus(UnitStatusType.SIT);
+
+        if(sitStatus)
+        {
+            if(parseFloat(sitStatus.value) > 1.0)
+            {
+                // nextHeight += sitHeight - 1.0;
+            }
+        }
+
+        unit.location.position.x = rollingData.positionNext.x;
+        unit.location.position.y = rollingData.positionNext.y;
+        unit.location.position.z = rollingData.positionNext.z;
+
+        currentTile.removeUnit(unit);
+        nextTile.addUnit(unit);
     }
 }

@@ -3,6 +3,7 @@ export * from './messenger';
 export * from './UserClubEvent';
 export * from './UserCurrencyEvent';
 export * from './UserFigureEvent';
+export * from './UserFollowEvent';
 export * from './UserHomeRoomEvent';
 export * from './UserIgnoredEvent';
 export * from './UserInfoEvent';

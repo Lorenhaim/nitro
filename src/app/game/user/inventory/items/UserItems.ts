@@ -100,6 +100,10 @@ export class UserItems
         {
             const item = addedItems[i];
 
+            if(!item) continue;
+
+            if(item.willRemove) continue;
+
             if(this.hasItem(item.id)) continue;
 
             validatedItems.push(item);

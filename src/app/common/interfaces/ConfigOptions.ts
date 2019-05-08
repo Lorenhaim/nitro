@@ -36,7 +36,8 @@ export interface ConfigOptions
             swf: string,
             swfBase: string,
             texts: string,
-            variables: string
+            variables: string,
+            avatarUrl: string
         }
     },
     game: {
