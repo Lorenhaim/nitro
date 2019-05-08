@@ -37,6 +37,7 @@ export class Room extends Manager
     private _wiredManager: RoomWiredManager;
 
     private _objectOwners: { id: number, username: string }[];
+    private _didCancelDispose: boolean;
 
     constructor(entity: RoomEntity)
     {
@@ -65,6 +66,7 @@ export class Room extends Manager
         this._wiredManager      = new RoomWiredManager(this);
 
         this._objectOwners      = [];
+        this._didCancelDispose  = false;
     }
 
     protected async onInit(): Promise<void>
@@ -72,43 +74,50 @@ export class Room extends Manager
         this._map = new RoomMap(this);
 
         this._taskManager.init();
-        this._unitManager.init();
 
-        await this._itemManager.init();
         await this._botManager.init();
+        await this._itemManager.init();
         await this._petManager.init();
         await this._securityManager.init();
-        await this._wiredManager.init();
 
         this._subscription  = this._events.subscribe(async roomEvent => await this.handleEvent(roomEvent));
 
         this._map.generateMap();
+
+        this._didCancelDispose = true;
     }
 
     protected async onDispose(): Promise<void>
     {
         if(this._subscription) this._subscription.unsubscribe();
 
-        await this._wiredManager.dispose();
-        await this._securityManager.dispose();
-        await this._unitManager.dispose();
         this._taskManager.dispose();
-        await this._itemManager.dispose();
+
         await this._botManager.dispose();
         await this._petManager.dispose();
-        await this._details.save();
+        await this._securityManager.dispose();
+
+        this._unitManager.dispose();
+
+        this._details.save();
 
         this._map = null;
     }
 
     public tryDispose(): void
     {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
+        if(this._isDisposed || this._isDisposing || this._isLoading) return;
+
+        if(this._details.usersNow) return;
+
+        this._didCancelDispose = false;
+
+        setTimeout(async () =>
         {
-            if(this._unitManager.units.length > 0) return;
-            
-            Emulator.gameManager.roomManager.removeRoom(this);
-        }
+            if(this._didCancelDispose) return;
+
+            await Emulator.gameManager.roomManager.removeRoom(this);
+        }, 60000);
     }
 
     private async handleEvent(event: RoomEvent)
@@ -229,6 +238,11 @@ export class Room extends Manager
         return null;
     }
 
+    public addObjectOwnerName(userId: number, username: string)
+    {
+        if(!this.getObjectOwnerName(userId)) this._objectOwners.push({ id: userId, username });
+    }
+
     public get id(): number
     {
         return this._id;
@@ -297,5 +311,15 @@ export class Room extends Manager
     public get objectOwners(): { id: number, username: string }[]
     {
         return this._objectOwners;
+    }
+
+    public get didCancelDispose(): boolean
+    {
+        return this._didCancelDispose;
+    }
+
+    public set didCancelDispose(flag: boolean)
+    {
+        this._didCancelDispose = flag;
     }
 }

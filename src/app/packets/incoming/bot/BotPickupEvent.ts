@@ -14,7 +14,7 @@ export class BotPickupEvent extends Incoming
 
             if(!botId) return;
             
-            await currentRoom.botManager.pickupBot(this.client.user, botId);
+            currentRoom.botManager.pickupBot(this.client.user, botId);
         }
 
         catch(err)

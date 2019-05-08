@@ -111,7 +111,7 @@ export class Unit
         }
     }
 
-    public async reset(sendHotelView: boolean = true): Promise<void>
+    public reset(sendHotelView: boolean = true): void
     {
         if(!this._isResetting)
         {
@@ -119,7 +119,7 @@ export class Unit
 
             this._timer.stopTimers();
 
-            if(this._room) await this._room.unitManager.removeUnit(this, false);
+            if(this._room) this._room.unitManager.removeUnit(this, false);
 
             this._room      = null;
             this._roomQueue = null;
@@ -160,7 +160,7 @@ export class Unit
 
         Emulator.gameManager.roomManager.addRoom(room);
 
-        this._roomLoading = room; //clear this if bye
+        this._roomLoading = room;
 
         if(!skipStateCheck && !room.securityManager.hasRights(this._user.id))
         {
@@ -201,7 +201,7 @@ export class Unit
         this._user.connections.processOutgoing(new RoomModelNameComposer(room));
     }
 
-    public async enterRoomPartTwo(): Promise<void>
+    public enterRoomPartTwo(): Promise<void>
     {
         const room = this._roomLoading;
 
@@ -220,7 +220,7 @@ export class Unit
             else this._location.teleporting.stopTeleporting();
         }
 
-        await room.unitManager.addUnit(this, position);
+        room.unitManager.addUnit(this, position);
 
         this._user.messenger.updateAllFriends();
     }
@@ -316,7 +316,7 @@ export class Unit
 
     public async dispose(): Promise<void>
     {
-        await this.reset();
+        this.reset();
     }
 
     public get id(): number

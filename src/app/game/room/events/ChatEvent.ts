@@ -2,7 +2,7 @@ import { TimeHelper } from '../../../common';
 import { Emulator } from '../../../Emulator';
 import { UnitActionComposer, UnitChatComposer, UnitChatShoutComposer, UnitChatWhisperComposer } from '../../../packets';
 import { WiredTriggerSaysSomething } from '../../item';
-import { Unit, UnitAction, UnitEmotion, UnitType } from '../../unit';
+import { determineEmotion, Unit, UnitAction, UnitType } from '../../unit';
 import { ChatBubble, ChatType } from '../interfaces';
 import { RoomEvent } from './RoomEvent';
 
@@ -57,12 +57,7 @@ export class ChatEvent extends RoomEvent
             {
                 this._unit.timer.resetIdleTimer();
 
-                let emotion: UnitEmotion = UnitEmotion.NORMAL;
-
-                if(this._message.includes(':)') || this._message.includes(':-)') || this._message.includes(':]')) emotion = UnitEmotion.HAPPY;
-                else if(this._message.includes(':@') || this._message.includes('>:(')) emotion = UnitEmotion.MAD;
-                else if(this._message.includes(':o') || this._message.includes(':O') || this._message.includes(':0') || this._message.includes('O.o') || this._message.includes('o.O') || this._message.includes('O.O')) emotion = UnitEmotion.SUPRISED;
-                else if(this._message.includes(':o') || this._message.includes(':O') || this._message.includes(':0') || this._message.includes('O.o') || this._message.includes(':(') || this._message.includes(':-(') || this._message.includes(':[')) emotion = UnitEmotion.SAD;
+                const emotion = determineEmotion(this._message);
                 
                 if(this._type === ChatType.WHISPER)
                 {

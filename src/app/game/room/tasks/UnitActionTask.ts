@@ -45,7 +45,7 @@ export class UnitActionTask extends Task
                 continue;
             }
 
-            await this.processUnit(unit);
+            this.processUnit(unit);
 
             if(!unit.needsUpdate) continue;
 
@@ -56,7 +56,7 @@ export class UnitActionTask extends Task
         if(updatedUnits.length) this._room.unitManager.processOutgoing(new UnitStatusComposer(...updatedUnits));
     }
 
-    private async processUnit(unit: Unit): Promise<void>
+    private processUnit(unit: Unit): Promise<void>
     {
         if(unit)
         {
@@ -159,7 +159,7 @@ export class UnitActionTask extends Task
                         unit.location.clearPath();
                         unit.location.walkTo(unit.location.positionGoal);
 
-                        return await this.processUnit(unit);
+                        return this.processUnit(unit);
                     }
                 }
                 else unit.location.stopWalking();

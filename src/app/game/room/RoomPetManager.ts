@@ -39,7 +39,9 @@ export class RoomPetManager extends Manager
 
             if(!pet) continue;
 
-            await this._room.unitManager.removeUnit(pet.unit);
+            pet.savePosition();
+
+            this._room.unitManager.removeUnit(pet.unit);
 
             this._pets.splice(i, 1);
         }
@@ -82,7 +84,7 @@ export class RoomPetManager extends Manager
         return null;
     }
 
-    public async placePet(user: User, petId: number, position: Position): Promise<void>
+    public placePet(user: User, petId: number, position: Position): void
     {
         if(!user || !petId) return;
 
@@ -98,14 +100,14 @@ export class RoomPetManager extends Manager
 
         user.inventory.pets.removePet(pet);
 
-        if(!this._room.getObjectOwnerName(pet.userId) && user.details.username) this._room.objectOwners.push({ id: pet.userId, username: user.details.username });
+        this._room.addObjectOwnerName(pet.userId, user.details.username);
 
-        await this._room.unitManager.addUnit(pet.unit, null);
+        this._room.unitManager.addUnit(pet.unit, null);
 
         pet.save();
     }
 
-    public async pickupPet(user: User, petId: number): Promise<void>
+    public pickupPet(user: User, petId: number): Promise<void>
     {
         if(!user || !petId) return;
 
@@ -121,7 +123,7 @@ export class RoomPetManager extends Manager
 
             if(pet.id !== petId) continue;
 
-            await pet.unit.reset(false);
+            pet.unit.reset(false);
 
             this._pets.splice(i, 1);
 
@@ -165,7 +167,7 @@ export class RoomPetManager extends Manager
 
             this._pets.push(pet);
 
-            await this._room.unitManager.addUnit(pet.unit, pet.unit.location.position);
+            this._room.unitManager.addUnit(pet.unit, pet.unit.location.position);
         }
     }
 

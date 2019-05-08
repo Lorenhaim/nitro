@@ -27,18 +27,30 @@ export class Pet
 
     public save(): void
     {
-        if(this._entity.roomId)
+        if(this._unit && this._unit.location.position)
         {
-            if(this._unit && this._unit.location.position)
-            {
-                this._entity.x          = this._unit.location.position.x || 0;
-                this._entity.y          = this._unit.location.position.y || 0;
-                this._entity.z          = this._unit.location.position.z.toString() || '0.00';
-                this._entity.direction  = this._unit.location.position.direction || 0;
-            }
+            this._entity.x          = this._unit.location.position.x || 0;
+            this._entity.y          = this._unit.location.position.y || 0;
+            this._entity.z          = this._unit.location.position.z.toString() || '0.00';
+            this._entity.direction  = this._unit.location.position.direction || 0;
         }
 
         Emulator.gameScheduler.savePet(this._entity);
+    }
+
+    public savePosition(): void
+    {
+        if(this._unit && this._unit.location.position)
+        {
+            const position = this._unit.location.position.copy();
+
+            this._entity.x          = position.x || 0;
+            this._entity.y          = position.y || 0;
+            this._entity.z          = position.z.toString() || '0.00';
+            this._entity.direction  = position.direction || 0;
+
+            this.save();
+        }
     }
 
     public ridePet(unit: Unit)

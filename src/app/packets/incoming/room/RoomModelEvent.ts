@@ -18,7 +18,7 @@ export class RoomModelEvent extends Incoming
                 new RoomMapComposer(loadingRoom),
                 new RoomModelComposer(loadingRoom));
 
-            await this.client.user.unit.enterRoomPartTwo();
+            this.client.user.unit.enterRoomPartTwo();
         }
 
         catch(err)

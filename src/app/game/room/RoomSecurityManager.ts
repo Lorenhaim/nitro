@@ -82,7 +82,7 @@ export class RoomSecurityManager extends Manager
 
         this.giveRightsNotification(right);
 
-        if(offlineUser.unit) offlineUser.unit.loadRights();
+        if(offlineUser.unit && offlineUser.unit.room === this._room) offlineUser.unit.loadRights();
     }
 
     public async removeAllRights(user: User): Promise<void>
@@ -151,6 +151,8 @@ export class RoomSecurityManager extends Manager
 
                 if(!user) continue;
 
+                if(!user.unit || user.unit.room !== this._room) continue;
+                
                 user.unit.loadRights();
 
                 break;

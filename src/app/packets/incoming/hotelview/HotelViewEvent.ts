@@ -7,7 +7,7 @@ export class HotelViewEvent extends Incoming
     {
         try
         {
-            if(this.client.user.unit) await this.client.user.unit.reset(false);
+            if(this.client.user.unit) this.client.user.unit.reset(false);
 
             if(this.client.user.unit.isSpectating) this.client.user.unit.spectate(false);
 

@@ -41,7 +41,9 @@ export class RoomBotManager extends Manager
 
             if(!bot) continue;
 
-            await this._room.unitManager.removeUnit(bot.unit);
+            bot.savePosition();
+
+            this._room.unitManager.removeUnit(bot.unit);
 
             this._bots.splice(i, 1);
         }
@@ -84,7 +86,7 @@ export class RoomBotManager extends Manager
         return null;
     }
 
-    public async placeBot(user: User, botId: number, position: Position): Promise<void>
+    public placeBot(user: User, botId: number, position: Position): void
     {
         if(!user || !botId || !position) return;
 
@@ -104,15 +106,17 @@ export class RoomBotManager extends Manager
 
         user.inventory.bots.removeBot(bot);
 
-        if(!this._room.getObjectOwnerName(bot.userId) && user.details.username) this._room.objectOwners.push({ id: bot.userId, username: user.details.username });
+        this._room.addObjectOwnerName(bot.userId, user.details.username);
 
-        await this._room.unitManager.addUnit(bot.unit, position);
+        this._room.unitManager.addUnit(bot.unit, position);
 
         this._bots.push(bot);
 
         bot.unit.location.dance(bot.dance);
 
-        this._room.map.updatePositions(true, position);
+        this._room.map.generateCollisions();
+
+        this._room.unitManager.updateUnits(bot.unit);
 
         if(bot.freeRoam)
         {
@@ -124,7 +128,7 @@ export class RoomBotManager extends Manager
         bot.save();
     }
 
-    public async pickupBot(user: User, botId: number): Promise<void>
+    public pickupBot(user: User, botId: number): Promise<void>
     {
         if(!user || !botId) return;
 
@@ -140,7 +144,7 @@ export class RoomBotManager extends Manager
 
             if(bot.id !== botId) continue;
 
-            await bot.unit.reset(false);
+            bot.unit.reset(false);
 
             this._bots.splice(i, 1);
 
@@ -178,7 +182,7 @@ export class RoomBotManager extends Manager
             {
                 const username = await BotDao.getOwnerUsername(result.id);
 
-                this._room.objectOwners.push({ id: bot.userId, username });
+                this._room.addObjectOwnerName(bot.userId, username);
             }
 
             await this._room.unitManager.addUnit(bot.unit, new Position(result.x, result.y, parseFloat(result.z), result.direction, result.direction));

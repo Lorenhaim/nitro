@@ -15,7 +15,7 @@ export class BotPlaceEvent extends Incoming
 
             if(!botId) return;
             
-            await currentRoom.botManager.placeBot(this.client.user, botId, new Position(this.packet.readInt(), this.packet.readInt(), 0, Direction.SOUTH, Direction.SOUTH));
+            currentRoom.botManager.placeBot(this.client.user, botId, new Position(this.packet.readInt(), this.packet.readInt(), 0, Direction.SOUTH, Direction.SOUTH));
         }
 
         catch(err)

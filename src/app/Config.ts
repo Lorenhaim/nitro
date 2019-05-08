@@ -4,7 +4,7 @@ export const Config: ConfigOptions = {
     general: {
         siteName: 'HabboAPI',
         siteUrl: 'http://emulator.habboapi.com:4200',
-        production: 'ARCTURUS-20180113'
+        production: 'PRODUCTION-201611291003-338511768'
     },
     captcha: {
         enabled: false,
@@ -83,7 +83,7 @@ export const Config: ConfigOptions = {
             idleTimerMs: 600000,
             handItemMs: 300000,
             lookTimerMs: 4000,
-            roamTimerMs: 300000
+            roamTimerMs: 10000
         },
         furni: {
             wired: {

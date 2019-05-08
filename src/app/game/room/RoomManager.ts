@@ -10,33 +10,23 @@ import { Room } from './Room';
 export class RoomManager extends Manager
 {
     private _rooms: Room[];
-    private _roomsDisposing: Room[];
     private _roomModels: RoomModel[];
-
-    private _roomDisposeInterval: NodeJS.Timeout;
 
     constructor()
     {
         super('RoomManager');
 
         this._rooms             = [];
-        this._roomsDisposing    = [];
         this._roomModels        = [];
     }
 
     protected async onInit(): Promise<void>
     {
         await this.loadRoomModels();
-
-        this._roomDisposeInterval = setInterval(async () => await this.disposeRooms(), 60000);
     }
 
     protected async onDispose(): Promise<void>
     {
-        if(this._roomDisposeInterval) clearInterval(this._roomDisposeInterval);
-        
-        await this.disposeRooms();
-
         const totalRooms = this._rooms.length;
 
         if(totalRooms)
@@ -45,6 +35,8 @@ export class RoomManager extends Manager
             {
                 const room = this._rooms[i];
 
+                if(!room) continue;
+
                 await room.dispose();
 
                 this._rooms.splice(i, 1);
@@ -52,160 +44,103 @@ export class RoomManager extends Manager
         }
     }
 
-    private async disposeRooms(): Promise<void>
-    {
-        const totalRoomsDisposing = this._roomsDisposing.length;
-
-        if(totalRoomsDisposing)
-        {
-            for(let i = 0; i < totalRoomsDisposing; i++)
-            {
-                const disposingRoom = this._roomsDisposing[i];
-
-                if(disposingRoom)
-                {
-                    await disposingRoom.dispose();
-
-                    this._roomsDisposing.splice(i, 1);
-                }
-            }
-        }
-    }
-
     public async getRoom(id: number): Promise<Room>
     {
-        if(id)
+        if(!id) return null;
+        
+        const totalRooms = this._rooms.length;
+
+        if(totalRooms)
         {
-            const totalRoomsDisposing = this._roomsDisposing.length;
-
-            if(totalRoomsDisposing)
+            for(let i = 0; i < totalRooms; i++)
             {
-                for(let i = 0; i < totalRoomsDisposing; i++)
+                const room = this._rooms[i];
+
+                if(room.id === id)
                 {
-                    const room = this._roomsDisposing[i];
+                    room.didCancelDispose = true;
 
-                    if(room.id === id)
-                    {
-                        if(room.isDisposing) console.log('room already closing');
-
-                        this._rooms.push(room);
-                        this._roomsDisposing.splice(i, 1);
-
-                        return room;
-                    }
+                    return room;
                 }
-            }
-
-            const totalRooms = this._rooms.length;
-
-            if(totalRooms)
-            {
-                for(let i = 0; i < totalRooms; i++)
-                {
-                    const room = this._rooms[i];
-
-                    if(room.id === id) return room;
-                }
-            }
-
-            const entity = await RoomDao.loadRoom(id);
-
-            if(entity)
-            {
-                const room = new Room(entity);
-
-                if(room) return room;
             }
         }
+        
+        const entity = await RoomDao.loadRoom(id);
 
-        return null;
+        if(!entity) return null;
+        
+        const room = new Room(entity);
+
+        if(!room) return null;
+        
+        return room;
     }
 
     public addRoom(room: Room): Room
     {
-        if(room)
+        if(!room) return;
+
+        const totalRooms = this._rooms.length;
+
+        if(totalRooms)
         {
-            const totalRoomsDisposing = this._roomsDisposing.length;
-
-            if(totalRoomsDisposing)
+            for(let i = 0; i < totalRooms; i++)
             {
-                for(let i = 0; i < totalRoomsDisposing; i++)
+                const activeRoom = this._rooms[i];
+
+                if(activeRoom.id === room.id)
                 {
-                    const disposingRoom = this._roomsDisposing[i];
+                    activeRoom.didCancelDispose = true;
 
-                    if(disposingRoom.id === room.id)
-                    {
-                        if(disposingRoom.isDisposing) console.log('room already closing');
-
-                        this._rooms.push(disposingRoom);
-                        this._roomsDisposing.splice(i, 1);
-
-                        return disposingRoom;
-                    }
+                    return activeRoom;
                 }
             }
-
-            const totalRooms = this._rooms.length;
-
-            if(totalRooms)
-            {
-                for(let i = 0; i < totalRooms; i++)
-                {
-                    const activeRoom = this._rooms[i];
-
-                    if(activeRoom.id === room.id) return activeRoom;
-                }
-            }
-
-            this._rooms.push(room);
-
-            return room;
         }
+        
+        this._rooms.push(room);
 
-        return null;
+        return room;
     }
 
-    public removeRoom(room: Room): void
+    public async removeRoom(room: Room): Promise<void>
     {
-        if(room)
+        if(!room) return;
+        
+        const totalRooms = this._rooms.length;
+
+        if(!totalRooms) return;
+        
+        for(let i = 0; i < totalRooms; i++)
         {
-            const totalRooms = this._rooms.length;
+            const activeRoom = this._rooms[i];
 
-            if(totalRooms)
-            {
-                for(let i = 0; i < totalRooms; i++)
-                {
-                    const activeRoom = this._rooms[i];
+            if(!activeRoom) continue;
 
-                    if(activeRoom)
-                    {
-                        if(activeRoom.id === room.id)
-                        {
-                            this._roomsDisposing.push(activeRoom);
-                            
-                            this._rooms.splice(i, 1);
-                        }
-                    }
-                }
-            }
+            if(activeRoom !== room) continue;
+
+            await activeRoom.dispose();
+
+            this._rooms.splice(i, 1);
+
+            return;
         }
     }
 
     public getModel(modelId: number): RoomModel
     {
-        if(modelId)
+        if(!modelId) return null;
+        
+        const totalModels = this._roomModels.length;
+
+        if(!totalModels) return null;
+        
+        for(let i = 0; i < totalModels; i++)
         {
-            const totalModels = this._roomModels.length;
+            const model = this._roomModels[i];
 
-            if(totalModels)
-            {
-                for(let i = 0; i < totalModels; i++)
-                {
-                    const model = this._roomModels[i];
+            if(!model) continue;
 
-                    if(model.id === modelId) return model;
-                }
-            }
+            if(model.id === modelId) return model;
         }
 
         return null;
@@ -213,19 +148,17 @@ export class RoomManager extends Manager
 
     public getModelByName(name: string): RoomModel
     {
-        if(name)
+        if(!name) return null;
+        
+        const totalModels = this._roomModels.length;
+
+        if(!totalModels) return null;
+        
+        for(let i = 0; i < totalModels; i++)
         {
-            const totalModels = this._roomModels.length;
+            const model = this._roomModels[i];
 
-            if(totalModels)
-            {
-                for(let i = 0; i < totalModels; i++)
-                {
-                    const model = this._roomModels[i];
-
-                    if(model.name === name) return model;
-                }
-            }
+            if(model.name === name) return model;
         }
 
         return null;
@@ -287,11 +220,6 @@ export class RoomManager extends Manager
     public get rooms(): Room[]
     {
         return this._rooms;
-    }
-
-    public get roomsDisposing(): Room[]
-    {
-        return this._roomsDisposing;
     }
 
     public get models(): RoomModel[]

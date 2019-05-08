@@ -14,7 +14,7 @@ export class PetPickupEvent extends Incoming
 
             if(!petId) return;
             
-            await currentRoom.petManager.pickupPet(this.client.user, petId);
+            currentRoom.petManager.pickupPet(this.client.user, petId);
         }
 
         catch(err)

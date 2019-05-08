@@ -1,27 +1,16 @@
-import { Manager } from '../../common';
 import { Item, WiredEffect, WiredTrigger } from '../item';
 import { RoomTile } from './mapping';
 import { Room } from './Room';
 
-export class RoomWiredManager extends Manager
+export class RoomWiredManager
 {
     private _room: Room;
 
     constructor(room: Room)
     {
-        super('RoomWiredManager', room.logger);
-
         if(!(room instanceof Room)) throw new Error('invalid_room');
 
         this._room = room;
-    }
-
-    protected async onInit(): Promise<void>
-    {
-    }
-    
-    protected async onDispose(): Promise<void>
-    {
     }
 
     public getItemsByTrigger(trigger: typeof WiredTrigger): Item[]
@@ -142,9 +131,6 @@ export class RoomWiredManager extends Manager
         if(!item) return;
 
         const interaction = <WiredEffect> item.baseItem.interaction;
-
-        console.log('do it');
-        // validate stuff, cooldowns etc
 
         interaction.onTriggered(item, ...args);
     }

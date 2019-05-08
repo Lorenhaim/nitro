@@ -14,7 +14,7 @@ export class PetPlaceEvent extends Incoming
 
             if(!petId) return;
             
-            await currentRoom.petManager.placePet(this.client.user, petId, null);
+            currentRoom.petManager.placePet(this.client.user, petId, null);
         }
 
         catch(err)
