@@ -23,6 +23,8 @@ export class RankManager extends Manager
 
     private async loadRanks(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._ranks = [];
 
         const results = await SecurityRankDao.loadRanks();

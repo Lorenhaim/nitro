@@ -71,6 +71,22 @@ export class NavigatorSearchResult
                             this._resultQuery   = `popularNow`;
                             this._resultName    = partThree || `Popular Now`;
                             break;
+                        case 'favoriteRooms':
+                            const userId = parseInt(partTwo);
+
+                            await this.loadFavoriteRooms(userId);
+
+                            this._resultQuery   = `favoriteRooms:${ userId }`;
+                            this._resultName    = partThree || `My Favorite Rooms`;
+                            break;
+                        case 'friendsRooms':
+                            const userIdd = parseInt(partTwo);
+
+                            await this.loadFavoriteRooms(userIdd);
+
+                            this._resultQuery   = `friendsRooms:${ userIdd }`;
+                            this._resultName    = partThree || `My Friends Rooms`;
+                            break;
                         case 'category':
                             const categoryId = parseInt(partTwo);
 
@@ -129,6 +145,41 @@ export class NavigatorSearchResult
 
             if(totalResults) for(let i = 0; i < totalResults; i++) this._rooms.push(results[i]);
         }
+    }
+
+    private async loadFavoriteRooms(userId: number): Promise<void>
+    {
+        if(!userId) return;
+
+        const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
+
+        if(!user) return;
+
+        await user.inventory.rooms.loadFavoritedRooms();
+
+        const favoritedRoomIds = user.inventory.rooms.favoritedRoomIds;
+
+        if(!favoritedRoomIds.length) return;
+        
+        const results = await getManager().find(RoomEntity, {
+            where: {
+                id: In(user.inventory.rooms.favoritedRoomIds)
+            },
+            relations: ['user', 'group'],
+            order: {
+                usersNow: 'DESC',
+                lastActive: 'DESC'
+            },
+            take: 20
+        });
+
+        if(!results.length) return;
+
+        this._rooms.push(...results);
+    }
+
+    private async loadFriendsRooms(userId: number): Promise<void>
+    {
     }
 
     private async loadByCategoryId(categoryId: number): Promise<void>

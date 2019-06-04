@@ -112,6 +112,8 @@ export class UserPets extends Manager
 
     private async loadPets(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._pets = [];
 
         const results = await PetDao.loadUserPets(this._user.id);

@@ -168,6 +168,8 @@ export class RoomBotManager extends Manager
 
     private async loadBots(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._bots = [];
 
         const results = await BotDao.loadRoomBots(this._room.id);

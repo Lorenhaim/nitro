@@ -71,6 +71,8 @@ export class UserOutfits extends Manager
 
     private async loadOutfits(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._outfits = [];
 
         const results = await UserOutfitDao.loadUserOutfits(this._user.id);

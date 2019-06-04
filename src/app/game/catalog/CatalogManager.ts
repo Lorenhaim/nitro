@@ -178,6 +178,8 @@ export class CatalogManager extends Manager
 
     private async loadPages(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._pages = [];
 
         const results = await CatalogPageDao.loadAllPages();
@@ -202,6 +204,8 @@ export class CatalogManager extends Manager
 
     private async loadItems(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._items = [];
 
         const results = await CatalogItemDao.loadAllItems();
@@ -237,6 +241,8 @@ export class CatalogManager extends Manager
 
     private async loadClothing(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._clothing      = [];
         this._clothingIds   = [];
 

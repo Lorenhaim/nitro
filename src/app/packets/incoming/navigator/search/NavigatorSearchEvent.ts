@@ -57,6 +57,30 @@ export class NavigatorSearchEvent extends Incoming
                                 
                                 if(searchResult.rooms.length > 0) results.push(searchResult);
                             }
+
+                            if(include === 'favoriteRooms')
+                            {
+                                const searchResult = new NavigatorSearchResult(tab, `favoriteRooms:${ this.client.user.id }:My Favorite Rooms`, NavigatorSearchAction.NONE, {
+                                    collapsed: NavigatorListCollapsed.FALSE,
+                                    mode: NavigatorListMode.LIST
+                                });
+        
+                                await searchResult.loadResults();
+                                
+                                if(searchResult.rooms.length > 0) results.push(searchResult);
+                            }
+
+                            if(include === 'friendsRooms')
+                            {
+                                const searchResult = new NavigatorSearchResult(tab, `friendsRooms:${ this.client.user.id }:My Favorite Rooms`, NavigatorSearchAction.NONE, {
+                                    collapsed: NavigatorListCollapsed.FALSE,
+                                    mode: NavigatorListMode.LIST
+                                });
+        
+                                await searchResult.loadResults();
+                                
+                                if(searchResult.rooms.length > 0) results.push(searchResult);
+                            }
                         }
                     }
 

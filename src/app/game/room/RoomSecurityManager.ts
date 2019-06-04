@@ -243,6 +243,8 @@ export class RoomSecurityManager extends Manager
 
     private async loadRights(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._rights = [];
 
         const results = await RoomRightsDao.loadRights(this._room.id);

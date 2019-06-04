@@ -101,6 +101,8 @@ export class ItemManager extends Manager
 
     private async loadBaseItems(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._baseItems = [];
 
         const results = await ItemBaseDao.loadItems();

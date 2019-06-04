@@ -525,6 +525,8 @@ export class RoomItemManager extends Manager
 
     private async loadItems(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._items = [];
 
         const results = await ItemDao.loadRoomItems(this._room.id);

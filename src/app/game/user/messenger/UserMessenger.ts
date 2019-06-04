@@ -466,6 +466,8 @@ export class UserMessenger extends Manager
 
     private async loadCategories(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._categories = []
 
         const results = await MessengerDao.loadCategories(this._user.id);
@@ -486,8 +488,10 @@ export class UserMessenger extends Manager
         }
     }
 
-    private async loadFriends(): Promise<void>
+    public async loadFriends(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._friends = []
 
         const results = await MessengerDao.loadFriends(this._user.id);
@@ -510,6 +514,8 @@ export class UserMessenger extends Manager
 
     private async loadRequests(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._requests = []
 
         const results = await MessengerDao.loadRequests(this._user.id);
@@ -554,6 +560,8 @@ export class UserMessenger extends Manager
 
     private async loadRequestsSent(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._requestsSent = []
 
         const results = await MessengerDao.loadRequestsSent(this._user.id);

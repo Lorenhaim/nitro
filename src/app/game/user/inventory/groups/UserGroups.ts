@@ -175,6 +175,8 @@ export class UserGroups extends Manager
 
     private async loadMemberships(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._memberships = [];
 
         const results = await GroupDao.getMembershipsByUserId(this._user.id);

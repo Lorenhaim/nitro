@@ -23,6 +23,8 @@ export class PermissionManager extends Manager
 
     private async loadPermissions(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._permissions = [];
         
         const results = await SecurityPermissionDao.loadPermissions();

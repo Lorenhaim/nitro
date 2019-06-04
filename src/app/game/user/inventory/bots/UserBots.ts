@@ -112,6 +112,8 @@ export class UserBots extends Manager
 
     private async loadBots(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._bots = [];
 
         const results = await BotDao.loadUserBots(this._user.id);

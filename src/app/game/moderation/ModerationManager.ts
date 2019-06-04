@@ -66,6 +66,8 @@ export class ModerationManager extends Manager
 
     private async loadTopics(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._topics = [];
 
         const results = await ModerationDao.loadTopics();
@@ -82,6 +84,8 @@ export class ModerationManager extends Manager
 
     private async loadCategories(): Promise<void>
     {
+        if(this._isLoaded);
+        
         this._categories = [];
 
         const results = await ModerationDao.loadCategories();

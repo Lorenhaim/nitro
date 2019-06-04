@@ -198,6 +198,8 @@ export class UserBadges extends Manager
 
     private async loadBadges(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._badges        = [];
         this._currentBadges = [];
 

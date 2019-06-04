@@ -225,6 +225,8 @@ export class RoomManager extends Manager
 
     private async loadRoomModels(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._roomModels = [];
 
         const results = await getManager().find(RoomModelEntity, {

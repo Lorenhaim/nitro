@@ -125,6 +125,8 @@ export class UserItems extends Manager
 
     private async loadItems(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._items = [];
 
         const results = await ItemDao.loadUserItems(this._user.id);

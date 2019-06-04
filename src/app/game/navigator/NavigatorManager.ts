@@ -36,6 +36,8 @@ export class NavigatorManager extends Manager
 
     private async loadCategories(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._categories = [];
 
         const results = await getManager().find(NavigatorCategoryEntity);
@@ -52,6 +54,8 @@ export class NavigatorManager extends Manager
 
     private async loadEventCategories(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._eventCategories = [];
 
         const results = await getManager().find(NavigatorEventCategoryEntity);
@@ -68,6 +72,8 @@ export class NavigatorManager extends Manager
 
     private async loadTabs(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._tabs = [];
 
         const results = await getManager().find(NavigatorTabEntity);

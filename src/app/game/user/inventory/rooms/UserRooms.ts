@@ -109,8 +109,12 @@ export class UserRooms extends Manager
         this._user.connections.processOutgoing(new UserFavoriteRoomComposer(roomId, false));
     }
 
-    private async loadFavoritedRooms(): Promise<void>
+    public async loadFavoritedRooms(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
+        if(this._isLoaded) return;
+        
         this._favoritedRoomIds = [];
 
         const results = await UserDao.getFavoritedRoomIdsByUserId(this._user.id);
@@ -131,8 +135,10 @@ export class UserRooms extends Manager
         }
     }
 
-    private async loadLikedRooms(): Promise<void>
+    public async loadLikedRooms(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._likedRoomIds = [];
 
         const results = await UserDao.getLikedRoomIdsByUserId(this._user.id);

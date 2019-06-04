@@ -161,6 +161,8 @@ export class RoomPetManager extends Manager
 
     private async loadPets(): Promise<void>
     {
+        if(this._isLoaded) return;
+        
         this._pets = [];
 
         const results = await PetDao.loadRoomPets(this._room.id);
