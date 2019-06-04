@@ -143,6 +143,7 @@ export enum OutgoingHeader
     USER_CREDITS                 = 3475,
     USER_CURRENCY                = 2018,
     USER_EFFECTS                 = 340,
+    USER_FAVORITE_ROOM           = 2524,
     USER_FAVORITE_ROOM_COUNT     = 151,
     USER_FIGURE                  = 2429,
     USER_FOWARD_ROOM             = 160,

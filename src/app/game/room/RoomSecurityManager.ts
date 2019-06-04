@@ -43,6 +43,15 @@ export class RoomSecurityManager extends Manager
         return false;
     }
 
+    public isStrictOwner(user: User): boolean
+    {
+        if(!user) return false;
+
+        if(this._room.details.ownerId === user.id) return true;
+
+        return false;
+    }
+
     public hasRights(user: User): boolean
     {
         if(!user) return false;

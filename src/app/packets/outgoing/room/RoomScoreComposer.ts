@@ -20,7 +20,7 @@ export class RoomScoreComposer extends Outgoing
     {
         return this.packet
             .writeInt(this._room.details.totalLikes)
-            .writeBoolean(false)
+            .writeBoolean(!this.client.user.inventory.rooms.hasLiked(this._room.id))
             .prepare();
     }
 }

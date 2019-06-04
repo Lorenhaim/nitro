@@ -6,4 +6,5 @@ export * from './effects';
 export * from './groups';
 export * from './items';
 export * from './pets';
+export * from './rooms';
 export * from './UserInventory';

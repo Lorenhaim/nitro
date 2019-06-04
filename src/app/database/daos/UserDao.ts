@@ -1,5 +1,6 @@
 import { getManager, Like } from 'typeorm';
 import { UserEntity } from '../../database';
+import { UserFavoriteRoomEntity, UserLikedRoomEntity } from '../entities';
 
 export class UserDao
 {
@@ -47,6 +48,36 @@ export class UserDao
         if(!result) return null;
 
         return result;
+    }
+
+    public static async getFavoritedRoomIdsByUserId(id: number): Promise<UserFavoriteRoomEntity[]>
+    {
+        if(!id) return null;
+
+        const results = await getManager()
+            .createQueryBuilder(UserFavoriteRoomEntity, 'favorite')
+            .select(['favorite.id', 'favorite.roomId'])
+            .where('favorite.userId = :id', { id })
+            .getMany();
+
+        if(!results.length) return null;
+
+        return results;
+    }
+
+    public static async getLikedRoomIdsByUserId(id: number): Promise<UserLikedRoomEntity[]>
+    {
+        if(!id) return null;
+
+        const results = await getManager()
+            .createQueryBuilder(UserLikedRoomEntity, 'liked')
+            .select(['liked.id', 'liked.roomId'])
+            .where('liked.userId = :id', { id })
+            .getMany();
+
+        if(!results.length) return null;
+
+        return results;
     }
 
     public static async getUserByUsername(username: string): Promise<UserEntity>

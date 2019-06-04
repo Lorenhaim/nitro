@@ -20,4 +20,4 @@ camera
 dist
 errors.txt
 docs
-/src/app/Config.ts
+src/app/Config.ts

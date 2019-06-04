@@ -1,12 +1,12 @@
 import { Incoming } from '../Incoming';
 
-export class RoomFavoriteEvent extends Incoming
+export class RoomUnfavoriteEvent extends Incoming
 {
     public async process(): Promise<void>
     {
         try
         {
-            return await this.client.user.inventory.rooms.favoriteRoom(this.packet.readInt());
+            return await this.client.user.inventory.rooms.unfavoriteRoom(this.packet.readInt());
         }
 
         catch(err)

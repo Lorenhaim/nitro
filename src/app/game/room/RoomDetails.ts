@@ -11,12 +11,16 @@ export class RoomDetails
     private _room: Room;
     private _entity: RoomEntity;
 
+    private _totalLikes: number;
+
     constructor(room: Room, entity: RoomEntity)
     {
         if(!(room instanceof Room) || !(entity instanceof RoomEntity)) throw new Error('invalid_room');
 
-        this._room      = room;
-        this._entity    = entity;
+        this._room          = room;
+        this._entity        = entity;
+
+        this._totalLikes    = entity.totalLikes || 0;
     }
 
     public save(): void
@@ -288,7 +292,12 @@ export class RoomDetails
 
     public get totalLikes(): number
     {
-        return this._entity.totalLikes || 0;
+        return this._totalLikes || 0;
+    }
+
+    public set totalLikes(count: number)
+    {
+        this._totalLikes = count;
     }
 
     public get timestampCreated(): Date

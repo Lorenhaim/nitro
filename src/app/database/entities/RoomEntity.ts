@@ -120,7 +120,7 @@ export class RoomEntity
     @OneToMany(type => RoomBanEntity, ban => ban.room)
     public bans: RoomBanEntity[];
 
-    @OneToMany(type => RoomRightsEntity, right => right.user)
+    @OneToMany(type => RoomRightsEntity, right => right.room)
     public rights: RoomRightsEntity[];
 
     @OneToMany(type => ItemEntity, item => item.room)
@@ -137,10 +137,10 @@ export class RoomEntity
     @OneToOne(type => GroupEntity, group => group.room)
     public group: GroupEntity;
 
-    @OneToMany(type => UserFavoriteRoomEntity, favorite => favorite.user)
+    @OneToMany(type => UserFavoriteRoomEntity, favorite => favorite.room)
     public userFavorites: UserFavoriteRoomEntity[];
 
-    @OneToMany(type => UserLikedRoomEntity, liked => liked.user)
+    @OneToMany(type => UserLikedRoomEntity, liked => liked.room)
     public userLikes: UserLikedRoomEntity[];
 
     @OneToMany(type => PetEntity, pet => pet.room)

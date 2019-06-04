@@ -235,6 +235,9 @@ export class PacketManager
         this.addHandler(IncomingHeader.ROOM_MODEL_BLOCKED_TILES, IncomingRoom.RoomModelBlockedTilesEvent);
         this.addHandler(IncomingHeader.ROOM_MODEL_DOOR, IncomingRoom.RoomModelDoorEvent);
         this.addHandler(IncomingHeader.ROOM_MODEL_SAVE, IncomingRoom.RoomModelSaveEvent);
+        this.addHandler(IncomingHeader.ROOM_LIKE, IncomingRoom.RoomLikeEvent);
+        this.addHandler(IncomingHeader.ROOM_FAVORITE, IncomingRoom.RoomFavoriteEvent);
+        this.addHandler(IncomingHeader.ROOM_UNFAVORITE, IncomingRoom.RoomUnfavoriteEvent);
     }
 
     private registerMessenger(): void
