@@ -164,6 +164,14 @@ export class UserDetails
         if(this._user.unit.room) this._user.unit.room.unitManager.processOutgoing(new UserRespectComposer(this._user));
     }
 
+    public toggleFriendToolbar(): void
+    {
+        if(this.toolbarShowFriends) this._entity.info.toolbarShowFriends = '0';
+        else this._entity.info.toolbarShowFriends = '1';
+
+        this.save();
+    }
+
     public get user(): User
     {
         return this._user;
@@ -292,6 +300,11 @@ export class UserDetails
     public get navigatorSearchOpen(): boolean
     {
         return this._entity.info.navigatorSearchOpen === '1';
+    }
+
+    public get toolbarShowFriends(): boolean
+    {
+        return this._entity.info.toolbarShowFriends === '1';
     }
 
     public get navigatorSettings(): NavigatorSettings

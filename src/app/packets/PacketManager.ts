@@ -255,6 +255,7 @@ export class PacketManager
         this.addHandler(IncomingHeader.MESSENGER_RELATIONSHIPS_UPDATE, IncomingUser.MessengerRelationshipUpdateEvent);
         this.addHandler(IncomingHeader.MESSENGER_UPDATES, IncomingUser.MessengerUpdatesEvent);
         this.addHandler(IncomingHeader.MESSENGER_ROOM_INVITE, IncomingUser.MessengerRoomInviteEvent);
+        this.addHandler(IncomingHeader.MESSENGER_TOGGLE_TOOLBAR, IncomingUser.MessengerToggleToolbarEvent);
     }
 
     private registerModeration(): void

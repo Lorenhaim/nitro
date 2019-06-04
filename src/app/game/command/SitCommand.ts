@@ -11,7 +11,10 @@ export class SitCommand extends Command
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        if(user && user.unit) user.unit.location.sit(true, parseInt(parts[0]), parseInt(parts[1]));
+        const height    = parts[0] || 0;
+        const direction = parts[1] || 0;
+
+        if(user && user.unit) user.unit.location.sit(true, parseInt(<any> height), parseInt(<any> direction));
     }
 
     public get description(): string

@@ -20,7 +20,7 @@ export class CatalogPageEntity
     @Column({ name: 'icon_image', default: '0' })
     public iconImage: number;
 
-    @Column({ name: 'layout', type: 'enum', enum: ['default_3x3', 'frontpage4', 'frontpage_featured', 'spaces_new'], default: 'default_3x3' })
+    @Column({ name: 'layout', type: 'enum', enum: CatalogLayouts, default: CatalogLayouts.DEFAULT })
     public layout: CatalogLayouts;
 
     @Column({ name: 'image_header', nullable: true })

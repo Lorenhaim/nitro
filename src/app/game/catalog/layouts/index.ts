@@ -1,5 +1,6 @@
 export * from './CatalogLayout';
 export * from './CatalogLayouts';
+export * from './ClubBuyLayout';
 export * from './DefaultLayout';
 export * from './FrontPageFeaturedLayout';
 export * from './FrontPageLayout';

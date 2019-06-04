@@ -10,4 +10,5 @@ export * from './MessengerRequestEvent';
 export * from './MessengerRequestsEvent';
 export * from './MessengerRoomInviteEvent';
 export * from './MessengerSearchEvent';
+export * from './MessengerToggleToolbarEvent';
 export * from './MessengerUpdatesEvent';

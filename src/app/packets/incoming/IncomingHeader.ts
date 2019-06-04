@@ -77,6 +77,7 @@ export enum IncomingHeader
     MESSENGER_REQUESTS             = 2448,
     MESSENGER_ROOM_INVITE          = 1276,
     MESSENGER_SEARCH               = 1210,
+    MESSENGER_TOGGLE_TOOLBAR       = 2313,
     MESSENGER_UPDATES              = 1419,
     MOD_TOOL_USER_INFO             = 3295,
     NAVIGATOR_CATEGORIES           = 3027,
