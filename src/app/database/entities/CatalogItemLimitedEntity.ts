@@ -11,7 +11,7 @@ export class CatalogItemLimitedEntity
     @PrimaryGeneratedColumn({ name: 'id' })
     public id: number;
 
-    @Column({ name: 'user_id', nullable: true })
+    @Column({ name: 'user_id' })
     public userId: number;
 
     @Column({ name: 'base_id' })
@@ -20,7 +20,7 @@ export class CatalogItemLimitedEntity
     @Column({ name: 'catalog_item_id', nullable: true })
     public catalogItemId: number;
 
-    @Column({ name: 'item_id', nullable: true })
+    @Column({ name: 'item_id' })
     public itemId: number;
 
     @Column({ name: 'limited_number' })
@@ -29,7 +29,7 @@ export class CatalogItemLimitedEntity
     @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })
     public timestampCreated: Date;
 
-    @ManyToOne(type => UserEntity, { onDelete: 'SET NULL' })
+    @ManyToOne(type => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     public user: UserEntity;
 
@@ -41,7 +41,7 @@ export class CatalogItemLimitedEntity
     @JoinColumn({ name: 'catalog_item_id' })
     public catalogItem: ItemBaseEntity;
 
-    @ManyToOne(type => ItemEntity, { onDelete: 'SET NULL' })
+    @ManyToOne(type => ItemEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'item_id' })
     public item: ItemEntity;
 }

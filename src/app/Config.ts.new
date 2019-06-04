@@ -1,0 +1,110 @@
+import { ConfigOptions } from './common';
+
+export const Config: ConfigOptions = {
+    general: {
+        siteName: 'Nitro',
+        siteUrl: 'https://website.com',
+        production: 'PRODUCTION-201611291003-338511768'
+    },
+    captcha: {
+        enabled: false,
+        publicKey: '',
+        secretKey: ''
+    },
+    logging: {
+        enabled: true,
+        packets: {
+            incoming: true,
+            outgoing: true,
+            unknown: true,
+            unprepared: true,
+            invalid: true
+        },
+        connections: {
+            game: true,
+            web: true
+        }
+    },
+    client: {
+        ip: '',
+        port: 1242,
+        enabled: true,
+        url: {
+            figureData: 'https://nitrots.co/assets/gamedata/figuredata.xml',
+            furniData: 'https://nitrots.co/assets/gamedata/furnidata.xml',
+            productData: 'https://nitrots.co/assets/gamedata/productdata.txt',
+            swf: 'https://nitrots.co/assets/gordon/PRODUCTION-201611291003-338511768/Habbo.swf',
+            swfBase: 'https://nitrots.co/assets/gordon/',
+            texts: 'https://nitrots.co/assets/gamedata/external_texts.txt',
+            variables: 'https://nitrots.co/assets/gamedata/external.variables.txt',
+            avatarUrl: 'http://www.habbo.com/habbo-imaging/avatarimage?figure='
+        }
+    },
+    game: {
+        enabled: true,
+        ip: '0.0.0.0',
+        port: 1242,
+        ticket: {
+            enabled: true,
+            maxLength: 1,
+            maxLengthType: 'minute',
+            validateIp: false
+        },
+        login: {
+            security: {
+                validateProduction: false,
+                validateVariables: false
+            },
+            alert: {
+                enabled: false,
+                message: `Welcome to Nitro!\r\r`,
+                type: 'default'
+            }
+        },
+        camera: {
+            savePath: "C:/mycamerapath/",
+            saveUrl: "https://website.com/camera/"
+        },
+        catalog: {
+            maxPurchaseStack: 50
+        },
+        messenger: {
+            maxFriends: 300,
+            maxFriendsHabboClub: 500
+        },
+        rollerTick: 2000,
+        pathfinder: {
+            steps: {
+                ignoreDoorTile: true,
+                maxWalkingHeight: 2,
+                allowDiagonals: true,
+                checkItemBelow: true
+            }
+        },
+        rooms: {
+            maxUnitsPerRoom: 75
+        },
+        unit: {
+            idleTimerMs: 600000,
+            handItemMs: 300000,
+            lookTimerMs: 4000,
+            roamTimerMs: 10000
+        },
+        furni: {
+            wired: {
+                maxItems: 5
+            }
+        }
+    },
+    web: {
+        enabled: false,
+        ip: '0.0.0.0',
+        port: 443,
+        ticket: {
+            enabled: true,
+            maxLength: 1,
+            maxLengthType: 'day',
+            validateIp: false
+        }
+    }
+}
