@@ -12,41 +12,26 @@ export class NavigatorEventCategoriesComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        const eventCategories = Emulator.gameManager.navigatorManager.eventCategories;
+
+        if(!eventCategories) return this.packet.writeInt(0).prepare();
+        
+        const totalEventCategories  = eventCategories.length;
+
+        if(!totalEventCategories) return this.packet.writeInt(0).prepare();
+        
+        this.packet.writeInt(totalEventCategories);
+
+        for(let i = 0; i < totalEventCategories; i++)
         {
-            if(Emulator.gameManager.navigatorManager.isLoaded)
-            {
-                const eventCategories       = Emulator.gameManager.navigatorManager.eventCategories;
-                const totalEventCategories  = eventCategories.length;
+            const eventCategory = eventCategories[i];
 
-                if(eventCategories && totalEventCategories)
-                {
-                    this.packet.writeInt(totalEventCategories);
-
-                    for(let i = 0; i < totalEventCategories; i++)
-                    {
-                        const eventCategory = eventCategories[i];
-
-                        this.packet
-                            .writeInt(eventCategory.id)
-                            .writeString(eventCategory.name)
-                            .writeBoolean(true); // ??
-                    }
-                }
-                else
-                {
-                    this.packet.writeInt(0);
-                }
-
-                return this.packet.prepare();
-            }
-
-            return this.cancel();
+            this.packet
+                .writeInt(eventCategory.id)
+                .writeString(eventCategory.name)
+                .writeBoolean(true); // ??
         }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        
+        return this.packet.prepare();
     }
 }

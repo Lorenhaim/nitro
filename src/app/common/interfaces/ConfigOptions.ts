@@ -18,7 +18,8 @@ export interface ConfigOptions
             incoming: boolean,
             outgoing: boolean,
             unknown: boolean,
-            unprepared: boolean
+            unprepared: boolean,
+            invalid: boolean
         },
         connections: {
             game: boolean,
@@ -60,6 +61,10 @@ export interface ConfigOptions
                 message: string,
                 type: string
             }
+        },
+        camera: {
+            savePath: string,
+            saveUrl: string
         },
         catalog: {
             maxPurchaseStack: number

@@ -1,6 +1,7 @@
 export const enum UnitStatusType
 {
     MOVE            = 'mv',
+    SLIDE           = 'sld',
     SIT             = 'sit',
     LAY             = 'lay',
     FLAT_CONTROL    = 'flatctrl',

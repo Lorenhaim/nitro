@@ -22,14 +22,6 @@ export class RoomSettingsSaveErrorComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._roomId, this._errorCode).writeString(this._message).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._roomId, this._errorCode).writeString(this._message).prepare();
     }
 }

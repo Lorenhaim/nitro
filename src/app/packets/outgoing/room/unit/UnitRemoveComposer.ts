@@ -10,26 +10,13 @@ export class UnitRemoveComposer extends Outgoing
     {
         super(OutgoingHeader.UNIT_REMOVE);
 
-        if(unitId > 0)
-        {
-            this._unitId = unitId;
-        }
-        else
-        {
-            throw new Error('invalid_unitId');
-        }
+        if(!unitId) throw new Error('invalid_unit');
+
+        this._unitId = unitId;
     }
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeString(this._unitId.toString()).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeString(this._unitId.toString()).prepare();
     }
 }

@@ -1,4 +1,4 @@
-export const enum NavigatorListMode
+export enum NavigatorListMode
 {
     LIST            = 0,
     THUMBNAILS      = 1,

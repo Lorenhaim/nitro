@@ -1,1 +1,1 @@
-export * from './EffectsComposer';
+export * from './UserEffectsComposer';

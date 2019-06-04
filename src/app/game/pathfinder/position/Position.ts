@@ -15,8 +15,8 @@ export class Position
         this._y = y || 0;
         this._z = z || 0.00;
 
-        this._direction     = direction || Direction.NORTH;
-        this._headDirection = headDirection || Direction.NORTH;
+        this._direction     = parseInt(<any> direction) || Direction.NORTH;
+        this._headDirection = parseInt(<any> headDirection) || Direction.NORTH;
     }
 
     public addPosition(position: Position): Position
@@ -41,39 +41,39 @@ export class Position
         return copy;
     }
 
-    public getPositionInfront(): Position
+    public getPositionInfront(count: number = 1): Position
     {
         const copy = this.copy();
 
         switch(copy.direction)
         {
             case Direction.NORTH:
-                copy.y--;
+                copy.y -= 1 * count;
                 break;
             case Direction.NORTH_EAST:
-                copy.x++;
-                copy.y--;
+                copy.x += 1 * count;
+                copy.y -= 1 * count;
                 break;
             case Direction.EAST:
-                copy.x++;
+                copy.x += 1 * count;
                 break;
             case Direction.SOUTH_EAST:
-                copy.x++;
-                copy.y++;
+                copy.x += 1 * count;
+                copy.y += 1 * count;
                 break;
             case Direction.SOUTH:
-                copy.y++;
+                copy.y += 1 * count;
                 break;
             case Direction.SOUTH_WEST:
-                copy.x--;
-                copy.y++;
+                copy.x -= 1 * count;
+                copy.y += 1 * count;
                 break;
             case Direction.WEST:
-                copy.x--;
+                copy.x -= 1 * count;
                 break;
             case Direction.NORTH_WEST:
-                copy.x--;
-                copy.y--;
+                copy.x -= 1 * count;
+                copy.y -= 1 * count;
                 break;
             default: break;
         }
@@ -81,39 +81,39 @@ export class Position
         return copy;
     }
 
-    public getPositionBehind(): Position
+    public getPositionBehind(count: number = 1): Position
     {
         const copy = this.copy();
 
         switch(copy.direction)
         {
             case Direction.NORTH:
-                copy.y++;
+                copy.y += 1 * count;
                 break;
             case Direction.NORTH_EAST:
-                copy.x--;
-                copy.y++;
+                copy.x -= 1 * count;
+                copy.y += 1 * count;
                 break;
             case Direction.EAST:
-                copy.x--;
+                copy.x -= 1 * count;
                 break;
             case Direction.SOUTH_EAST:
-                copy.x--;
-                copy.y--;
+                copy.x -= 1 * count;
+                copy.y -= 1 * count;
                 break;
             case Direction.SOUTH:
-                copy.y--;
+                copy.y -= 1 * count;
                 break;
             case Direction.SOUTH_WEST:
-                copy.x++;
-                copy.y--;
+                copy.x += 1 * count;
+                copy.y -= 1 * count;
                 break;
             case Direction.WEST:
-                copy.x++;
+                copy.x += 1 * count;
                 break;
             case Direction.NORTH_WEST:
-                copy.x++;
-                copy.y++;
+                copy.x += 1 * count;
+                copy.y += 1 * count;
                 break;
             default: break;
         }
@@ -121,39 +121,39 @@ export class Position
         return copy;
     }
 
-    public getPositionLeft(): Position
+    public getPositionLeft(count: number = 1): Position
     {
         const copy = this.copy();
 
         switch(copy.direction)
         {
             case Direction.NORTH:
-                copy.x--;
+                copy.x -= 1 * count;
                 break;
             case Direction.NORTH_EAST:
-                copy.x--;
-                copy.y--;
+                copy.x -= 1 * count;
+                copy.y -= 1 * count;
                 break;
             case Direction.EAST:
-                copy.y--;
+                copy.y -= 1 * count;
                 break;
             case Direction.SOUTH_EAST:
-                copy.x++;
-                copy.y--;
+                copy.x += 1 * count;
+                copy.y -= 1 * count;
                 break;
             case Direction.SOUTH:
-                copy.x++;
+                copy.x += 1 * count;
                 break;
             case Direction.SOUTH_WEST:
-                copy.x++;
-                copy.y++;
+                copy.x += 1 * count;
+                copy.y += 1 * count;
                 break;
             case Direction.WEST:
-                copy.y++;
+                copy.y += 1 * count;
                 break;
             case Direction.NORTH_WEST:
-                copy.x--;
-                copy.y++;
+                copy.x -= 1 * count;
+                copy.y += 1 * count;
                 break;
             default: break;
         }
@@ -161,39 +161,39 @@ export class Position
         return copy;
     }
 
-    public getPositionRight(): Position
+    public getPositionRight(count: number = 1): Position
     {
         const copy = this.copy();
 
         switch(copy.direction)
         {
             case Direction.NORTH:
-                copy.x++;
+                copy.x += 1 * count;
                 break;
             case Direction.NORTH_EAST:
-                copy.x++;
-                copy.y++;
+                copy.x += 1 * count;
+                copy.y += 1 * count;
                 break;
             case Direction.EAST:
-                copy.y++;
+                copy.y += 1 * count;
                 break;
             case Direction.SOUTH_EAST:
-                copy.x--;
-                copy.y++;
+                copy.x -= 1 * count;
+                copy.y += 1 * count;
                 break;
             case Direction.SOUTH:
-                copy.x--;
+                copy.x -= 1 * count;
                 break;
             case Direction.SOUTH_WEST:
-                copy.x--;
-                copy.y--;
+                copy.x -= 1 * count;
+                copy.y -= 1 * count;
                 break;
             case Direction.WEST:
-                copy.y--;
+                copy.y -= 1 * count;
                 break;
             case Direction.NORTH_WEST:
-                copy.x++;
-                copy.y--;
+                copy.x += 1 * count;
+                copy.y -= 1 * count;
                 break;
             default: break;
         }
@@ -240,24 +240,23 @@ export class Position
 
     public isNear(position: Position, radius: number = 1): boolean
     {
-        if(position && radius)
+        if(!position || !radius) return false;
+
+        if(this.compare(position)) return true;
+        
+        const positions = position.getPositionsAround(radius);
+
+        if(!positions) return false;
+        
+        const totalPositions = positions.length;
+
+        if(!totalPositions) return false;
+        
+        for(let i = 0; i < totalPositions; i++)
         {
-            const positions = this.getPositionsAround(radius);
+            const nearPosition = positions[i];
 
-            if(positions)
-            {
-                const totalPositions = positions.length;
-
-                if(totalPositions)
-                {
-                    for(let i = 0; i < totalPositions; i++)
-                    {
-                        const nearPosition = positions[i];
-
-                        if(nearPosition.compare(position)) return true;
-                    }
-                }
-            }
+            if(nearPosition.compare(this)) return true;
         }
 
         return false;
@@ -286,16 +285,15 @@ export class Position
 
     public calculateHumanDirection(position: Position): Direction
     {
-        if(position)
-        {
-            if(this._x > position.x && this._y > position.y)        return Direction.NORTH_WEST;
-            else if(this._x < position.x && this._y < position.y)   return Direction.SOUTH_EAST;
-            else if(this._x > position.x && this._y < position.y)   return Direction.SOUTH_WEST;
-            else if(this._x < position.x && this._y > position.y)   return Direction.NORTH_EAST;
-            else if(this._x > position.x)                           return Direction.WEST;
-            else if(this._x < position.x)                           return Direction.EAST;
-            else if(this._y < position.y)                           return Direction.SOUTH;
-        }
+        if(!position) return Direction.NORTH;
+        
+        if(this._x > position.x && this._y > position.y)        return Direction.NORTH_WEST;
+        else if(this._x < position.x && this._y < position.y)   return Direction.SOUTH_EAST;
+        else if(this._x > position.x && this._y < position.y)   return Direction.SOUTH_WEST;
+        else if(this._x < position.x && this._y > position.y)   return Direction.NORTH_EAST;
+        else if(this._x > position.x)                           return Direction.WEST;
+        else if(this._x < position.x)                           return Direction.EAST;
+        else if(this._y < position.y)                           return Direction.SOUTH;
 
         return Direction.NORTH;
     }
@@ -312,39 +310,37 @@ export class Position
 
     public calculateWalkDirection(position: Position): Direction
     {
-        if(position)
+        if(!position) return Direction.NORTH_EAST;
+        
+        if(this._x === position.x)
         {
-            if(this._x === position.x)
-            {
-                if(this._y < position.y) return Direction.SOUTH;
-                else return Direction.NORTH;
-            }
-
-            else if(this._x > position.x)
-            {
-                if(this._y === position.y) return Direction.WEST;
-                else if(this._y < position.y) return Direction.SOUTH_WEST;
-                else return Direction.NORTH_WEST
-            }
-
-            else if(this._y === position.y) return Direction.EAST;
-            else if(this._y < position.y) return Direction.SOUTH_EAST;
+            if(this._y < position.y) return Direction.SOUTH;
+            else return Direction.NORTH;
         }
+
+        else if(this._x > position.x)
+        {
+            if(this._y === position.y) return Direction.WEST;
+            else if(this._y < position.y) return Direction.SOUTH_WEST;
+            else return Direction.NORTH_WEST
+        }
+
+        else if(this._y === position.y) return Direction.EAST;
+        else if(this._y < position.y) return Direction.SOUTH_EAST;
 
         return Direction.NORTH_EAST;
     }
 
     public calculateHeadDirection(position: Position): Direction
     {
-        if(position)
-        {
-            const difference = this._direction - this.calculateHumanDirection(position);
+        if(!position) return this._direction;
+        
+        const difference = this._direction - this.calculateHumanDirection(position);
 
-            if((this._direction % 2) === 0)
-            {
-                if(difference > 0) return this._direction - 1;
-                else if(difference < 0) return this._direction + 1;
-            }
+        if((this._direction % 2) === 0)
+        {
+            if(difference > 0) return this._direction - 1;
+            else if(difference < 0) return this._direction + 1;
         }
         
         return this._direction;

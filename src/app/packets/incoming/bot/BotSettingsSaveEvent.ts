@@ -1,4 +1,4 @@
-import { BotSetting, UnitDance } from '../../../game';
+import { BotSetting } from '../../../game';
 import { Incoming } from '../Incoming';
 
 export class BotSettingsSaveEvent extends Incoming
@@ -17,26 +17,13 @@ export class BotSettingsSaveEvent extends Incoming
 
             const setting = this.packet.readInt();
 
-            if(setting === BotSetting.FIGURE)
-            {
-                bot.updateFigure(this.client.user.details.figure, this.client.user.details.gender);
+            if(!setting) return;
 
-                return;
-            }
-
-            else if(setting === BotSetting.FREE_ROAM)
-            {
-                if(bot.freeRoam) bot.updateRoaming(false);
-                else bot.updateRoaming(true);
-            }
-
-            else if(setting === BotSetting.DANCE)
-            {
-                if(bot.dance) bot.updateDance(UnitDance.NONE);
-                else bot.updateDance(UnitDance.NORMAL);
-
-                return;
-            }
+            if(setting === BotSetting.FIGURE) return bot.updateFigure(this.client.user, this.client.user.details.figure, this.client.user.details.gender);
+            else if(setting === BotSetting.FREE_ROAM) return bot.toggleRoaming(this.client.user);
+            else if(setting === BotSetting.DANCE) return bot.toggleDance(this.client.user);
+            else if(setting === BotSetting.NAME) return bot.updateName(this.client.user, this.packet.readString());
+            else if(setting === BotSetting.MOTTO) return bot.updateMotto(this.client.user, this.packet.readString());
         }
 
         catch(err)

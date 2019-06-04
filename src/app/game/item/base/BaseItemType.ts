@@ -1,4 +1,4 @@
-export const enum BaseItemType
+export enum BaseItemType
 {
     FLOOR       = 'S',
     WALL        = 'I',

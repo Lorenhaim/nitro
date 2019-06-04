@@ -10,28 +10,13 @@ export class UserFowardRoomComposer extends Outgoing
     {
         super(OutgoingHeader.USER_FOWARD_ROOM);
 
-        if(roomId > 0)
-        {
-            this._roomId = roomId;
-        }
-        else
-        {
-            throw new Error('invalid_room_id');
-        }
+        if(!roomId) throw new Error('invalid_room');
+
+        this._roomId = roomId;
     }
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._roomId).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._roomId).prepare();
     }
-
-    protected au
 }

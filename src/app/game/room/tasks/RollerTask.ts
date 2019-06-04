@@ -1,7 +1,8 @@
-import { ItemRollingComposer, Outgoing, UnitRollingComposer } from '../../../packets';
-import { InteractionRoller, Item, ItemRolling } from '../../item';
+import { Outgoing, UnitRollingComposer } from '../../../packets';
+import { RollingComposer } from '../../../packets/outgoing/room/RollingComposer';
+import { BaseItemType, InteractionRoller, Item, ItemRolling, RollerData } from '../../item';
 import { Position } from '../../pathfinder';
-import { Unit, UnitRolling, UnitStatusType } from '../../unit';
+import { Unit, UnitRolling } from '../../unit';
 import { Room } from '../Room';
 import { Task } from './Task';
 
@@ -18,7 +19,7 @@ export class RollerTask extends Task
         this._room = room;
     }
 
-    protected async onRun(): Promise<void>
+    protected onRun(): void
     {
         const rollers = this._room.itemManager.getItemsByInteraction(InteractionRoller);
 
@@ -28,12 +29,9 @@ export class RollerTask extends Task
 
         if(!totalRollers) return;
 
-        const updatedPositions: Position[] = [];
-
-        const itemsRolling: Item[]  = [];
-        const unitsRolling: Unit[]  = [];
-
-        const pendingOutgoing: Outgoing[] = [];
+        const rollersRolling: RollerData[]  = [];
+        const updatedPositions: Position[]  = [];
+        const pendingOutgoing: Outgoing[]   = [];
         
         for(let i = 0; i < totalRollers; i++)
         {
@@ -45,18 +43,19 @@ export class RollerTask extends Task
 
             if(!tile) continue;
 
-            const tileItems = tile.items;
-            const tileUnits = tile.units;
+            const rollerData = new RollerData(roller);
 
-            if(tileItems)
+            if(!rollerData) continue;
+
+            if(tile.items)
             {
-                const totalItems = tileItems.length;
+                const totalItems = tile.items.length;
 
                 if(totalItems)
                 {
                     for(let j = 0; j < totalItems; j++)
                     {
-                        const item = tileItems[j];
+                        const item = tile.items[j];
 
                         if(!item) continue;
 
@@ -64,105 +63,133 @@ export class RollerTask extends Task
 
                         if(item.baseItem.hasInteraction(InteractionRoller)) continue;
 
-                        const nextPosition = this.processItem(item, roller);
-
-                        if(nextPosition) itemsRolling.push(item);
+                        this.processItem(rollerData, item);
                     }
                 }
             }
 
-            if(tileUnits)
+            if(tile.units)
             {
-                const totalUnits = tileUnits.length;
+                const totalUnits = tile.units.length;
 
                 if(totalUnits)
                 {
                     for(let j = 0; j < totalUnits; j++)
                     {
-                        const unit = tileUnits[j];
+                        const unit = tile.units[j];
 
                         if(!unit) continue;
-
-                        const positionNext = this.processUnit(unit, roller);
-
-                        if(positionNext) unitsRolling.push(unit);
+                        
+                        this.processUnit(rollerData, unit);
                     }
                 }
             }
+
+            if(rollerData.items.length || rollerData.units.length) rollersRolling.push(rollerData);
         }
 
-        const totalUnits    = unitsRolling.length;
-        const totalItems    = itemsRolling.length;
+        const totalRollersRolling = rollersRolling.length;
 
-        if(totalUnits)
+        if(totalRollersRolling)
         {
-            for(let i = 0; i < totalUnits; i++)
+            for(let i = 0; i < totalRollersRolling; i++)
             {
-                const unit = unitsRolling[i];
+                const roller = rollersRolling[i];
 
-                if(!unit) continue;
+                if(!roller) continue;
 
-                if(!unit.location.rolling) continue;
+                const totalItems = roller.items.length;
 
-                this.finishUnitRoll(unit);
+                if(totalItems)
+                {
+                    for(let j = 0; j < totalItems; j++)
+                    {
+                        const item = roller.items[j];
 
-                pendingOutgoing.push(new UnitRollingComposer(unit));
+                        if(!item || !item.rolling || !item.rolling.rollerData) continue;
+
+                        this.finishItemRoll(item);
+                    }
+
+                    updatedPositions.push(roller.position, roller.positionNext);
+                }
+
+                const totalUnits = roller.units.length;
+
+                if(totalUnits)
+                {
+                    for(let j = 0; j < totalUnits; j++)
+                    {
+                        const unit = roller.units[j];
+
+                        if(!unit || !unit.location.rolling || !unit.location.rolling.rollerData) continue;
+
+                        this.finishUnitRoll(unit);
+                    }
+                }
+
+                if(!totalUnits)
+                {
+                    pendingOutgoing.push(new RollingComposer(roller));
+                }
+                else
+                {
+                    let didSend = false;
+
+                    for(let j = 0; j < totalUnits; j++)
+                    {
+                        const unit = roller.units[j];
+
+                        if(!unit) continue;
+
+                        if(!didSend) pendingOutgoing.push(new RollingComposer(roller, unit));
+                        else pendingOutgoing.push(new UnitRollingComposer(roller, unit));
+
+                        didSend = true;
+                    }
+                }
             }
+
+            this._room.map.generateCollisions();
+
+            if(updatedPositions.length) this._room.map.updatePositions(false, ...updatedPositions);
+
+            if(pendingOutgoing.length) this._room.unitManager.processOutgoing(...pendingOutgoing);
+
+            setTimeout(() =>
+            {
+                const totalRollersRolling = rollersRolling.length;
+
+                if(!totalRollersRolling) return;
+
+                for(let i = 0; i < totalRollersRolling; i++)
+                {
+                    const roller = rollersRolling[i];
+
+                    if(!roller) continue;
+
+                    roller.finishRoll();
+                }
+            }, 500);
         }
-
-        if(totalItems)
-        {
-            for(let i = 0; i < totalItems; i++)
-            {
-                const item = itemsRolling[i];
-
-                if(!item) continue;
-
-                if(!item.rolling) continue;
-
-                this.finishItemRoll(item);
-
-                pendingOutgoing.push(new ItemRollingComposer(item));
-
-                updatedPositions.push(item.rolling.position, item.rolling.positionNext);
-            }
-        }
-
-        this._room.map.generateCollisions();
-
-        if(updatedPositions.length) this._room.map.updatePositions(false, ...updatedPositions);
-
-        if(pendingOutgoing.length) this._room.unitManager.processOutgoing(...pendingOutgoing);
-
-        if(totalUnits) for(let i = 0; i < totalUnits; i++) unitsRolling[i].location.rolling = null;
-
-        if(totalItems) for(let i = 0; i < totalItems; i++) itemsRolling[i].rolling = null;
-
-        setTimeout(() =>
-        {
-            if(unitsRolling.length)
-            {
-                this._room.unitManager.updateUnits(...unitsRolling);
-
-                if(totalUnits) for(let i = 0; i < totalUnits; i++) unitsRolling[i].location.rolling = null;
-            }
-
-            if(totalItems) for(let i = 0; i < totalItems; i++) itemsRolling[i].rolling = null;
-        }, 500);
     }
 
-    private processItem(item: Item, roller: Item): Position
+    private processItem(rollerData: RollerData, item: Item, validateOnly: boolean = false): Position
     {
-        if(!item || !roller) return null;
+        if(!rollerData || !item) return null;
 
-        if(item.id === roller.id) return null;
+        if(!rollerData.roller || !rollerData.position || !rollerData.positionNext) return null;
 
-        if(item.position.z < roller.position.z) return null;
+        if(item.id === rollerData.roller.id) return null;
 
-        const currentTile   = item.getTile();
-        const goalTile      = this._room.map.getTile(roller.position.getPositionInfront());
+        if(!item.position.compare(rollerData.roller.position)) return null;
 
-        if(!currentTile || !goalTile) return null;
+        if(item.position.z < rollerData.roller.position.z) return null;
+
+        const currentTile   = rollerData.getTile();
+        const goalTile      = rollerData.getGoalTile();
+
+        if(!currentTile || !goalTile) return;
 
         const totalUnits = this._room.unitManager.units.length;
 
@@ -170,27 +197,29 @@ export class RollerTask extends Task
         {
             for(let i = 0; i < totalUnits; i++)
             {
-                const unit = this._room.unitManager.units[i];
+                const activeUnit = this._room.unitManager.units[i];
 
-                if(!unit) continue;
+                if(!activeUnit) continue;
 
-                if(unit.location.positionNext)
+                if(activeUnit.location.positionNext)
                 {
-                    if(unit.location.positionNext.compare(goalTile.position)) return null;
+                    if(activeUnit.location.positionNext.compare(goalTile.position)) return null;
                 }
 
-                if(unit.location.isWalking) continue;
+                if(activeUnit.location.isWalking) continue;
 
-                if(unit.location.rolling)
+                if(activeUnit.location.rolling && activeUnit.location.rolling.rollerData)
                 {
-                    if(unit.location.rolling.positionNext.compare(goalTile.position)) return null;
+                    if(activeUnit.location.position.compare(currentTile.position)) continue;
+
+                    if(activeUnit.location.rolling.rollerData.positionNext.compare(goalTile.position)) return null;
                 }
 
-                if(unit.location.position.compare(goalTile.position)) return null;
+                if(activeUnit.location.position.compare(goalTile.position)) return null;
             }
         }
 
-        const floorItems = this._room.itemManager.getFloorItems();
+        const floorItems = this._room.itemManager.getItemsByType(BaseItemType.FLOOR);
 
         if(floorItems)
         {
@@ -204,11 +233,11 @@ export class RollerTask extends Task
 
                     if(!activeItem) continue;
 
-                    if(activeItem.rolling)
+                    if(activeItem.rolling && activeItem.rolling.rollerData)
                     {
-                        if(activeItem.position.compare(roller.position)) continue;
+                        if(activeItem.position.compare(currentTile.position)) continue;
 
-                        if(activeItem.rolling.positionNext.compare(goalTile.position)) return null;
+                        if(activeItem.rolling.rollerData.positionNext.compare(goalTile.position)) return null;
                     }
                 }
             }
@@ -218,83 +247,77 @@ export class RollerTask extends Task
 
         let nextHeight = item.position.z + 0;
 
-        if(!goalTile.hasInteraction(InteractionRoller)) nextHeight -= roller.baseItem.stackHeight;
+        if(!goalTile.hasInteraction(InteractionRoller)) nextHeight -= rollerData.roller.baseItem.stackHeight;
 
-        const nextPosition = new Position(goalTile.position.x, goalTile.position.y, nextHeight);
+        if(!validateOnly)
+        {
+            item.rolling = new ItemRolling(item, rollerData, item.position.z + 0, nextHeight);
 
-        item.rolling = new ItemRolling(item, roller, item.position.copy(), nextPosition);
+            rollerData.items.push(item);
+        }
 
-        return nextPosition;
+        return rollerData.positionNext;
     }
 
     private finishItemRoll(item: Item): void
     {
-        if(!item) return;
+        if(!item || !item.rolling || !item.rolling.rollerData) return;
 
-        const rollingData = item.rolling;
-
-        if(!rollingData) return;
-
-        item.position.x = rollingData.positionNext.x;
-        item.position.y = rollingData.positionNext.y;
-        item.position.z = rollingData.positionNext.z;
+        item.position.x = item.rolling.rollerData.positionNext.x;
+        item.position.y = item.rolling.rollerData.positionNext.y;
+        item.position.z = item.rolling.nextHeight;
 
         item.save();
     }
 
-    private processUnit(unit: Unit, roller: Item): Position
+    private processUnit(rollerData: RollerData, unit: Unit): Position
     {
-        if(!unit || !roller) return;
+        if(!rollerData || !unit) return null;
 
-        if(!unit.room || !roller.room) return;
+        if(!rollerData.roller || !rollerData.position || !rollerData.positionNext) return null;
 
-        if(unit.room !== roller.room) return;
+        if(unit.location.isWalking) return null;
 
-        if(unit.location.isWalking) return;
+        if(!unit.location.position.compare(rollerData.roller.position)) return null;
 
-        if(!unit.location.position.compare(roller.position)) return;
+        if(unit.location.position.z < rollerData.roller.position.z) return null;
 
-        if(unit.location.position.z < roller.position.z) return;
+        const currentTile   = rollerData.getTile();
+        const goalTile      = rollerData.getGoalTile();
 
-        const unitPosition  = unit.location.position.copy();
-        const nextPosition  = roller.position.getPositionInfront();
+        if(!currentTile || !goalTile) return;
 
-        if(!unitPosition || !nextPosition) return;
+        if(!currentTile.canWalk) return;
 
-        const currentTile   = unit.location.getCurrentTile();
-        const nextTile      = unit.room.map.getTile(nextPosition);
-
-        if(!currentTile || !nextTile) return;
-
-        if(!currentTile.canWalk || !nextTile.canWalk) return;
-
-        const totalUnits = roller.room.unitManager.units.length;
+        const totalUnits = this._room.unitManager.units.length;
 
         if(totalUnits)
         {
             for(let i = 0; i < totalUnits; i++)
             {
-                const activeUnit = roller.room.unitManager.units[i];
+                const activeUnit = this._room.unitManager.units[i];
 
-                if(!activeUnit || activeUnit === unit) continue;
+                if(!activeUnit) continue;
 
                 if(activeUnit.location.positionNext)
                 {
-                    if(activeUnit.location.positionNext.compare(nextPosition)) return;
+                    if(activeUnit.location.positionNext.compare(goalTile.position)) return null;
                 }
 
                 if(activeUnit.location.isWalking) continue;
 
-                if(activeUnit.location.rolling)
+                if(activeUnit.location.rolling && activeUnit.location.rolling.rollerData)
                 {
-                    if(activeUnit.location.rolling.positionNext.compare(nextPosition)) return;
+                    if(activeUnit.location.position.compare(currentTile.position)) continue;
+
+                    if(activeUnit.location.rolling.rollerData.positionNext.compare(goalTile.position)) return null;
                 }
-                
-                if(activeUnit.location.position.compare(nextPosition)) return;
+
+                if(activeUnit.location.position.compare(goalTile.position)) return null;
             }
         }
 
-        if(!roller.room.map.getValidTile(unit, nextPosition)) return;
+        if(!this._room.map.getValidTile(unit, goalTile.position)) return;
 
         const currentItem = unit.location.getCurrentItem();
 
@@ -302,47 +325,31 @@ export class RollerTask extends Task
         {
             if(!currentItem.baseItem.hasInteraction(InteractionRoller))
             {
-                if(this.processItem(currentItem, roller) === null) return null;
+                if(this.processItem(rollerData, currentItem, true) === null) return;
             }
         }
 
         let nextHeight = unit.location.position.z + 0;
 
-        if(!nextTile.hasInteraction(InteractionRoller)) nextHeight -= roller.baseItem.stackHeight;
+        if(!goalTile.hasInteraction(InteractionRoller)) nextHeight -= rollerData.roller.baseItem.stackHeight;
 
-        nextPosition.z = nextHeight;
+        unit.location.rolling = new UnitRolling(unit, rollerData, unit.location.position.z + 0, nextHeight);
 
-        unit.location.rolling = new UnitRolling(unit, roller, unitPosition, nextPosition);
-
-        return nextPosition;
+        rollerData.units.push(unit);
     }
 
     private finishUnitRoll(unit: Unit): void
     {
-        if(!unit) return;
+        if(!unit || !unit.location.rolling || !unit.location.rolling.rollerData) return;
 
-        const rollingData = unit.location.rolling;
-
-        if(!rollingData) return;
-
-        const currentTile   = unit.location.getCurrentTile();
-        const nextTile      = this._room.map.getTile(rollingData.positionNext);
+        const currentTile   = unit.location.rolling.rollerData.getTile();
+        const nextTile      = unit.location.rolling.rollerData.getGoalTile();
 
         if(!currentTile || !nextTile) return;
 
-        const sitStatus = unit.location.getStatus(UnitStatusType.SIT);
-
-        if(sitStatus)
-        {
-            if(parseFloat(sitStatus.value) > 1.0)
-            {
-                // nextHeight += sitHeight - 1.0;
-            }
-        }
-
-        unit.location.position.x = rollingData.positionNext.x;
-        unit.location.position.y = rollingData.positionNext.y;
-        unit.location.position.z = rollingData.positionNext.z;
+        unit.location.position.x = unit.location.rolling.rollerData.positionNext.x;
+        unit.location.position.y = unit.location.rolling.rollerData.positionNext.y;
+        unit.location.position.z = unit.location.rolling.nextHeight;
 
         currentTile.removeUnit(unit);
         nextTile.addUnit(unit);

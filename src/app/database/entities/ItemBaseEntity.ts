@@ -20,7 +20,7 @@ export class ItemBaseEntity
     @Column({ name: 'sprite_id' })
     public spriteId: number;
 
-    @Column({ name: 'type', type: 'enum', enum: ['S', 'I', 'E', 'B', 'R', 'H', 'P'], default: 'S' })
+    @Column({ name: 'type', type: 'enum', enum: BaseItemType, default: BaseItemType.FLOOR })
     public type: BaseItemType;
 
     @Column({ name: 'width', width: 2, default: '1' })
@@ -38,7 +38,7 @@ export class ItemBaseEntity
     @Column({ name: 'allowed_directions', nullable: true })
     public allowedDirections: string;
 
-    @Column({ name: 'interaction', type: 'enum', enum: ['default', 'roller', 'teleport', 'exchange', 'gate', 'multi_height', 'dice', 'vending_machine', 'stack_helper', 'pet_jump', 'wf_trg_says_something', 'wf_trg_state_changed', 'wf_trg_enter_room', 'wf_trg_walks_on_furni', 'wf_act_teleport_to'], default: 'default' })
+    @Column({ name: 'interaction', type: 'enum', enum: InteractionType, default: InteractionType.DEFAULT })
     public interaction: InteractionType;
 
     @Column({ name: 'total_states' })
@@ -86,6 +86,6 @@ export class ItemBaseEntity
     @OneToMany(type => CatalogItemEntity, item => item.base)
     public catalogItems: CatalogItemEntity[];
 
-    @OneToMany(type => CatalogItemLimitedEntity, item => item.baseId)
+    @OneToMany(type => CatalogItemLimitedEntity, item => item.base)
     public limitedSells: CatalogItemLimitedEntity[];
 }

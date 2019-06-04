@@ -1,3 +1,4 @@
+import { Emulator } from '../../../../Emulator';
 import { MessengerRelationshipsComposer } from '../../../outgoing';
 import { Incoming } from '../../Incoming';
 
@@ -7,7 +8,13 @@ export class MessengerRelationshipsEvent extends Incoming
     {
         try
         {
-            this.client.processOutgoing(new MessengerRelationshipsComposer(this.packet.readInt()));
+            const user = await Emulator.gameManager.userManager.getOfflineUserById(this.packet.readInt());
+
+            if(!user) return;
+
+            await user.messenger.loadRelationships();
+
+            this.client.processOutgoing(new MessengerRelationshipsComposer(user));
         }
 
         catch(err)

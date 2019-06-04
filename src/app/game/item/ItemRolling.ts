@@ -1,23 +1,23 @@
 import { Item } from '../item';
-import { Position } from '../pathfinder';
+import { RollerData } from './RollerData';
 
 export class ItemRolling
 {
     private _item: Item;
-    private _roller: Item;
+    private _rollerData: RollerData;
 
-    private _position: Position;
-    private _positionNext: Position;
+    private _height: number;
+    private _nextHeight: number;
 
-    constructor(item: Item, roller: Item, position: Position, positionNext: Position)
+    constructor(item: Item, rollerData: RollerData, height: number, heightNext: number)
     {
-        if(!(item instanceof Item) || !(roller instanceof Item) || !position || !positionNext) throw new Error('invalid_rolling');
+        if(!(item instanceof Item) || !(rollerData instanceof RollerData)) throw new Error('invalid_roll');
 
         this._item          = item;
-        this._roller        = roller;
+        this._rollerData    = rollerData;
 
-        this._position      = position;
-        this._positionNext  = positionNext;
+        this._height        = height;
+        this._nextHeight    = heightNext;
     }
 
     public get item(): Item
@@ -25,23 +25,18 @@ export class ItemRolling
         return this._item;
     }
 
-    public get roller(): Item
+    public get rollerData(): RollerData
     {
-        return this._roller;
+        return this._rollerData;
     }
 
-    public get position(): Position
+    public get height(): number
     {
-        return this._position;
+        return this._height;
     }
 
-    public get positionNext(): Position
+    public get nextHeight(): number
     {
-        return this._positionNext;
-    }
-
-    public copy(): ItemRolling
-    {
-        return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+        return this._nextHeight;
     }
 }

@@ -18,18 +18,10 @@ export class RoomThicknessComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet
-                .writeBoolean(this._room.details.hideWalls)
-                .writeInt(this._room.details.thicknessWall)
-                .writeInt(this._room.details.thicknessFloor)
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeBoolean(this._room.details.hideWalls)
+            .writeInt(this._room.details.thicknessWall)
+            .writeInt(this._room.details.thicknessFloor)
+            .prepare();
     }
 }

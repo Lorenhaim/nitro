@@ -18,38 +18,30 @@ export class RoomMapComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        const map = this._room.map;
+
+        if(!map) return this.cancel();
+        
+        const tiles = map.tiles;
+
+        if(!tiles) return this.cancel();
+
+        const totalTiles = tiles.length;
+
+        if(!totalTiles) return this.cancel();
+        
+        this.packet
+            .writeInt(this._room.model.totalSize / this._room.model.totalY)
+            .writeInt(this._room.model.totalSize);
+
+        for(let i = 0; i < totalTiles; i++)
         {
-            const map = this._room.map;
+            const tile = tiles[i];
 
-            if(!map) return this.cancel();
-            
-            const tiles = map.tiles;
-
-            if(!tiles) return this.cancel();
-
-            const totalTiles = tiles.length;
-
-            if(!totalTiles) return this.cancel();
-            
-            this.packet
-                .writeInt(this._room.model.totalSize / this._room.model.totalY)
-                .writeInt(this._room.model.totalSize);
-
-            for(let i = 0; i < totalTiles; i++)
-            {
-                const tile = tiles[i];
-
-                if(!tile) this.packet.writeShort(32767);
-                else this.packet.writeShort(tile.getRelativeHeight());
-            }
-
-            return this.packet.prepare();
+            if(!tile) this.packet.writeShort(32767);
+            else this.packet.writeShort(tile.getRelativeHeight());
         }
 
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.prepare();
     }
 }

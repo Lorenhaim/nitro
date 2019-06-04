@@ -11,18 +11,10 @@ export class ValidatorComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this.packet.writeBoolean(this.result);
+        this.packet.writeBoolean(this.result);
 
-            this.packet.prepare();
+        this.packet.prepare();
 
-            return this.packet;
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet;
     }
 }

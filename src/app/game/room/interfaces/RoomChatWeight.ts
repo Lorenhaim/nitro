@@ -1,4 +1,4 @@
-export const enum RoomChatWeight
+export enum RoomChatWeight
 {
     WIDE    = 0,
     NORMAL  = 1,

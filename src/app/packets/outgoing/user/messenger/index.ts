@@ -6,5 +6,6 @@ export * from './MessengerRelationshipsComposer';
 export * from './MessengerRequestComposer';
 export * from './MessengerRequestErrorComposer';
 export * from './MessengerRequestsComposer';
+export * from './MessengerRoomInviteComposer';
 export * from './MessengerSearchComposer';
 export * from './MessengerUpdateComposer';

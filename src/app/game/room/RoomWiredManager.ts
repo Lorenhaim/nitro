@@ -85,11 +85,11 @@ export class RoomWiredManager
 
             if(!trigger) continue;
 
-            if(!this.canTrigger(trigger, ...args)) continue;
-
             const tile = trigger.getTile();
 
             if(!tile) continue;
+
+            if(!this.canTrigger(trigger, ...args)) continue;
 
             const effects = this.getEffectsByTile(tile);
 

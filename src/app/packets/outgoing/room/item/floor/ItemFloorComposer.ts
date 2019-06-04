@@ -1,4 +1,4 @@
-import { Room } from '../../../../../game';
+import { BaseItemType, Room } from '../../../../../game';
 import { Outgoing } from '../../../Outgoing';
 import { OutgoingHeader } from '../../../OutgoingHeader';
 import { OutgoingPacket } from '../../../OutgoingPacket';
@@ -18,57 +18,44 @@ export class ItemFloorComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        const itemOwners = this._room.objectOwners;
+
+        if(itemOwners)
         {
-            const itemOwners = this._room.objectOwners;
+            const totalOwners = itemOwners.length;
 
-            if(itemOwners)
+            if(totalOwners)
             {
-                const totalOwners = itemOwners.length;
+                this.packet.writeInt(totalOwners);
 
-                if(totalOwners)
+                for(let i = 0; i < totalOwners; i++)
                 {
-                    this.packet.writeInt(totalOwners);
+                    const owner = itemOwners[i];
 
-                    for(let i = 0; i < totalOwners; i++)
-                    {
-                        const owner = itemOwners[i];
-
-                        this.packet.writeInt(owner.id).writeString(owner.username);
-                    }
-
-                    const items = this._room.itemManager.getFloorItems();
-                    
-                    if(items)
-                    {
-                        const totalItems = items.length;
-
-                        if(totalItems)
-                        {
-                            this.packet.writeInt(totalItems);
-
-                            for(let i = 0; i < totalItems; i++)
-                            {
-                                const item = items[i];
-
-                                item.parseFloorData(this.packet);
-                                this.packet.writeInt(1)
-                                item.parseExtraData(this.packet);
-                                this.packet.writeInt(-1, item.baseItem.canToggle ? 1 : 0, item.userId); // 2nd is usable
-                            }
-
-                            return this.packet.prepare();
-                        }
-                    }
+                    this.packet.writeInt(owner.id).writeString(owner.username);
                 }
             }
-
-            return this.packet.writeInt(0, 0).prepare();
+            else this.packet.writeInt(0);
         }
+        else this.packet.writeInt(0);
+        
+        const items = this._room.itemManager.getItemsByType(BaseItemType.FLOOR);
 
-        catch(err)
+        if(!items) return this.packet.writeInt(0).prepare();
+        
+        const totalItems = items.length;
+
+        if(!totalItems) return this.packet.writeInt(0).prepare();
+        
+        this.packet.writeInt(totalItems);
+
+        for(let i = 0; i < totalItems; i++)
         {
-            this.error(err);
+            const item = items[i];
+
+            item.parseItem(this.packet);
         }
+        
+        return this.packet.prepare();
     }
 }

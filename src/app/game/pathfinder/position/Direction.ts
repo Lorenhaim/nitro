@@ -1,4 +1,4 @@
-export const enum Direction
+export enum Direction
 {
     NORTH       = 0,
     NORTH_EAST  = 1,
@@ -10,15 +10,23 @@ export const enum Direction
     NORTH_WEST  = 7
 }
 
+export enum DirectionSimple
+{
+    NORTH       = 0,
+    EAST        = 2,
+    SOUTH       = 4,
+    WEST        = 6
+}
+
 const directionNames = [];
 
-directionNames['0'] = 'NORTH';
-directionNames['1'] = 'NORTH_EAST';
-directionNames['2'] = 'EAST';
-directionNames['3'] = 'SOUTH_EAST';
-directionNames['4'] = 'SOUTH';
-directionNames['5'] = 'SOUTH_WEST';
-directionNames['6'] = 'WEST';
-directionNames['7'] = 'NORTH_WEST';
+directionNames[Direction.NORTH] = 'NORTH';
+directionNames[Direction.NORTH_EAST] = 'NORTH_EAST';
+directionNames[Direction.EAST] = 'EAST';
+directionNames[Direction.SOUTH_EAST] = 'SOUTH_EAST';
+directionNames[Direction.SOUTH] = 'SOUTH';
+directionNames[Direction.SOUTH_WEST] = 'SOUTH_WEST';
+directionNames[Direction.WEST] = 'WEST';
+directionNames[Direction.NORTH_WEST] = 'NORTH_WEST';
 
 export const DirectionNames = directionNames;

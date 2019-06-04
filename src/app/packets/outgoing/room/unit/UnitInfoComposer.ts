@@ -18,36 +18,28 @@ export class UnitInfoComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        if(this._unit.type === UnitType.USER)
         {
-            if(this._unit.type === UnitType.USER)
-            {
-                return this.packet
-                    .writeInt(this._unit.id)
-                    .writeString(this._unit.user.details.figure)
-                    .writeString(this._unit.user.details.gender)
-                    .writeString(this._unit.user.details.motto)
-                    .writeInt(this._unit.user.details.achievementScore)
-                    .prepare();
-            }
+            return this.packet
+                .writeInt(this._unit.id)
+                .writeString(this._unit.user.details.figure)
+                .writeString(this._unit.user.details.gender)
+                .writeString(this._unit.user.details.motto)
+                .writeInt(this._unit.user.details.achievementScore)
+                .prepare();
+        }
             
-            else if(this._unit.type === UnitType.BOT)
-            {
-                return this.packet
-                    .writeInt(this._unit.id)
-                    .writeString(this._unit.bot.figure)
-                    .writeString(this._unit.bot.gender)
-                    .writeString(this._unit.bot.motto)
-                    .writeInt(0)
-                    .prepare();
-            }
-
-            else return this.cancel();
-        }
-
-        catch(err)
+        else if(this._unit.type === UnitType.BOT)
         {
-            this.error(err);
+            return this.packet
+                .writeInt(this._unit.id)
+                .writeString(this._unit.bot.figure)
+                .writeString(this._unit.bot.gender)
+                .writeString(this._unit.bot.motto)
+                .writeInt(0)
+                .prepare();
         }
+        
+        return this.cancel();
     }
 }

@@ -12,9 +12,11 @@ export class CatalogPageEvent extends Incoming
             const unknown   = this.packet.readInt();
             const mode      = this.packet.readString();
 
-            const page = Emulator.gameManager.catalogManager.getPage(pageId);
+            const page = Emulator.gameManager.catalogManager.getPage(pageId, this.client.user.details.rankId);
 
-            if(page) this.client.processOutgoing(new CatalogPageComposer(page, mode));
+            if(!page) return;
+
+            this.client.processOutgoing(new CatalogPageComposer(page, mode));
         }
 
         catch(err)

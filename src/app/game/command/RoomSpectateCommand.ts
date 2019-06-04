@@ -15,4 +15,9 @@ export class RoomSpectateCommand extends Command
         // set some var, this composer needs to be sent after entering but before the map loads
         //user.connections.processOutgoing(new RoomSpectatorComposer());
     }
+
+    public get description(): string
+    {
+        return 'Turns on spectator mode';
+    }
 }

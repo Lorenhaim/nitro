@@ -1,4 +1,5 @@
-import { ChatEvent, ChatType } from '../../../../../game';
+import { Emulator } from '../../../../../Emulator';
+import { ChatType } from '../../../../../game';
 import { Incoming } from '../../../Incoming';
 
 export class UnitChatWhisperEvent extends Incoming
@@ -7,17 +8,15 @@ export class UnitChatWhisperEvent extends Incoming
     {
         try
         {
-            if(this.client.user.unit)
-            {
-                const currentRoom = this.client.user.unit.room;
+            if(!this.client.user.unit) return;
 
-                const data = this.packet.readString();
+            const message = this.packet.readString();
 
-                const username = data.substr(0, data.indexOf(' '));
-                const message = data.substr(data.indexOf(' '));
+            if(!message) return;
 
-                if(currentRoom) currentRoom.events.next(new ChatEvent(this.client.user.unit, message, ChatType.WHISPER, username));
-            }
+            if(await Emulator.gameManager.commandManager.processMessageAsCommand(this.client.user, message)) return;
+
+            this.client.user.unit.chat(ChatType.WHISPER, message);
         }
 
         catch(err)

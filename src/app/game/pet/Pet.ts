@@ -1,8 +1,9 @@
+import { getManager } from 'typeorm';
 import { PetEntity } from '../../database';
 import { Emulator } from '../../Emulator';
 import { OutgoingPacket } from '../../packets';
 import { Room } from '../room';
-import { Unit, UnitType } from '../unit';
+import { Unit, UnitEffect, UnitType } from '../unit';
 import { User } from '../user';
 import { PetBreed } from './PetBreed';
 
@@ -12,8 +13,6 @@ export class Pet
 
     private _unit: Unit;
 
-    private _rideCheckInterval: NodeJS.Timer;
-
     constructor(entity: PetEntity)
     {
         if(!(entity instanceof PetEntity)) throw new Error('invalid_entity');
@@ -21,24 +20,9 @@ export class Pet
         this._entity = entity;
 
         this._unit = new Unit(UnitType.PET, this);
-
-        this._rideCheckInterval = null;
     }
 
     public save(): void
-    {
-        if(this._unit && this._unit.location.position)
-        {
-            this._entity.x          = this._unit.location.position.x || 0;
-            this._entity.y          = this._unit.location.position.y || 0;
-            this._entity.z          = this._unit.location.position.z.toString() || '0.00';
-            this._entity.direction  = this._unit.location.position.direction || 0;
-        }
-
-        Emulator.gameScheduler.savePet(this);
-    }
-
-    public savePosition(): void
     {
         if(this._unit && this._unit.location.position)
         {
@@ -48,57 +32,100 @@ export class Pet
             this._entity.y          = position.y || 0;
             this._entity.z          = position.z.toString() || '0.00';
             this._entity.direction  = position.direction || 0;
+        }
 
-            this.save();
+        Emulator.gameScheduler.savePet(this);
+    }
+
+    public async saveNow(): Promise<void>
+    {
+        Emulator.gameScheduler.removePet(this);
+
+        if(this._unit && this._unit.location.position)
+        {
+            const position = this._unit.location.position.copy();
+
+            this._entity.x          = position.x || 0;
+            this._entity.y          = position.y || 0;
+            this._entity.z          = position.z.toString() || '0.00';
+            this._entity.direction  = position.direction || 0;
+        }
+
+        await getManager().save(this._entity);
+    }
+
+    public ridePet(unit: Unit): void
+    {
+        if(!this._unit || !this._unit.room || !unit) return;
+
+        let position = this._unit.location.position.getPositionLeft();
+
+        if(!this._unit.room.map.getValidTile(unit, position))
+        {
+            position = this._unit.location.position.getPositionRight();
+
+            if(!this._unit.room.map.getValidTile(unit, position)) return;
+
+            // up or down position
+        }
+
+        if(!unit.location.position.compare(position))
+        {
+            unit.location.walkTo(position, false, false);
+
+            unit.location.setGoalAction(() =>
+            {
+                if(unit.location.position.compare(position))
+                {
+                    unit.location.lookAtPosition(this._unit.location.position);
+                    
+                    unit.connectUnit(this._unit);
+
+                    unit.location.position.x = this._unit.location.position.x + 0;
+                    unit.location.position.y = this._unit.location.position.y + 0;
+
+                    unit.location.position.setDirection(this._unit.location.position.direction);
+
+                    unit.location.additionalHeight = 1;
+
+                    unit.location.effect(UnitEffect.HORSE_SADDLE);
+
+                    unit.updateNow();
+
+                    this._unit.room.map.generateUnitCollison();
+                }
+            });
         }
     }
 
-    public ridePet(unit: Unit)
+    public stopRiding(): void
     {
-        if(!unit) return;
+        if(!this._unit.room || !this._unit.connectedUnit) return;
+        
+        const connectedUnit = this._unit.room.unitManager.getUnit(this._unit.connectedUnit.id);
 
-        const positions = this._unit.location.position.getPositionsAround();
+        if(!connectedUnit) return;
 
-        if(!positions) return;
+        let position = this._unit.location.position.getPositionLeft();
 
-        const totalPositions = positions.length;
-
-        if(!totalPositions) return;
-
-        for(let i = 0; i < totalPositions; i++)
+        if(!connectedUnit.room.map.getValidTile(connectedUnit, position))
         {
-            const position = positions[i];
+            position = this._unit.location.position.getPositionRight();
 
-            if(!position) continue;
-
-            if(!unit.location.position.compare(position)) continue;
-
-            return unit.connectUnit(this._unit);
+            if(!connectedUnit.room.map.getValidTile(connectedUnit, position)) return;
         }
+        
+        this._unit.connectUnit(null);
 
-        const positionInfront = this._unit.location.position.getPositionInfront();
+        connectedUnit.location.additionalHeight = 0;
 
-        unit.location.walkTo(positionInfront);
+        connectedUnit.updateNow();
 
-        this._rideCheckInterval = setInterval(() => this.checkRide(unit), 250);
-    }
+        connectedUnit.location.effect(UnitEffect.NONE);
 
-    private checkRide(unit: Unit): void
-    {
-        if(!unit) return;
-
-        const positionInfront = this._unit.location.position.getPositionInfront();
-
-        if(unit.location.position.compare(positionInfront))
-        {
-            clearInterval(this._rideCheckInterval);
-
-            unit.connectUnit(this._unit);
-
-            return;
-        }
-
-        if(!unit.location.positionGoal || !unit.location.positionGoal.compare(positionInfront)) return clearInterval(this._rideCheckInterval);
+        connectedUnit.location.walkTo(position);
+        
+        connectedUnit.location.setGoalAction(() => connectedUnit.location.lookAtPosition(this._unit.location.position));
     }
 
     public setUser(user: User): void
@@ -212,6 +239,11 @@ export class Pet
     public get unit(): Unit
     {
         return this._unit;
+    }
+
+    public set unit(unit: Unit)
+    {
+        this._unit = unit;
     }
 
     public get look(): string

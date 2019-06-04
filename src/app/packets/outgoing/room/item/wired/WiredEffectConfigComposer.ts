@@ -1,4 +1,4 @@
-import { Item } from '../../../../../game';
+import { Item, WiredEffect } from '../../../../../game';
 import { Outgoing } from '../../../Outgoing';
 import { OutgoingHeader } from '../../../OutgoingHeader';
 import { OutgoingPacket } from '../../../OutgoingPacket';
@@ -18,18 +18,10 @@ export class WiredEffectConfigComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            const interaction: any = this._item.baseItem.interaction;
+        const interaction = <WiredEffect> this._item.baseItem.interaction;
 
-            if(interaction && interaction.parseWiredData) interaction.parseWiredData(this._item, this.packet);
-
-            return this.packet.prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        if(!(interaction instanceof WiredEffect)) return this.cancel();
+        
+        return interaction.parseWiredData(this._item, this.packet).prepare();
     }
 }

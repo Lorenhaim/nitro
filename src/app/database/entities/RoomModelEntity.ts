@@ -17,7 +17,7 @@ export class RoomModelEntity
     @Column({ name: 'door_y' })
     public doorY: number;
 
-    @Column({ name: 'door_direction' })
+    @Column({ name: 'door_direction', type: 'enum', enum: Direction, default: Direction.SOUTH })
     public doorDirection: Direction;
 
     @Column({ name: 'model', type: 'text' })
@@ -25,6 +25,9 @@ export class RoomModelEntity
 
     @Column({ name: 'enabled', type: 'enum', enum: ['0', '1'], default: '1' })
     public enabled: '0' | '1';
+
+    @Column({ name: 'custom', type: 'enum', enum: ['0', '1'], default: '0' })
+    public custom: '0' | '1';
 
     @OneToMany(type => RoomEntity, room => room.model)
     public rooms: RoomEntity[];

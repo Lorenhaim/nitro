@@ -11,23 +11,15 @@ export class MarketplaceConfigComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet
-                .writeBoolean(true)
-                .writeInt(1)
-                .writeInt(10)
-                .writeInt(5)
-                .writeInt(1)
-                .writeInt(1000000)
-                .writeInt(48)
-                .writeInt(7)
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeBoolean(true)
+            .writeInt(1)
+            .writeInt(10)
+            .writeInt(5)
+            .writeInt(1)
+            .writeInt(1000000)
+            .writeInt(48)
+            .writeInt(7)
+            .prepare();
     }
 }

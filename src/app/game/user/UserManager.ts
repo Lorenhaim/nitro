@@ -26,6 +26,8 @@ export class UserManager extends Manager
         {
             const user = this._users[i];
 
+            if(!user) continue;
+
             await user.dispose();
 
             this._users.splice(i, 1);
@@ -112,7 +114,7 @@ export class UserManager extends Manager
         return newUser;
     }
 
-    public processOutgoing(...composers: Outgoing[]): void
+    public processOutgoing(...outgoing: Outgoing[]): void
     {
         const totalUsers = this._users.length;
 
@@ -124,7 +126,7 @@ export class UserManager extends Manager
 
             if(!user || !user.connections) continue;
             
-            user.connections.processOutgoing(...composers);
+            user.connections.processOutgoing(...outgoing);
         }
     }
 
@@ -160,14 +162,13 @@ export class UserManager extends Manager
 
             if(!user) continue;
 
-            if(user.id === id)
-            {
-                await user.dispose();
+            if(user.id !== id) continue;
+            
+            await user.dispose();
 
-                this._users.splice(i, 1);
-
-                return;
-            }
+            this._users.splice(i, 1);
+            
+            return;
         }
     }
 

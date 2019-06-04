@@ -2,6 +2,7 @@ import { IncomingHeader } from './incomingHeader';
 
 export class IncomingPacket
 {
+    private _buffer: Buffer;
     private _bytes: number[];
     private _bytesLength: number;
 
@@ -11,6 +12,7 @@ export class IncomingPacket
 
     constructor(_bytes: Buffer)
     {
+        this._buffer        = _bytes;
         this._bytes         = [ ..._bytes ];
         this._bytesLength   = this._bytes.length;
 
@@ -19,6 +21,17 @@ export class IncomingPacket
         this._header        = this.readShort();
         
         if(this._header < 1) this._header = 0;
+    }
+
+    public readBuffer(size: number): Buffer
+    {
+        if(this.remainingBytes < size) return null;
+
+        const result = this._buffer.slice(this._offset, (this._offset + size));
+
+        this._offset = this._offset + size;
+
+        return result;
     }
 
     public readBytes(size: number): number[]
@@ -98,6 +111,11 @@ export class IncomingPacket
     public readBoolean(): boolean
     {
         return this.readBytes(1)[0] === 1;
+    }
+
+    public get buffer(): Buffer
+    {
+        return this._buffer;
     }
 
     public get bytes(): number[]

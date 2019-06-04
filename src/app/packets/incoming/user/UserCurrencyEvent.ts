@@ -1,4 +1,4 @@
-import { CurrencyComposer, CurrencyCreditsComposer } from '../../outgoing';
+import { UserCreditsComposer, UserCurrencyComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
 export class UserCurrencyEvent extends Incoming
@@ -8,8 +8,8 @@ export class UserCurrencyEvent extends Incoming
         try
         {
             this.client.processOutgoing(
-                new CurrencyCreditsComposer(),
-                new CurrencyComposer());
+                new UserCreditsComposer(),
+                new UserCurrencyComposer());
         }
 
         catch(err)

@@ -1,15 +1,18 @@
-import { NumberHelper } from '../../common';
+import { NumberHelper, TimeHelper } from '../../common';
 import { Emulator } from '../../Emulator';
-import { DoorbellAddUserComposer, DoorbellCloseComposer, HotelViewComposer, RoomAccessDeniedComposer, RoomEnterComposer, RoomModelNameComposer, RoomOwnerComposer, RoomRightsComposer, RoomRightsListComposer, RoomSpectatorComposer, UnitIdleComposer, UserFowardRoomComposer } from '../../packets';
+import { HotelViewComposer, RoomAccessDeniedComposer, RoomDoorbellAddUserComposer, RoomDoorbellCloseComposer, RoomEnterComposer, RoomEnterErrorComposer, RoomModelNameComposer, RoomOwnerComposer, RoomRightsComposer, RoomRightsListComposer, RoomSpectatorComposer, UnitActionComposer, UnitChatComposer, UnitChatShoutComposer, UnitChatWhisperComposer, UnitIdleComposer, UnitStatusComposer, UserFowardRoomComposer } from '../../packets';
 import { Bot } from '../bot';
+import { GroupRank } from '../group';
+import { WiredTriggerSaysSomething } from '../item';
 import { Position } from '../pathfinder';
 import { Pet } from '../pet';
-import { Room, RoomRightsType, RoomState } from '../room';
+import { ChatBubble, ChatType, Room, RoomEnterError, RoomRightsType, RoomState } from '../room';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { UnitStatus, UnitStatusType } from './status';
+import { UnitAction } from './UnitAction';
 import { UnitDance } from './UnitDance';
-import { UnitEffect } from './UnitEffect';
+import { determineEmotion, UnitEmotion } from './UnitEmotion';
 import { UnitLocation } from './UnitLocation';
 import { UnitTimer } from './UnitTimer';
 import { UnitType } from './UnitType';
@@ -93,21 +96,16 @@ export class Unit
 
     public connectUnit(unit: Unit): void
     {
-        this._connectedUnit = unit;
-
-        unit.connectedUnit = this;
-
-        if(unit.type === UnitType.PET)
+        if(this._connectedUnit)
         {
-            this._location.effect(UnitEffect.HORSE_SADDLE);
-                
-            this._location.position.x = unit.location.position.x;
-            this._location.position.y = unit.location.position.y;
-            this._location.position.setDirection(unit.location.position.direction);
+            this._connectedUnit._connectedUnit  = unit;
+            this._connectedUnit                 = unit;
+        }
+        else
+        {
+            this._connectedUnit = unit;
 
-            this._location.additionalHeight = 1;
-
-            this.needsUpdate = true;
+            if(unit) unit._connectedUnit = this;
         }
     }
 
@@ -121,12 +119,26 @@ export class Unit
 
             if(this._room) this._room.unitManager.removeUnit(this, false);
 
+            if(this._roomQueue)
+            {
+                this._roomQueue.unitManager.removeQueue(this);
+
+                if(sendHotelView && this._user) this._user.connections.processOutgoing(new RoomAccessDeniedComposer());
+            }
+
             this._room      = null;
             this._roomQueue = null;
 
             if(this._location) this._location.reset();
 
-            if(sendHotelView && this._user) this._user.connections.processOutgoing(new HotelViewComposer());
+            this.connectUnit(null);
+
+            if(this._user)
+            {
+                if(sendHotelView) this._user.connections.processOutgoing(new HotelViewComposer());
+
+                this._user.messenger.updateAllFriends();
+            }
 
             this._canLocate     = true;
             this._needsUpdate   = false;
@@ -136,13 +148,27 @@ export class Unit
         }
     }
 
+    public updateNow(): void
+    {
+        if(!this._room) return;
+
+        return this._room.unitManager.processOutgoing(new UnitStatusComposer(this));
+    }
+
     public fowardRoom(id: number): void
     {
-        if(id && this._type === UnitType.USER)
-        {
-            if(this._room && this._room.id === id) return;
+        if(!id) return;
 
+        if(this._room && this._room.id === id) return;
+
+        if(this._type === UnitType.USER)
+        {
             this._user.connections.processOutgoing(new UserFowardRoomComposer(id));
+        }
+
+        else if(this._type === UnitType.PET)
+        {
+            console.log('send the pet another way');
         }
     }
 
@@ -150,70 +176,100 @@ export class Unit
     {
         if(!id) return;
 
-        if(this._room && this._room.id === id) return;
+        this.reset(false);
 
         const room = await Emulator.gameManager.roomManager.getRoom(id);
 
-        if(!room) return this._user.connections.processOutgoing(new HotelViewComposer());
+        if(!room) return this._user.connections.processOutgoing(new RoomEnterErrorComposer(RoomEnterError.NO_ENTRY));
 
         await room.init();
 
-        Emulator.gameManager.roomManager.addRoom(room);
-
         this._roomLoading = room;
 
-        if(!skipStateCheck && !room.securityManager.hasRights(this._user.id))
+        if(this._location.teleporting && this._location.teleporting.teleportGoal.room.id === id) skipStateCheck = true;
+
+        if(!room.securityManager.hasRights(this._user))
         {
-            if(room.details.state === RoomState.LOCKED)
+            if(!this._user.hasPermission(PermissionList.ENTER_FULL_ROOMS))
             {
-                const totalUnits = room.unitManager.units.length;
+                if(room.details.usersNow >= room.details.usersMax) return this._user.connections.processOutgoing(new RoomEnterErrorComposer(RoomEnterError.ROOM_FULL));
+            }
 
-                if(!totalUnits) return this._user.connections.processOutgoing(new RoomAccessDeniedComposer());
-
-                let foundUser = false;
-
-                for(let i = 0; i < totalUnits; i++)
+            if(!skipStateCheck && !this._user.hasPermission(PermissionList.IGNORE_ROOM_STATE))
+            {
+                if(room.details.state === RoomState.LOCKED)
                 {
-                    const unit = room.unitManager.units[i];
+                    const totalUnits = room.unitManager.units.length;
 
-                    if(!unit) continue;
+                    if(!totalUnits) return this._user.connections.processOutgoing(new RoomAccessDeniedComposer());
 
-                    if(unit.type !== UnitType.USER) continue;
+                    let foundUser = false;
 
-                    if(!unit.hasRights()) continue;
+                    for(let i = 0; i < totalUnits; i++)
+                    {
+                        const unit = room.unitManager.units[i];
 
-                    unit.user.connections.processOutgoing(new DoorbellAddUserComposer(this._user.details.username));
+                        if(!unit) continue;
 
-                    foundUser = true;
+                        if(unit.type !== UnitType.USER) continue;
+
+                        if(!unit.hasRights()) continue;
+
+                        unit.user.connections.processOutgoing(new RoomDoorbellAddUserComposer(this._user.details.username));
+
+                        foundUser = true;
+                    }
+
+                    if(!foundUser) return this._user.connections.processOutgoing(new RoomAccessDeniedComposer());
+                    else
+                    {
+                        room.unitManager.unitsQueuing.push(this);
+                        
+                        this._roomQueue = room;
+
+                        return this._user.connections.processOutgoing(new RoomDoorbellAddUserComposer());
+                    }
                 }
 
-                if(!foundUser) return this._user.connections.processOutgoing(new RoomAccessDeniedComposer());
-                else return this._user.connections.processOutgoing(new DoorbellAddUserComposer());
+                else if(room.details.state === RoomState.PASSWORD)
+                {
+
+                }
+
+                else if(room.details.state === RoomState.INVISIBLE)
+                {
+                    if(!this._user.hasPermission(PermissionList.ENTER_INVISIBLE_ROOMS))
+                    {
+                        return this._user.connections.processOutgoing(new RoomEnterErrorComposer(RoomEnterError.NO_ENTRY));
+                    }
+                }
             }
         }
 
         this._user.connections.processOutgoing(new RoomEnterComposer());
 
-        if(room.details.state === RoomState.LOCKED) this._user.connections.processOutgoing(new DoorbellCloseComposer());
+        if(room.details.state === RoomState.LOCKED) this._user.connections.processOutgoing(new RoomDoorbellCloseComposer());
 
         if(this._isSpectating) this._user.connections.processOutgoing(new RoomSpectatorComposer());
 
         this._user.connections.processOutgoing(new RoomModelNameComposer(room));
     }
 
-    public enterRoomPartTwo(): Promise<void>
+    public async enterRoomPartTwo(): Promise<void>
     {
-        const room = this._roomLoading;
+        if(!this._roomLoading) return this._user.connections.processOutgoing(new RoomEnterErrorComposer(RoomEnterError.NO_ENTRY));
 
-        if(!room) return;
+        const room = await Emulator.gameManager.roomManager.getRoom(this._roomLoading.id);
+
+        await room.init();
 
         let position: Position = null;
 
         if(this._location.teleporting)
         {
-            if(this._location.teleporting.teleportGoal.room === room)
+            if(this._location.teleporting.teleportGoal.room === this._roomLoading)
             {
-                position = new Position(this._location.teleporting.teleportGoal.position.x, this._location.teleporting.teleportGoal.position.y);
+                position = new Position(this._location.teleporting.teleportGoal.position.x, this._location.teleporting.teleportGoal.position.y, this._location.teleporting.teleportGoal.position.z);
 
                 position.setDirection(this._location.teleporting.teleportGoal.position.direction);
             }
@@ -221,19 +277,6 @@ export class Unit
         }
 
         room.unitManager.addUnit(this, position);
-
-        this._user.messenger.updateAllFriends();
-    }
-
-    public isOwner(): boolean
-    {
-        if(this._type !== UnitType.USER || !this._room) return false;
-
-        if(this._room.details.ownerId !== this._user.id) return false;
-
-        if(this._user.hasPermission(PermissionList.ANY_ROOM_OWNER)) return true;
-
-        return true;
     }
 
     public spectate(status: boolean = false): void
@@ -256,6 +299,116 @@ export class Unit
         }
     }
 
+    public chatSelf(message: string): void
+    {
+        if(!this._room || !message) return;
+
+        this._user.connections.processOutgoing(new UnitChatWhisperComposer({
+            unit: this,
+            message,
+            emotion: UnitEmotion.NORMAL,
+            bubble: ChatBubble.ALERT
+        }));
+    }
+
+    public chat(type: ChatType, message: string): void
+    {
+        if(!message || !this._room) return;
+
+        //if(this._lastChat && this._lastChat < TimeHelper.currentTimestamp - 250) return; // spam guard
+
+        this._timer.resetIdleTimer();
+
+        const emotion = determineEmotion(message);
+        
+        if(type === ChatType.WHISPER)
+        {
+            const username = message.substr(0, message.indexOf(' '));
+            
+            message = message.substr(message.indexOf(' '));
+
+            if(!username || !message) return;
+
+            const activeUser = Emulator.gameManager.userManager.getUserByUsername(username);
+
+            if(!activeUser) return;
+
+            if(activeUser.unit.room !== this._room) return;
+            
+            if(message.endsWith('o/')) activeUser.connections.processOutgoing(new UnitActionComposer(this, UnitAction.WAVE));
+
+            activeUser.connections.processOutgoing(new UnitChatWhisperComposer({
+                unit: this,
+                message: message,
+                emotion,
+                bubble: ChatBubble.ALERT
+            }));
+
+            if(this._type === UnitType.USER) this.user.connections.processOutgoing(new UnitChatWhisperComposer({
+                unit: this,
+                message: message,
+                emotion,
+                bubble: ChatBubble.ALERT
+            }));
+        }
+        else
+        {
+            const totalUnits = this._room.unitManager.units.length;
+
+            if(!totalUnits) return;
+            
+            for(let i = 0; i < totalUnits; i++)
+            {
+                const activeUnit = this._room.unitManager.units[i];
+
+                if(!activeUnit) continue;
+
+                if(activeUnit.type !== UnitType.USER) continue;
+
+                if(type !== ChatType.SHOUT && !this._location.position.isNear(activeUnit.location.position, this._room.details.chatDistance)) continue;
+                
+                if(message.endsWith('o/')) activeUnit.user.connections.processOutgoing(new UnitActionComposer(this, UnitAction.WAVE));
+
+                if(activeUnit !== this) activeUnit.location.lookAtPosition(this._location.position, true);
+
+                const chat = {
+                    unit: this,
+                    message,
+                    emotion,
+                    bubble: ChatBubble.NORMAL
+                };
+
+                if(type === ChatType.NORMAL) activeUnit.user.connections.processOutgoing(new UnitChatComposer(chat));
+                else if(type === ChatType.SHOUT) activeUnit.user.connections.processOutgoing(new UnitChatShoutComposer(chat));
+            }
+
+            this.room.wiredManager.processTrigger(WiredTriggerSaysSomething, this._user, message);
+        }
+
+        this._lastChat = TimeHelper.currentTimestamp;
+    }
+
+    public isOwner(): boolean
+    {
+        if(this._type !== UnitType.USER || !this._room) return false;
+
+        return this._room.securityManager.isOwner(this._user);
+    }
+
+    public isGroupAdmin(): boolean
+    {
+        if(this._type !== UnitType.USER || !this._room) return false;
+
+        return this._room.group && this._room.group.isAdmin(this._user);
+    }
+
+    public hasRights(): boolean
+    {
+        if(this._type !== UnitType.USER || !this._room) return false;
+
+        return this._room.securityManager.hasRights(this._user);
+    }
+
     public loadRights(): void
     {
         if(!this._room) return;
@@ -270,7 +423,17 @@ export class Unit
         }
         else if(this.hasRights())
         {
-            rightsType = RoomRightsType.RIGHTS;
+            if(this._room.group)
+            {
+                const rank = this._user.inventory.groups.getMembershipRank(this._room.group.id);
+
+                if(rank === GroupRank.ADMIN)        rightsType = RoomRightsType.GROUP_ADMIN;
+                else if(rank === GroupRank.MEMBER)  rightsType = RoomRightsType.GROUP_RIGHTS;
+            }
+            else
+            {
+                rightsType = RoomRightsType.RIGHTS;
+            }
         }
 
         this._user.connections.processOutgoing(new RoomRightsComposer(rightsType));
@@ -278,24 +441,11 @@ export class Unit
         this._location.addStatus(new UnitStatus(UnitStatusType.FLAT_CONTROL, rightsType.toString()));
 
         if(this.isOwner()) this._user.connections.processOutgoing(new RoomRightsListComposer(this._room));
-
-        //this._user.connections.processOutgoing(new RoomInfoComposer(this._room, true));
-    }
-
-    public hasRights(): boolean
-    {
-        if(!this.isOwner()) return false;
-
-        if(!this._room || this._type !== UnitType.USER) return false;
-        
-        if(!this._room.securityManager.hasRights(this._user.id)) return false;
-        
-        return true;
     }
 
     public idle(status: boolean): void
     {
-        if(!this._room) return;
+        if(!this._room || this._type !== UnitType.USER) return;
 
         if(status && !this._isIdle)
         {

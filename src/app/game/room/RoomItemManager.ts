@@ -1,9 +1,10 @@
 import { Manager } from '../../common';
 import { ItemDao } from '../../database';
 import { Emulator } from '../../Emulator';
-import { ItemFloorAddComposer, ItemFloorRemoveComposer, ItemFloorUpdateComposer, ItemWallAddComposer, ItemWallRemoveComposer, ItemWallUpdateComposer, RoomPaintComposer } from '../../packets';
-import { BaseItemType, Interaction } from '../item';
+import { GenericNotificationListComposer, ItemFloorAddComposer, ItemFloorRemoveComposer, ItemFloorUpdateComposer, ItemWallAddComposer, ItemWallRemoveComposer, ItemWallUpdateComposer, RoomPaintComposer } from '../../packets';
+import { BaseItemType, Interaction, InteractionDimmer } from '../item';
 import { Item } from '../item/Item';
+import { NotificationList, NotificationMessage, NotificationType } from '../notification';
 import { AffectedPositions, Position } from '../pathfinder';
 import { User } from '../user';
 import { RoomPaintType } from './interfaces';
@@ -14,6 +15,7 @@ export class RoomItemManager extends Manager
     private _room: Room;
 
     private _items: Item[];
+    private _dimmer: Item;
 
     constructor(room: Room)
     {
@@ -21,9 +23,10 @@ export class RoomItemManager extends Manager
 
         if(!(room instanceof Room)) throw new Error('invalid_room');
 
-        this._room  = room;
+        this._room      = room;
 
-        this._items = [];
+        this._items     = [];
+        this._dimmer    = null;
     }
 
     protected async onInit(): Promise<void>
@@ -56,10 +59,10 @@ export class RoomItemManager extends Manager
         return null;
     }
 
-    public getUserItems(userId: number): Item[]
+    public getItemsByUser(user: User): Item[]
     {
-        if(!userId) return null;
-
+        if(!user) return null;
+        
         const totalItems = this._items.length;
 
         if(!totalItems) return null;
@@ -72,7 +75,7 @@ export class RoomItemManager extends Manager
 
             if(!item) continue;
 
-            if(item.userId === userId) results.push(item);
+            if(item.userId === user.id) results.push(item);
         }
         
         if(results.length) return results;
@@ -80,8 +83,10 @@ export class RoomItemManager extends Manager
         return null;
     }
 
-    public getFloorItems(): Item[]
+    public getItemsByType(type: BaseItemType): Item[]
     {
+        if(!type) return null;
+
         const totalItems = this._items.length;
 
         if(!totalItems) return null;
@@ -94,31 +99,7 @@ export class RoomItemManager extends Manager
 
             if(!item) continue;
 
-            if(item.baseItem.type !== BaseItemType.FLOOR) continue;
-
-            results.push(item);
-        }
-
-        if(results.length) return results;
-
-        return null;
-    }
-
-    public getWallItems(): Item[]
-    {
-        const totalItems = this._items.length;
-
-        if(!totalItems) return null;
-
-        const results: Item[] = [];
-
-        for(let i = 0; i < totalItems; i++)
-        {
-            const item = this._items[i];
-
-            if(!item) continue;
-
-            if(item.baseItem.type !== BaseItemType.WALL) continue;
+            if(item.baseItem.type !== type) continue;
 
             results.push(item);
         }
@@ -191,20 +172,53 @@ export class RoomItemManager extends Manager
         return this.getItem(id) !== null;
     }
 
+    public setDimmer(): void
+    {
+        this._dimmer = null;
+
+        const wallItems = this.getItemsByType(BaseItemType.WALL);
+
+        if(!wallItems) return;
+
+        const totalItems = wallItems.length;
+
+        if(!totalItems) return;
+
+        for(let i = 0; i < totalItems; i++)
+        {
+            const item = wallItems[i];
+
+            if(!item) continue;
+
+            if(!item.baseItem.hasInteraction(InteractionDimmer)) continue;
+
+            this._dimmer = item;
+
+            return;
+        }
+    }
+
     public placeItem(user: User, itemId: number, position: Position): void
     {
+        if(!this._room.details.allowEditing) return;
+
         if(!user || !itemId || !position) return;
 
-        if(!user.unit.hasRights()) return;
+        if(!user.unit.hasRights()) return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.NO_RIGHTS)));
 
         const item = user.inventory.items.getItem(itemId);
 
-        if(!item) return;
+        if(!item) return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.INVALID_ITEM)));
 
-        if(this.hasItem(item.id)) return;
+        if(this.hasItem(item.id)) return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.ITEM_EXISTS)));
 
         if(item.baseItem.type === BaseItemType.WALL)
         {
+            if(item.baseItem.hasInteraction(InteractionDimmer))
+            {
+                if(this._dimmer) return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.MAX_DIMMERS)));
+            }
+
             if(typeof position === 'string')
             {
                 item.wallPosition = position;
@@ -215,21 +229,24 @@ export class RoomItemManager extends Manager
 
                 this._items.push(item);
 
+                this.setDimmer();
+
                 user.inventory.items.removeItem(item);
 
                 item.save();
 
                 this._room.unitManager.processOutgoing(new ItemWallAddComposer(item, user.details.username));
             }
+            else return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.INVALID_PLACEMENT)));
         }
 
         else if(item.baseItem.type === BaseItemType.FLOOR)
         {
-            if(!item.isValidPlacement(position, this._room)) return;
+            if(!item.isValidPlacement(position, this._room)) return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.INVALID_PLACEMENT)));
 
             const tile = this._room.map.getTile(position);
 
-            if(!tile) return;
+            if(!tile) return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.INVALID_PLACEMENT)));
 
             item.position   = position.copy();
             item.position.z = tile.tileHeight;
@@ -258,8 +275,19 @@ export class RoomItemManager extends Manager
 
         if(item.baseItem.type === BaseItemType.WALL)
         {
-            if(!user.unit.hasRights()) return user.connections.processOutgoing(new ItemWallUpdateComposer(item));
-            // bubble alert
+            if(!this._room.details.allowEditing)
+            {
+                user.connections.processOutgoing(new ItemWallUpdateComposer(item));
+
+                return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.NO_EDITING)));
+            }
+
+            if(!user.unit.hasRights())
+            {
+                user.connections.processOutgoing(new ItemWallUpdateComposer(item));
+
+                return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.NO_RIGHTS)));
+            }
 
             if(typeof position === 'string')
             {
@@ -269,35 +297,45 @@ export class RoomItemManager extends Manager
 
                 this._room.unitManager.processOutgoing(new ItemWallUpdateComposer(item));
             }
+            else
+            {
+                user.connections.processOutgoing(new ItemWallUpdateComposer(item));
+
+                return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.INVALID_PLACEMENT)));
+            }
         }
 
         else if(item.baseItem.type === BaseItemType.FLOOR)
         {
-            if(!user.unit.hasRights()) return user.connections.processOutgoing(new ItemFloorUpdateComposer(item));
-            // bubble alert
-
-            const oldPosition   = item.position.copy();
-            let isRotating      = false;
-
-            if(item.position.direction !== position.direction) isRotating = true;
-
-            if(item.rolling) return;
-
-            if(isRotating)
+            if(!this._room.details.allowEditing)
             {
-                if(!item.position.compare(position) || !item.isValidPlacement(position)) return user.connections.processOutgoing(new ItemFloorUpdateComposer(item));
-                // bubble alert
+                user.connections.processOutgoing(new ItemFloorUpdateComposer(item));
 
-                item.position.setDirection(position.direction);
+                return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.NO_EDITING)));
             }
-            else
+
+            item.rolling = null;
+
+            if(!user.unit.hasRights())
             {
-                if(item.position.compareStrict(position) || !item.isValidPlacement(position)) return user.connections.processOutgoing(new ItemFloorUpdateComposer(item));
-                // bubble alert
+                user.connections.processOutgoing(new ItemFloorUpdateComposer(item));
 
-                item.position.x = position.x;
-                item.position.y = position.y;
+                return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.NO_RIGHTS)));
             }
+
+            const oldPosition = item.position.copy();
+
+            if(!item.isValidPlacement(position))
+            {
+                user.connections.processOutgoing(new ItemFloorUpdateComposer(item));
+
+                return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.INVALID_PLACEMENT)));
+            }
+            
+            item.position.setDirection(position.direction);
+            
+            item.position.x = position.x;
+            item.position.y = position.y;
 
             const tile = item.getTile();
 
@@ -314,11 +352,13 @@ export class RoomItemManager extends Manager
 
         const interaction: any = item.baseItem.interaction;
 
-        if(interaction) if(interaction.onMove) interaction.onMove(user, item);
+        if(interaction && interaction.onMove) interaction.onMove(user, item);
     }
 
     public removeItem(user: User, ...items: Item[]): void
     {
+        if(!this._room.details.allowEditing) return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.NO_EDITING)));
+
         if(!user || !user.unit) return;
 
         const removedItems = [ ...items ];
@@ -340,7 +380,7 @@ export class RoomItemManager extends Manager
 
             if(!item) continue;
 
-            if(!user.unit.isOwner() && item.userId !== user.id) continue;
+            if(!user.unit.isOwner() && !user.unit.isGroupAdmin() && item.userId !== user.id) continue;
 
             for(let j = 0; j < totalActiveItems; j++)
             {
@@ -356,7 +396,7 @@ export class RoomItemManager extends Manager
 
                     this._room.unitManager.processOutgoing(new ItemWallRemoveComposer(activeItem));
 
-                    if(activeItem.userId === user.id)
+                    if(!item.willRemove && activeItem.userId === user.id)
                     {
                         validatedItems.push(activeItem);
                     }
@@ -364,9 +404,11 @@ export class RoomItemManager extends Manager
                     {
                         const activeUser = Emulator.gameManager.userManager.getUserById(activeItem.userId);
 
-                        if(activeUser) activeUser.inventory.items.addItem(activeItem);
+                        if(!item.willRemove && activeUser) activeUser.inventory.items.addItem(activeItem);
                         else activeItem.clearRoom();
                     }
+
+                    this.setDimmer();
                 }
 
                 else if(activeItem.baseItem.type === BaseItemType.FLOOR)
@@ -377,7 +419,7 @@ export class RoomItemManager extends Manager
                     
                     this._room.unitManager.processOutgoing(new ItemFloorRemoveComposer(activeItem));
 
-                    if(activeItem.userId === user.id)
+                    if(!item.willRemove && activeItem.userId === user.id)
                     {
                         validatedItems.push(item);
                     }
@@ -385,17 +427,19 @@ export class RoomItemManager extends Manager
                     {
                         const activeUser = Emulator.gameManager.userManager.getUserById(activeItem.userId);
 
-                        if(activeUser) activeUser.inventory.items.addItem(activeItem);
+                        if(!item.willRemove && activeUser) activeUser.inventory.items.addItem(activeItem);
                         else activeItem.clearRoom();
                     }
                 }
 
                 const interaction: any = item.baseItem.interaction;
 
-                if(interaction) if(interaction.onPickup) interaction.onPickup(user, item);
+                if(interaction && interaction.onPickup) interaction.onPickup(user, item);
 
                 break;
             }
+
+            item.save();
         }
 
         const totalValidated = validatedItems.length;
@@ -403,6 +447,44 @@ export class RoomItemManager extends Manager
         if(totalValidated) user.inventory.items.addItem(...validatedItems);
 
         if(affectedPositions.length) this._room.map.updatePositions(true, ...affectedPositions);
+    }
+
+    public removeAllItems(user: User): void
+    {
+        if(!user || !user.unit) return;
+
+        const totalItems = this._items.length;
+
+        if(!totalItems) return;
+
+        const validatedItems: Item[] = [];
+
+        for(let i = 0; i < totalItems; i++)
+        {
+            const item = this._items[i];
+
+            if(!item) continue;
+
+            if(!user.unit.isOwner() && item.userId !== user.id) continue;
+
+            if(item.userId === user.id)
+            {
+                validatedItems.push(item);
+            }
+            else
+            {
+                const activeUser = Emulator.gameManager.userManager.getUserById(item.userId);
+
+                if(activeUser) activeUser.inventory.items.addItem(item);
+                else item.clearRoom();
+            }
+            
+            const interaction: any = item.baseItem.interaction;
+
+            if(interaction && interaction.onPickup) interaction.onPickup(user, item);
+        }
+
+        if(validatedItems.length) user.inventory.items.addItem(...validatedItems);
     }
 
     public paintRoom(user: User, itemId: number): void
@@ -436,7 +518,9 @@ export class RoomItemManager extends Manager
 
         user.inventory.items.removeItem(item);
 
-        item.clearUser();
+        item.willRemove = true;
+
+        item.save();
     }
 
     private async loadItems(): Promise<void>
@@ -445,30 +529,30 @@ export class RoomItemManager extends Manager
 
         const results = await ItemDao.loadRoomItems(this._room.id);
 
-        if(results)
+        if(!results) return;
+        
+        const totalResults = results.length;
+
+        if(!totalResults) return;
+        
+        for(let i = 0; i < totalResults; i++)
         {
-            const totalResults = results.length;
+            const result = results[i];
 
-            if(totalResults)
+            if(!result) continue;
+
+            if(!this._room.getObjectOwnerName(result.userId))
             {
-                for(let i = 0; i < totalResults; i++)
-                {
-                    const result = results[i];
+                const username = await ItemDao.getOwnerUsername(result.id);
 
-                    if(!this._room.getObjectOwnerName(result.userId))
-                    {
-                        const username = await ItemDao.getOwnerUsername(result.id);
-
-                        this._room.objectOwners.push({ id: result.userId, username });
-                    }
-
-                    const item = new Item(result);
-
-                    item.setRoom(this._room);
-
-                    this._items.push(item);
-                }
+                this._room.objectOwners.push({ id: result.userId, username });
             }
+
+            const item = new Item(result);
+
+            item.setRoom(this._room);
+
+            this._items.push(item);
         }
     }
 
@@ -480,5 +564,10 @@ export class RoomItemManager extends Manager
     public get items(): Item[]
     {
         return this._items;
+    }
+
+    public get dimmer(): Item
+    {
+        return this._dimmer;
     }
 }

@@ -17,14 +17,6 @@ export class UserBotRemoveComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._id).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._id).prepare();
     }
 }

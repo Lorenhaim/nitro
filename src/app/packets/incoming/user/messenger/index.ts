@@ -8,5 +8,6 @@ export * from './MessengerRelationshipsUpdateEvent';
 export * from './MessengerRemoveEvent';
 export * from './MessengerRequestEvent';
 export * from './MessengerRequestsEvent';
+export * from './MessengerRoomInviteEvent';
 export * from './MessengerSearchEvent';
 export * from './MessengerUpdatesEvent';

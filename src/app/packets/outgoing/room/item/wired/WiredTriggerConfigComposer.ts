@@ -1,4 +1,4 @@
-import { Item } from '../../../../../game';
+import { Item, WiredTrigger } from '../../../../../game';
 import { Outgoing } from '../../../Outgoing';
 import { OutgoingHeader } from '../../../OutgoingHeader';
 import { OutgoingPacket } from '../../../OutgoingPacket';
@@ -18,18 +18,10 @@ export class WiredTriggerConfigComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            const interaction: any = this._item.baseItem.interaction;
+        const interaction = <WiredTrigger> this._item.baseItem.interaction;
 
-            if(interaction && interaction.parseWiredData) interaction.parseWiredData(this._item, this.packet);
-
-            return this.packet.prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        if(!(interaction instanceof WiredTrigger)) return this.cancel();
+        
+        return interaction.parseWiredData(this._item, this.packet).prepare();
     }
 }

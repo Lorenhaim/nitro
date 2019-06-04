@@ -1,3 +1,4 @@
+import { Direction } from '../../pathfinder';
 import { Unit } from '../../unit';
 import { Item } from '../Item';
 import { OnClick } from './actions';
@@ -13,43 +14,50 @@ export class InteractionVendingMachine extends InteractionDefault implements OnC
     public onClick(unit: Unit, item: Item): void
     {
         if(!unit || !item) return;
-
+        
         const room = item.room;
 
         if(!room) return;
-
-        if(item.extraData !== '0') return;
         
-        const positionInfront = item.position.getPositionInfront();
-
-        positionInfront.setDirection(item.position.directionOpposite);
-
-        if(!unit.location.position.compare(positionInfront))
+        if(item.position.direction === Direction.NORTH)
         {
-            if(!room.map.getValidTile(unit, positionInfront)) return;
+            item.position.direction = Direction.EAST;
 
-            unit.location.setClickGoal(positionInfront, item);
-
-            unit.location.walkTo(positionInfront, false, item.position);
-
-            return;
+            item.save();
         }
 
-        if(unit.location.position.direction !== positionInfront.direction)
-        {
-            unit.location.position.setDirection(positionInfront.direction);
+        if(item.extraData === '1') return;
 
-            unit.needsUpdate = true;
+        const tileFront = room.map.getValidTile(unit, item.position.getPositionInfront());
+
+        if(!tileFront) return;
+
+        if(!unit.location.position.compare(tileFront.position))
+        {
+            unit.location.setGoalAction(() =>
+            {
+                if(unit.location.positionGoal.compare(tileFront.position)) this.onClick(unit, item);
+            });
+
+            return unit.location.walkTo(tileFront.position, false);
         }
-
-        const handItem = item.baseItem.getRandomVending();
-
-        if(handItem)
+        else
         {
+            if(unit.location.position.direction !== item.position.directionOpposite)
+            {
+                unit.location.position.setDirection(item.position.directionOpposite);
+
+                unit.needsUpdate = true;
+            }
+
+            const handItem = item.baseItem.getRandomVending();
+
+            if(!handItem) return;
+
             item.setExtraData(1);
-            
+                
             unit.location.hand(handItem);
-
+    
             setTimeout(() => item.setExtraData(0), 1000);
         }
     }

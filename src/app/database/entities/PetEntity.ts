@@ -22,7 +22,7 @@ export class PetEntity
     @Column({ name: 'level', default: 1 })
     public level: number;
 
-    @Column({ name: 'breed', type: 'enum', enum: ['0', '1', '2', '10', '11', '12', '13', '14', '15', '17'], default: '0' })
+    @Column({ name: 'breed', type: 'enum', enum: PetBreed })
     public breed: PetBreed;
 
     @Column({ name: 'race' })
@@ -46,7 +46,7 @@ export class PetEntity
     @Column({ name: 'z', type: 'decimal', precision: 3, scale: 2, default: '0' })
     public z: string;
 
-    @Column({ name: 'direction', type: 'enum', enum: ['0', '1', '2', '3', '4', '5', '6', '7'], default: '0' })
+    @Column({ name: 'direction', type: 'enum', enum: Direction, default: Direction.NORTH })
     public direction: Direction;
 
     @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })

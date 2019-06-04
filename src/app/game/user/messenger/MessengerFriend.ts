@@ -1,6 +1,7 @@
 import { MessengerFriendEntity } from '../../../database';
 import { Emulator } from '../../../Emulator';
 import { OutgoingPacket } from '../../../packets';
+import { UnitGender } from '../../unit';
 import { MessengerRelationshipType } from './interfaces';
 
 export class MessengerFriend
@@ -8,7 +9,7 @@ export class MessengerFriend
     private _id: number;
     private _username: string;
     private _motto: string;
-    private _gender: 'M' | 'F';
+    private _gender: UnitGender;
     private _figure: string;
     private _online: boolean;
     private _relation: MessengerRelationshipType;
@@ -45,7 +46,7 @@ export class MessengerFriend
             .writeInt(this._gender === 'M' ? 0 : 1) // group 0
             .writeBoolean(this._online) // group true/false ??
             .writeBoolean(this._inRoom) // in room
-            .writeString(this._figure) // group badge code
+            .writeString(this._online ? this._figure : null) // group badge code
             .writeInt(this._categoryId)
             .writeString(this._motto)
             .writeString(null, null)
@@ -80,12 +81,12 @@ export class MessengerFriend
         this._motto = motto;
     }
 
-    public get gender(): 'M' | 'F'
+    public get gender(): UnitGender
     {
         return this._gender;
     }
 
-    public set gender(gender: 'M' | 'F')
+    public set gender(gender: UnitGender)
     {
         this._gender = gender;
     }
@@ -115,12 +116,12 @@ export class MessengerFriend
         return this._categoryId;
     }
 
-    public get relation(): 0 | 1 | 2 | 3
+    public get relation(): MessengerRelationshipType
     {
         return this._relation;
     }
 
-    public set relation(relation: 0 | 1 | 2 | 3)
+    public set relation(relation: MessengerRelationshipType)
     {
         this._relation = relation;
     }

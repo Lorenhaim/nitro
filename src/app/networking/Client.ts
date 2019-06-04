@@ -54,40 +54,52 @@ export abstract class Client<T>
     {
         const packets = [ ...incoming ];
 
-        if(packets)
+        if(!packets) return;
+        
+        const totalPackets = packets.length;
+
+        if(!totalPackets) return;
+        
+        for(let i = 0; i < totalPackets; i++)
         {
-            const totalPackets = packets.length;
+            const packet = packets[i];
 
-            if(totalPackets)
+            if(!packet) continue;
+
+            const handler: any = Emulator.networkManager.packetManager().getHandler(packet.header);
+
+            if(!handler)
             {
-                for(let i = 0; i < totalPackets; i++)
-                {
-                    const packet = packets[i];
+                this.logger.warn(`IncomingEvent [${ packet.header }] => Unknown`);
 
-                    const handler: any = Emulator.networkManager.packetManager().getHandler(packet.header);
+                continue;
+            }
+            
+            const instance: Incoming = new handler();
 
-                    if(handler)
-                    {
-                        const instance: Incoming = new handler();
-                        
-                        if(instance instanceof Incoming)
-                        {
-                            this.setIncomingClient(instance);
+            if(!(instance instanceof Incoming))
+            {
+                this.logger.warn(`IncomingEvent [${ packet.header }] => Invalid`);
 
-                            if(instance.authenticationRequired && !this.isAuthenticated) return;
-                            
-                            instance.setPacket(packet);
+                continue;
+            }
+            
+            this.setIncomingClient(instance);
 
-                            if(Emulator.config.logging.enabled && Emulator.config.logging.packets.incoming) this.logger.log(`IncomingEvent [${ packet.header }] => ${ instance.constructor.name }`);
+            if(instance.authenticationRequired && !this.isAuthenticated) return;
+                
+            instance.setPacket(packet);
 
-                            await instance.process();
-                        }
-                    }
-                    else
-                    {
-                        if(Emulator.config.logging.enabled && Emulator.config.logging.packets.unknown)  this.logger.warn(`IncomingEvent [${ packet.header }] => Unknown`);
-                    }
-                }
+            if(Emulator.config.logging.enabled && Emulator.config.logging.packets.incoming) this.logger.log(`IncomingEvent [${ packet.header }] => ${ instance.constructor.name }`);
+
+            try
+            {
+                await instance.process();
+            }
+
+            catch(err)
+            {
+                this.logger.error(err.stack);
             }
         }
     }
@@ -106,32 +118,36 @@ export abstract class Client<T>
         {
             const composer = composers[i];
 
-            if(composer instanceof Outgoing)
+            if(!composer || !(composer instanceof Outgoing))
             {
-                this.setOutgoingClient(composer);
+                if(Emulator.config.logging.enabled && Emulator.config.logging.packets.invalid) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Invalid Composer`);
 
-                const packet = composer.compose();
-
-                if(packet instanceof OutgoingPacket)
-                {
-                    if(composer.isCancelled) continue;
-                    
-                    if(packet.isPrepared && !packet.isCancelled)
-                    {
-                        this.write(packet.buffer);
-
-                        if(Emulator.config.logging.enabled && Emulator.config.logging.packets.outgoing) this.logger.log(`OutgoingComposer [${ composer.header }] => ${ composer.constructor.name }`);
-                    }
-                    else
-                    {
-                        if(Emulator.config.logging.enabled && Emulator.config.logging.packets.unprepared) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Packet unprepared`);
-                    }
-                }
-                else
-                {
-                    if(Emulator.config.logging.enabled) this.logger.error(`Invalid Composer => ${ composer.constructor.name }`);
-                }
+                continue;
             }
+
+            this.setOutgoingClient(composer);
+
+            const packet = composer.compose();
+
+            if(!(packet instanceof OutgoingPacket))
+            {
+                if(Emulator.config.logging.enabled && Emulator.config.logging.packets.invalid) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Invalid Packet`);
+
+                continue;
+            }
+            
+            if(composer.isCancelled || packet.isCancelled) continue;
+
+            if(!packet.isPrepared)
+            {
+                if(Emulator.config.logging.enabled && Emulator.config.logging.packets.unprepared) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Packet unprepared`);
+
+                continue;
+            }
+            
+            this.write(packet.buffer);
+
+            if(Emulator.config.logging.enabled && Emulator.config.logging.packets.outgoing) this.logger.log(`OutgoingComposer => ${ composer.constructor.name }`);
         }
     }
 

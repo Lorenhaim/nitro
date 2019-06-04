@@ -1,5 +1,4 @@
 export * from './access';
-export * from './doorbell';
 export * from './item';
 export * from './map';
 export * from './promotions';

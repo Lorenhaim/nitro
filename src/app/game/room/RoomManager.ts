@@ -29,77 +29,86 @@ export class RoomManager extends Manager
     {
         const totalRooms = this._rooms.length;
 
-        if(totalRooms)
+        if(!totalRooms) return;
+        
+        for(let i = 0; i < totalRooms; i++)
         {
-            for(let i = 0; i < totalRooms; i++)
-            {
-                const room = this._rooms[i];
+            const room = this._rooms[i];
 
-                if(!room) continue;
+            if(!room) continue;
 
-                await room.dispose();
+            await room.dispose();
 
-                this._rooms.splice(i, 1);
-            }
+            this._rooms.splice(i, 1);
         }
     }
 
-    public async getRoom(id: number): Promise<Room>
+    public async getRoom(roomId: number): Promise<Room>
     {
-        if(!id) return null;
-        
+        if(!roomId) return null;
+
+        let room = this.getActiveRoom(roomId);
+
+        if(room) return room;
+
+        return await this.getOfflineRoom(roomId);
+    }
+
+    public getActiveRoom(roomId: number): Room
+    {
+        if(!roomId) return null;
+
         const totalRooms = this._rooms.length;
 
-        if(totalRooms)
+        if(!totalRooms) return null;
+
+        for(let i = 0; i < totalRooms; i++)
         {
-            for(let i = 0; i < totalRooms; i++)
-            {
-                const room = this._rooms[i];
+            const room = this._rooms[i];
 
-                if(room.id === id)
-                {
-                    room.didCancelDispose = true;
+            if(!room) continue;
 
-                    return room;
-                }
-            }
+            if(room.id !== roomId) continue;
+
+            room.cancelDispose();
+
+            return room;
         }
-        
-        const entity = await RoomDao.loadRoom(id);
+
+        return null;
+    }
+
+    public async getOfflineRoom(roomId: number): Promise<Room>
+    {
+        if(!roomId) return null;
+
+        const entity = await RoomDao.loadRoom(roomId);
 
         if(!entity) return null;
-        
+
         const room = new Room(entity);
 
         if(!room) return null;
-        
-        return room;
+
+        return this.addRoom(room);
     }
 
-    public addRoom(room: Room): Room
+    private addRoom(room: Room): Room
     {
-        if(!room) return;
+        if(!(room instanceof Room)) return null;
 
-        const totalRooms = this._rooms.length;
+        let instance = this.getActiveRoom(room.id);
 
-        if(totalRooms)
-        {
-            for(let i = 0; i < totalRooms; i++)
-            {
-                const activeRoom = this._rooms[i];
+        if(instance) return instance;
 
-                if(activeRoom.id === room.id)
-                {
-                    activeRoom.didCancelDispose = true;
-
-                    return activeRoom;
-                }
-            }
-        }
-        
         this._rooms.push(room);
 
         return room;
+    }
+
+    public hasRoom(roomId: number): boolean
+    {
+        return this.getActiveRoom(roomId) !== null;
     }
 
     public async removeRoom(room: Room): Promise<void>
@@ -124,6 +133,51 @@ export class RoomManager extends Manager
 
             return;
         }
+    }
+
+    public async deleteRoom(room: Room, user: User): Promise<void>
+    {
+        if(!room) return;
+
+        room = await this.getRoom(room.id);
+
+        if(!room) return;
+        
+        if(!room.securityManager.isOwner(user)) return;
+
+        room.itemManager.removeAllItems(user);
+
+        await this.removeRoom(room);
+        
+        await getManager().delete(RoomEntity, room.id);
+    }
+
+    public async createRoom(user: User, data: RoomCreate): Promise<number>
+    {
+        if(!user || !data) return null;
+
+        const model = this.getModelByName(data.modelName);
+
+        if(!model) return null;
+        
+        const category = Emulator.gameManager.navigatorManager.getCategory(data.categoryId);
+
+        if(!category) return null;
+        
+        const newRoom = new RoomEntity();
+
+        newRoom.name        = data.name;
+        newRoom.description = data.description;
+        newRoom.ownerId     = user.details.id;
+        newRoom.ownerName   = user.details.username;
+        newRoom.modelId     = model.id;
+        newRoom.categoryId  = data.categoryId;
+        newRoom.usersMax    = data.usersMax;
+        newRoom.tradeType   = data.tradeType;
+
+        await getManager().save(newRoom);
+
+        return newRoom.id;
     }
 
     public getModel(modelId: number): RoomModel
@@ -164,57 +218,50 @@ export class RoomManager extends Manager
         return null;
     }
 
+    public hasModel(modelId: number): boolean
+    {
+        return this.getModel(modelId) !== null;
+    }
+
     private async loadRoomModels(): Promise<void>
     {
         this._roomModels = [];
 
         const results = await getManager().find(RoomModelEntity, {
             where: {
-                enabled: '1'
+                enabled: '1',
+                custom: '0'
             }
         });
 
-        if(results)
-        {
-            const totalResults = results.length;
+        if(!results) return;
+        
+        const totalResults = results.length;
 
-            if(totalResults) for(let i = 0; i < totalResults; i++) this._roomModels.push(new RoomModel(results[i]));
-        }
+        if(totalResults) for(let i = 0; i < totalResults; i++) this._roomModels.push(new RoomModel(results[i]));
 
         this.logger.log(`Loaded ${ this._roomModels.length } models`);
     }
 
-    public async createRoom(user: User, data: RoomCreate): Promise<number>
+    public async loadCustomModel(modelId: number): Promise<void>
     {
-        if(user && data)
-        {
-            const model = this.getModelByName(data.modelName);
+        if(!modelId) return;
 
-            if(model)
-            {
-                const category = Emulator.gameManager.navigatorManager.getCategory(data.categoryId);
+        const model = this.getModel(modelId);
 
-                if(category)
-                {
-                    const newRoom = new RoomEntity();
+        if(model) return;
 
-                    newRoom.name        = data.name;
-                    newRoom.description = data.description;
-                    newRoom.ownerId     = user.details.id;
-                    newRoom.ownerName   = user.details.username;
-                    newRoom.modelId     = model.id;
-                    newRoom.categoryId  = data.categoryId;
-                    newRoom.usersMax    = data.usersMax;
-                    newRoom.tradeType   = data.tradeType;
-
-                    await getManager().save(newRoom);
-
-                    return newRoom.id;
-                }
+        const result = await getManager().findOne(RoomModelEntity, {
+            where: {
+                id: modelId,
+                enabled: '1',
+                custom: '1'
             }
-        }
+        });
 
-        return null;
+        if(!result) return;
+        
+        this._roomModels.push(new RoomModel(result));
     }
 
     public get rooms(): Room[]

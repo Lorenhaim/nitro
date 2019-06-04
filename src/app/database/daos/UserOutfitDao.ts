@@ -1,5 +1,5 @@
 import { getManager } from 'typeorm';
-import { Outfit } from '../../game';
+import { Outfit, UnitGender } from '../../game';
 import { UserOutfitEntity } from '../entities';
 
 export class UserOutfitDao
@@ -24,7 +24,7 @@ export class UserOutfitDao
 
         entity.userId     = outfit.userId || 0;
         entity.figure     = outfit.figure || null,
-        entity.gender     = outfit.gender === 'M' ? 'M' : 'F',
+        entity.gender     = outfit.gender === UnitGender.MALE ? UnitGender.MALE : UnitGender.FEMALE,
         entity.slotNumber = outfit.slotNumber || 0
 
         if(entity.userId > 0 && entity.figure !== null && entity.gender !== null && entity.slotNumber > 0)

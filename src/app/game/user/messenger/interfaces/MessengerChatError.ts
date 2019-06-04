@@ -1,4 +1,4 @@
-export const enum MessengerChatError
+export enum MessengerChatError
 {
     FRIEND_MUTED        = 3,
     USER_MUTED          = 4,

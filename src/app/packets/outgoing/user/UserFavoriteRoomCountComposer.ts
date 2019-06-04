@@ -11,14 +11,6 @@ export class UserFavoriteRoomCountComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(1, 0).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(1, 0).prepare();
     }
 }

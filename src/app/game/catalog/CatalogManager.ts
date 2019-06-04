@@ -1,5 +1,7 @@
 import { Manager } from '../../common';
-import { CatalogItemDao, CatalogPageDao } from '../../database';
+import { CatalogClothingDao, CatalogItemDao, CatalogPageDao } from '../../database';
+import { Emulator } from '../../Emulator';
+import { CatalogModeComposer, CatalogUpdatedComposer, DiscountConfigComposer, GiftConfigComposer, MarketplaceConfigComposer, RecyclerPrizesComposer } from '../../packets';
 import { CatalogItem } from './CatalogItem';
 import { CatalogPage } from './CatalogPage';
 import { CatalogLayout, CatalogLayouts, DefaultLayout, FrontPageFeaturedLayout, FrontPageLayout, SpacesNewLayout } from './layouts';
@@ -10,13 +12,19 @@ export class CatalogManager extends Manager
     private _pages: CatalogPage[];
     private _items: CatalogItem[];
 
+    private _clothing: { name: string, ids: number[] }[];
+    private _clothingIds: number[];
+
     constructor()
     {
         super('CatalogManager');
 
-        this._layouts   = [];
-        this._pages     = [];
-        this._items     = [];
+        this._layouts       = [];
+        this._pages         = [];
+        this._items         = [];
+
+        this._clothing      = [];
+        this._clothingIds   = [];
     }
 
     protected async onInit(): Promise<void>
@@ -25,27 +33,34 @@ export class CatalogManager extends Manager
 
         await this.loadPages();
         await this.loadItems();
+        await this.loadClothing();
     }
 
     protected async onDispose(): Promise<void>
     {
-        this._layouts   = [];
-        this._pages     = [];
-        this._items     = [];
+        this._layouts       = [];
+        this._pages         = [];
+        this._items         = [];
+
+        this._clothing      = [];
+        this._clothingIds   = [];
     }
 
-    public getPage(id: number): CatalogPage
+    public getPage(id: number, rankId: number = null): CatalogPage
     {
         const totalPages = this._pages.length;
 
-        if(totalPages)
+        if(!totalPages) return null;
+        
+        for(let i = 0; i < totalPages; i++)
         {
-            for(let i = 0; i < totalPages; i++)
-            {
-                const page = this._pages[i];
+            const page = this._pages[i];
 
-                if(page.id === id) return page;
-            }
+            if(!page) continue;
+
+            if(page.minRank && page.minRank > rankId) continue;
+
+            if(page.id === id) return page;
         }
 
         return null;
@@ -55,59 +70,57 @@ export class CatalogManager extends Manager
     {
         const totalLayouts = this._layouts.length;
 
-        if(totalLayouts)
-        {
-            for(let i = 0; i < totalLayouts; i++)
-            {
-                const layout = this._layouts[i];
+        if(!totalLayouts) return null;
 
-                if(layout.name === name) return layout;
-            }
+        for(let i = 0; i < totalLayouts; i++)
+        {
+            const layout = this._layouts[i];
+
+            if(layout.name === name) return layout;
         }
 
         return null;
     }
 
-    public getPages(parentId: number = 0): CatalogPage[]
+    public getPages(parentId: number = 0, rankId: number = null): CatalogPage[]
     {
         const totalPages = this._pages.length;
 
-        if(totalPages)
-        {
-            const results: CatalogPage[] = [];
+        if(!totalPages) return null;
+        
+        const results: CatalogPage[] = [];
             
-            for(let i = 0; i < totalPages; i++)
-            {
-                const page = this._pages[i];
+        for(let i = 0; i < totalPages; i++)
+        {
+            const page = this._pages[i];
 
-                if(page.parentId === null && parentId === 0) results.push(page);
+            if(!page) continue;
 
-                else if(page.parentId === parentId) results.push(page);
-            }
+            if(page.minRank && page.minRank > rankId) continue;
 
-            if(results.length) return results;
+            if(page.parentId === null && parentId === 0) results.push(page);
+
+            else if(page.parentId === parentId) results.push(page);
         }
+
+        if(results.length) return results;
 
         return null;
     }
 
     public getItem(itemId: number): CatalogItem
     {
-        if(itemId)
+        if(!itemId) return null;
+        
+        const totalItems = this._items.length;
+
+        if(!totalItems) return null;
+        
+        for(let i = 0; i < totalItems; i++)
         {
-            const totalItems = this._items.length;
+            const item = this._items[i];
 
-            if(totalItems)
-            {
-                const results: CatalogItem[] = [];
-                
-                for(let i = 0; i < totalItems; i++)
-                {
-                    const item = this._items[i];
-
-                    if(item.id === itemId) return item;
-                }
-            }
+            if(item.id === itemId) return item;
         }
 
         return null;
@@ -115,23 +128,39 @@ export class CatalogManager extends Manager
 
     public getItems(pageId: number): CatalogItem[]
     {
-        if(pageId)
-        {
-            const totalItems = this._items.length;
+        if(!pageId) return null;
+        
+        const totalItems = this._items.length;
 
-            if(totalItems)
-            {
-                const results: CatalogItem[] = [];
+        if(!totalItems) return null;
+        
+        const results: CatalogItem[] = [];
                 
-                for(let i = 0; i < totalItems; i++)
-                {
-                    const item = this._items[i];
+        for(let i = 0; i < totalItems; i++)
+        {
+            const item = this._items[i];
 
-                    if(item.pageId === pageId) results.push(item);
-                }
+            if(item.pageId === pageId) results.push(item);
+        }
 
-                if(results.length) return results;
-            }
+        if(results.length) return results;
+
+        return null;
+    }
+
+    public getClothingIds(name: string): number[]
+    {
+        if(!name) return null;
+        
+        const totalClothing = this._clothing.length;
+
+        if(!totalClothing) return null;
+        
+        for(let i = 0; i < totalClothing; i++)
+        {
+            const clothing = this._clothing[i];
+
+            if(clothing.name === name) return clothing.ids;
         }
 
         return null;
@@ -206,6 +235,67 @@ export class CatalogManager extends Manager
         this.logger.log(`Loaded ${ this._items.length } items`);
     }
 
+    private async loadClothing(): Promise<void>
+    {
+        this._clothing      = [];
+        this._clothingIds   = [];
+
+        const results = await CatalogClothingDao.loadAllClothing();
+
+        if(results)
+        {
+            const totalResults = results.length;
+
+            if(totalResults)
+            {
+                for(let i = 0; i < totalResults; i++)
+                {
+                    const entity = results[i];
+
+                    const figureIds = entity.figureIds;
+
+                    if(!figureIds) continue;
+
+                    const parts = figureIds.split(',');
+
+                    if(!parts) continue;
+
+                    const totalParts = parts.length;
+
+                    if(!totalParts) continue;
+
+                    const validatedParts: number[] = [];
+
+                    for(let j = 0; j < totalParts; j++)
+                    {
+                        const part = parts[j];
+
+                        if(!part) continue;
+
+                        this._clothingIds.push(parseInt(part));
+
+                        validatedParts.push(parseInt(part));
+                    }
+
+                    this._clothing.push({ name: entity.name, ids: validatedParts });
+                }
+            }
+        }
+
+        this.logger.log(`Loaded ${ this._clothing.length } clothing sets`);
+    }
+
+    public notifyReload(): void
+    {
+        return Emulator.gameManager.userManager.processOutgoing(
+            new CatalogUpdatedComposer(),
+            new CatalogModeComposer(0),
+            new DiscountConfigComposer(),
+            new MarketplaceConfigComposer(),
+            new GiftConfigComposer(),
+            new RecyclerPrizesComposer());
+    }
+
     public get pages(): CatalogPage[]
     {
         return this._pages;
@@ -214,5 +304,15 @@ export class CatalogManager extends Manager
     public get items(): CatalogItem[]
     {
         return this._items;
+    }
+
+    public get clothing(): { name: string, ids: number[] }[]
+    {
+        return this._clothing;
+    }
+
+    public get clothingIds(): number[]
+    {
+        return this._clothingIds;
     }
 }

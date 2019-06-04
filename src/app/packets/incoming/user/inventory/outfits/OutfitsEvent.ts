@@ -1,4 +1,4 @@
-import { ClothingOutfitsComposer } from '../../../../outgoing';
+import { UserOutfitsComposer } from '../../../../outgoing';
 import { Incoming } from '../../../Incoming';
 
 export class OutfitsEvent extends Incoming
@@ -7,7 +7,7 @@ export class OutfitsEvent extends Incoming
     {
         try
         {
-            if(this.client.user.inventory.outfits && this.client.user.inventory.outfits.isLoaded) this.client.processOutgoing(new ClothingOutfitsComposer());
+            this.client.processOutgoing(new UserOutfitsComposer());
         }
 
         catch(err)

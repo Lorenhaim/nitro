@@ -1,9 +1,9 @@
 import { getManager } from 'typeorm';
-import { TimeHelper } from '../../common';
+import { FigureHelper, TimeHelper } from '../../common';
 import { UserEntity } from '../../database';
 import { Emulator } from '../../Emulator';
 import { UnitInfoComposer, UserFigureComposer, UserHomeRoomComposer, UserRespectComposer } from '../../packets';
-import { UnitAction } from '../unit';
+import { UnitAction, UnitGender } from '../unit';
 import { NavigatorSettings } from './interfaces';
 import { User } from './User';
 
@@ -13,6 +13,7 @@ export class UserDetails
     private _entity: UserEntity;
 
     private _firstLoginOfDay: boolean;
+    private _totalFriends: number;
 
     constructor(entity: UserEntity, user: User)
     {
@@ -22,32 +23,35 @@ export class UserDetails
         this._entity            = entity;
 
         this._firstLoginOfDay   = false;
+        this._totalFriends      = entity.totalFriends || 0;
     }
 
     public save(): void
     {
-        Emulator.gameScheduler.saveUser(this._entity);
+        Emulator.gameScheduler.saveUser(this._user);
     }
 
-    public async saveNow(destroy: boolean = false): Promise<void>
+    public async saveNow(): Promise<void>
     {
-        await getManager().save(this._entity);
+        Emulator.gameScheduler.removeUser(this._user);
 
-        if(destroy) this._entity = null;
+        await getManager().save(this._entity);
     }
 
-    public updateFigure(figure: string, gender: 'M' | 'F'): void
+    public updateFigure(figure: string, gender: UnitGender, processPending: boolean = false): void
     {
         if(!figure || !gender) return;
+
+        if(!FigureHelper.validateFigure(figure, Emulator.gameManager.catalogManager.clothingIds, this._user.inventory.clothing.clothingIds)) return;
         
         this._entity.figure = figure;
-        this._entity.gender = gender === 'M' ? 'M' : 'F';
+        this._entity.gender = gender === UnitGender.MALE ? UnitGender.MALE : UnitGender.FEMALE;
 
         this.save();
 
         if(this._user.connections) this._user.connections.processOutgoing(new UserFigureComposer());
 
-        if(this._user.unit && this._user.unit.room) this._user.unit.room.unitManager.processOutgoing(new UnitInfoComposer(this._user.unit));
+        if(this._user.unit.room) this._user.unit.room.unitManager.processOutgoing(new UnitInfoComposer(this._user.unit));
 
         if(this._user.messenger) this._user.messenger.updateAllFriends();
     }
@@ -67,7 +71,7 @@ export class UserDetails
 
         this.save();
 
-        if(this._user.unit && this._user.unit.room) this._user.unit.room.unitManager.processOutgoing(new UnitInfoComposer(this._user.unit));
+        if(this._user.unit.room) this._user.unit.room.unitManager.processOutgoing(new UnitInfoComposer(this._user.unit));
     }
 
     public updateOnline(flag: boolean): void
@@ -118,9 +122,11 @@ export class UserDetails
             }
         }
 
-        if(this._user.messenger) this._user.messenger.updateAllFriends();
+        if(this._entity.statistics.loginStreak > this._entity.statistics.loginStreakLifetime) this._entity.statistics.loginStreakLifetime = this._entity.statistics.loginStreak;
 
         this.save();
+
+        if(this._user.messenger) this._user.messenger.updateAllFriends();
     }
 
     public updateNavigator(navigatorSettings: NavigatorSettings)
@@ -183,7 +189,7 @@ export class UserDetails
         return this._entity.motto;
     }
 
-    public get gender(): 'M' | 'F'
+    public get gender(): UnitGender
     {
         return this._entity.gender;
     }
@@ -221,6 +227,11 @@ export class UserDetails
     public get homeRoom(): number
     {
         return this._entity.info.homeRoom || 0;
+    }
+
+    public get favoriteGroupId(): number
+    {
+        return this._entity.info.favoriteGroupId || 0;
     }
 
     public get clubActive(): boolean
@@ -322,5 +333,15 @@ export class UserDetails
     public get firstLoginOfDay(): boolean
     {
         return this._firstLoginOfDay;
+    }
+
+    public get totalFriends(): number
+    {
+        return this._totalFriends;
+    }
+
+    public set totalFriends(count: number)
+    {
+        this._totalFriends = count;
     }
 }

@@ -11,14 +11,6 @@ export class SecurityUnknown2Composer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeString(null, null).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeString(null, null).prepare();
     }
 }

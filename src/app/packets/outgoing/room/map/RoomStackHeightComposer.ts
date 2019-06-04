@@ -18,33 +18,21 @@ export class RoomStackHeightComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        if(!this._tiles) return this.packet.writeBytes(0).prepare();
+        
+        const totalTiles = this._tiles.length;
+
+        if(!totalTiles) return this.packet.writeBytes(0).prepare();
+        
+        this.packet.writeBytes(totalTiles);
+
+        for(let i = 0; i < totalTiles; i++)
         {
-            if(this._tiles)
-            {
-                const totalTiles = this._tiles.length;
+            const tile = this._tiles[i];
 
-                if(totalTiles)
-                {
-                    this.packet.writeBytes(totalTiles);
-
-                    for(let i = 0; i < totalTiles; i++)
-                    {
-                        const tile = this._tiles[i];
-
-                        this.packet.writeBytes(tile.position.x, tile.position.y).writeShort(tile.getRelativeHeight());
-                    }
-
-                    return this.packet.prepare();
-                }
-            }
-            
-            return this.cancel();
+            this.packet.writeBytes(tile.position.x, tile.position.y).writeShort(tile.getRelativeHeight());
         }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        
+        return this.packet.prepare();
     }
 }

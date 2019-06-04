@@ -1,5 +1,5 @@
 import { OutgoingPacket } from '../../../packets';
-import { AffectedPositions, Position } from '../../pathfinder';
+import { Position } from '../../pathfinder';
 import { Unit, UnitEffect } from '../../unit';
 import { User } from '../../user';
 import { Item } from '../Item';
@@ -93,54 +93,46 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
     }
 
     public onStop(unit: Unit, item: Item): void
-    {        
-        if(unit && item)
+    {
+        if(!unit || !item) return;
+        
+        if(item.baseItem.hasEffect)
         {
-            if(item.baseItem.hasEffect)
+            if(unit.location.effectType)
             {
-                if(unit.location.effectType)
-                {
-                    if(item.baseItem.effectIds.indexOf(unit.location.effectType) === -1)
-                    {
-                        const effectId = item.baseItem.getRandomEffect(unit.user.details.gender);
-
-                        if(effectId) unit.location.effect(effectId);
-                    }
-                }
-                else
+                if(item.baseItem.effectIds.indexOf(unit.location.effectType) === -1)
                 {
                     const effectId = item.baseItem.getRandomEffect(unit.user.details.gender);
 
                     if(effectId) unit.location.effect(effectId);
                 }
             }
-             
-            if(item.baseItem.canSit)
+            else
             {
-                unit.location.sit(true, item.baseItem.stackHeight, item.position.direction);
+                const effectId = item.baseItem.getRandomEffect(unit.user.details.gender);
+
+                if(effectId) unit.location.effect(effectId);
             }
+        }
+             
+        if(item.baseItem.canSit)
+        {
+            unit.location.sit(true, item.baseItem.stackHeight, item.position.direction);
+        }
 
-            else if(item.baseItem.canLay)
+        else if(item.baseItem.canLay)
+        {
+            const closestPillow = item.room.map.getClosestValidPillow(unit, unit.location.position);
+
+            if(closestPillow)
             {
-                const pillowPositions = AffectedPositions.getPillowPositions(item);
-
-                if(pillowPositions)
+                if(!closestPillow.compare(unit.location.position))
                 {
-                    const totalPositions = pillowPositions.length;
-
-                    if(totalPositions)
-                    {
-                        for(let i = 0; i < totalPositions; i++)
-                        {
-                            const pillowPosition = pillowPositions[i];
-
-                            if(pillowPosition.compare(unit.location.position))
-                            {
-                                unit.location.lay(true, item.baseItem.stackHeight, item.position.direction);
-                            }
-                        }
-                    }
+                    unit.location.position.x = closestPillow.x;
+                    unit.location.position.y = closestPillow.y;
                 }
+
+                unit.location.lay(true, item.baseItem.stackHeight, item.position.direction);
             }
         }
     }

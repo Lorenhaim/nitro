@@ -1,6 +1,8 @@
 import { RoomModelEntity } from '../../../database';
+import { BaseItemType } from '../../item';
 import { Direction, Position } from '../../pathfinder';
 import { RoomTileState } from '../mapping';
+import { Room } from '../Room';
 
 export class RoomModel
 {
@@ -15,14 +17,24 @@ export class RoomModel
     private _tileStates: RoomTileState[][];
     private _tileHeights: number[][];
 
+    private _didGenerate: boolean;
+
     constructor(entity: RoomModelEntity)
     {
         if(!(entity instanceof RoomModelEntity)) throw new Error('invalid_entity');
 
         this._entity        = entity;
         this._model         = this._entity.model.replace(/\r\n|\r|\n/g, '\r') || null;
-        this._doorPosition  = null;
 
+        if(this._model.endsWith('\r')) this._model = this._model.slice(0, -1);
+        
+        this._doorPosition  = new Position(this._entity.doorX, this._entity.doorY, 0, parseInt(<any> this._entity.doorDirection), parseInt(<any> this._entity.doorDirection));
+
+        this.resetModel();
+    }
+
+    public resetModel(generate: boolean = true): void
+    {
         this._totalX        = 0;
         this._totalY        = 0;
         this._totalSize     = 0;
@@ -30,22 +42,32 @@ export class RoomModel
         this._tileStates    = [];
         this._tileHeights   = [];
 
-        this.buildMap();
+        this._didGenerate   = false;
+
+        if(generate) this.generateModel();
     }
 
-    private buildMap(): void
+    private generateModel(): void
     {
-        const parts     = this._entity.model.split(/\r?\n/);
+        const parts     = this._model.split('\r');
         const totalX    = parts[0].length;
         const totalY    = parts.length;
 
+        if(!parts|| !totalX || !totalY) return this.resetModel(false);
+
         for(let y = 0; y < totalY; y++)
         {
-            if(parts[y].length === 0 || parts[y] === '\r') break;
+            const currentY = parts[y];
+
+            if(!currentY || currentY === '\r') continue;
+
+            const currentYLength = currentY.length;
+
+            if(!currentYLength) continue;
 
             for(let x = 0; x < totalX; x++)
             {
-                if(parts[y].length !== totalX) break;
+                if(currentYLength !== totalX) return this.resetModel(false);
 
                 const square = parts[y].substring(x, x + 1).trim().toLowerCase();
 
@@ -84,6 +106,8 @@ export class RoomModel
             }
         }
 
+        if(this._totalSize !== (totalX * totalY)) return this.resetModel(false);
+
         this._totalX    = totalX;
         this._totalY    = totalY;
 
@@ -91,28 +115,50 @@ export class RoomModel
 
         if(doorTileHeight !== null)
         {
-            this._doorPosition = new Position(this._entity.doorX, this._entity.doorY, doorTileHeight, parseInt(<any> this._entity.doorDirection), parseInt(<any> this._entity.doorDirection));
+            this._doorPosition.z = doorTileHeight;
 
             this._tileStates[this._entity.doorX][this._entity.doorY] = RoomTileState.OPEN;
         }
+
+        this._didGenerate = true;
+    }
+
+    public validateModel(room: Room): boolean
+    {
+        if(!room) return false;
+
+        const items = room.itemManager.getItemsByType(BaseItemType.FLOOR);
+
+        if(!items) return true;
+
+        const totalItems = items.length;
+
+        if(!totalItems) return true;
+
+        for(let i = 0; i < totalItems; i++)
+        {
+            const item = items[i];
+
+            if(!item) continue;
+
+            const tileState = this.getTileState(item.position.x, item.position.y);
+
+            if(!tileState || tileState === RoomTileState.CLOSED) return false;
+        }
+
+        return true;
     }
 
     public getTileState(x: number, y: number): RoomTileState
     {
-        if(this._tileStates[x] !== undefined && this._tileStates[x][y] !== undefined)
-        {
-            return this._tileStates[x][y];
-        }
+        if(this._tileStates[x] !== undefined && this._tileStates[x][y] !== undefined) return this._tileStates[x][y];
 
         return null;
     }
 
     public getTileHeight(x: number, y: number): number
     {
-        if(this._tileHeights[x] !== undefined && this._tileHeights[x][y] !== undefined)
-        {
-            return this._tileHeights[x][y];
-        }
+        if(this._tileHeights[x] !== undefined && this._tileHeights[x][y] !== undefined) return this._tileHeights[x][y];
 
         return null;
     }
@@ -147,6 +193,11 @@ export class RoomModel
         return this._model;
     }
 
+    public get isCustom(): boolean
+    {
+        return this._entity.custom === '1';
+    }
+
     public get rawModel(): string
     {
         return this._entity.model;
@@ -170,5 +221,10 @@ export class RoomModel
     public get doorPosition(): Position
     {
         return this._doorPosition;
+    }
+
+    public get didGenerate(): boolean
+    {
+        return this._didGenerate;
     }
 }

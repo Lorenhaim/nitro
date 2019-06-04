@@ -1,7 +1,9 @@
+import { getManager } from 'typeorm';
 import { TimeHelper } from '../../common';
 import { RoomEntity } from '../../database';
 import { Emulator } from '../../Emulator';
 import { RoomBanType, RoomChatMode, RoomChatProtection, RoomChatSpeed, RoomChatWeight, RoomKickType, RoomSettings, RoomState, RoomThickness, RoomTradeType } from './interfaces';
+import { RoomModel } from './models';
 import { Room } from './Room';
 
 export class RoomDetails
@@ -20,6 +22,13 @@ export class RoomDetails
     public save(): void
     {
         Emulator.gameScheduler.saveRoom(this._room);
+    }
+
+    public async saveNow(): Promise<void>
+    {
+        Emulator.gameScheduler.removeRoom(this._room);
+
+        await getManager().save(this._entity);
     }
 
     public setUsersNow(count: number): void
@@ -50,6 +59,17 @@ export class RoomDetails
         this._entity.paintLandscape = color;
 
         this.save();
+    }
+
+    public setModel(model: RoomModel): void
+    {
+        if(!model) return null;
+
+        this._entity.modelId = model.id;
+
+        this._room.loadMapping();
+
+        this._room.map.generateMap();
     }
 
     public updateSettings(settings: RoomSettings): void
@@ -114,6 +134,11 @@ export class RoomDetails
     public get ownerName(): string
     {
         return this._entity.ownerName;
+    }
+
+    public get groupId(): number
+    {
+        return this._entity.group ? this._entity.group.id : 0;
     }
 
     public get name(): string
@@ -196,6 +221,11 @@ export class RoomDetails
         return parseInt(<any> this._entity.thicknessFloor);
     }
 
+    public get allowEditing(): boolean
+    {
+        return this._entity.allowEditing === '1';
+    }
+
     public get allowPets(): boolean
     {
         return this._entity.allowPets === '1';
@@ -254,6 +284,11 @@ export class RoomDetails
     public get lastActive(): Date
     {
         return this._entity.lastActive;
+    }
+
+    public get totalLikes(): number
+    {
+        return this._entity.totalLikes || 0;
     }
 
     public get timestampCreated(): Date

@@ -18,16 +18,8 @@ export class RoomSettingsChatComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this._room.parseChatSettings(this.packet);
+        this._room.parseChatSettings(this.packet);
 
-            return this.packet.prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.prepare();
     }
 }

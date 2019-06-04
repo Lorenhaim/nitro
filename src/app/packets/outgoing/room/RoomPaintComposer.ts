@@ -20,40 +20,33 @@ export class RoomPaintComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        if(this._type === RoomPaintType.FLOOR)
         {
+            const paintFloor = this._room.details.paintFloor;
+
+            if(!paintFloor) return this.cancel();
             
-            if(this._type === RoomPaintType.FLOOR)
-            {
-                const paintFloor = this._room.details.paintFloor;
-
-                if(!paintFloor) return this.cancel();
-                
-                return this.packet.writeString(RoomPaintType.FLOOR, this._room.details.paintFloor.toString()).prepare();
-            }
-
-            else if(this._type === RoomPaintType.WALLPAPER)
-            {
-                const paintWall = this._room.details.paintWall;
-
-                if(!paintWall) return this.cancel();
-                
-                return this.packet.writeString(RoomPaintType.WALLPAPER, this._room.details.paintWall.toString()).prepare();
-            }
-
-            else if(this._type === RoomPaintType.LANDSCAPE)
-            {
-                const paintLandscape = this._room.details.paintLandscape;
-
-                if(!paintLandscape) return this.cancel();
-                
-                return this.packet.writeString(RoomPaintType.LANDSCAPE, this._room.details.paintLandscape.toString()).prepare();
-            }
+            return this.packet.writeString(RoomPaintType.FLOOR, this._room.details.paintFloor.toString()).prepare();
         }
 
-        catch(err)
+        else if(this._type === RoomPaintType.WALLPAPER)
         {
-            this.error(err);
+            const paintWall = this._room.details.paintWall;
+
+            if(!paintWall) return this.cancel();
+            
+            return this.packet.writeString(RoomPaintType.WALLPAPER, this._room.details.paintWall.toString()).prepare();
         }
+
+        else if(this._type === RoomPaintType.LANDSCAPE)
+        {
+            const paintLandscape = this._room.details.paintLandscape;
+
+            if(!paintLandscape) return this.cancel();
+            
+            return this.packet.writeString(RoomPaintType.LANDSCAPE, this._room.details.paintLandscape.toString()).prepare();
+        }
+
+        else return this.cancel();
     }
 }

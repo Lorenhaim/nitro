@@ -18,14 +18,6 @@ export class UserRespectComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._user.id, this._user.details.respectsReceived).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._user.id, this._user.details.respectsReceived).prepare();
     }
 }

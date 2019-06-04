@@ -11,18 +11,10 @@ export class CameraPriceComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet
-                .writeInt(0)
-                .writeInt(0)
-                .writeInt(0)
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeInt(0)
+            .writeInt(0)
+            .writeInt(0)
+            .prepare();
     }
 }

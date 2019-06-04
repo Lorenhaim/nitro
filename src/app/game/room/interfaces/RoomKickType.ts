@@ -1,4 +1,4 @@
-export const enum RoomKickType
+export enum RoomKickType
 {
     NONE    = 0,
     RIGHTS  = 1,

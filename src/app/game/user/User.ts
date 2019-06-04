@@ -49,12 +49,12 @@ export class User extends Manager
         
         this._details.updateOnline(false);
 
-        await this._details.saveNow(true);
-
         await this._inventory.dispose();
         await this._messenger.dispose();
         await this._unit.dispose();
         await this._connections.dispose();
+
+        await this._details.saveNow();
     }
 
     public loadRank(): void
@@ -103,6 +103,11 @@ export class User extends Manager
     public get unit(): Unit
     {
         return this._unit;
+    }
+
+    public set unit(unit: Unit)
+    {
+        this._unit = unit;
     }
 
     public get rank(): Rank

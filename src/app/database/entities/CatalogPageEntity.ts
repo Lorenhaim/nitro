@@ -41,6 +41,9 @@ export class CatalogPageEntity
     @Column({ name: 'text_teaser', nullable: true })
     public textTeaser: string;
 
+    @Column({ name: 'min_rank', nullable: true })
+    public minRank: number;
+
     @Column({ name: 'is_visible', type: 'enum', enum: ['0', '1'], default: '1' })
     public isVisible: '0' | '1';
 

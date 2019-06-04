@@ -12,13 +12,24 @@ export class Permission
         this._entity = entity;
     }
 
+    public hasAllPermissions(): boolean
+    {
+        if(this._entity.allPermissions === '1') return true;
+
+        return false;
+    }
+
     public hasPermission(permission: PermissionList | string): boolean
     {
-        if(!permission) return true;
+        if(!permission) return false;
         
         permission = this._entity[permission.toString()];
 
-        return permission !== undefined && permission === '1';
+        if(permission === undefined || !permission) return false;
+
+        if(this.hasAllPermissions()) return true;
+
+        return permission === '1';
     }
 
     public get id(): number

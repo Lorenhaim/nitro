@@ -15,14 +15,6 @@ export class UserHomeRoomComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this.client.user.details.homeRoom, this._update ? this.client.user.details.homeRoom : 0).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this.client.user.details.homeRoom, this._update ? this.client.user.details.homeRoom : 0).prepare();
     }
 }

@@ -13,19 +13,9 @@ export class UnitActionEvent extends Incoming
             {
                 const action: UnitAction = this.packet.readInt();
 
-                if(action === UnitAction.IDLE)
-                {
-                    this.client.user.unit.idle(true);
+                if(action === UnitAction.IDLE) return this.client.user.unit.idle(true);
 
-                    return;
-                }
-
-                if(this.client.user.unit.canLocate)
-                {
-                    if(action === UnitAction.BLOW_KISS || action === UnitAction.LAUGH && !this.client.user.details.clubActive) return;
-
-                    this.client.user.unit.location.action(action);
-                }
+                if(this.client.user.unit.canLocate) return this.client.user.unit.location.action(action);
             }
         }
 

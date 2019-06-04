@@ -18,19 +18,10 @@ export class ItemFloorUpdateComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this._item.parseFloorData(this.packet);
-            this.packet.writeInt(0);
-            this._item.parseExtraData(this.packet);
-            this.packet.writeInt(-1, 0, this._item.userId);
+        this._item.parseItem(this.packet, 0);
+        
+        //this.packet.writeInt(-1, 0, this._item.userId);
 
-            return this.packet.prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.prepare();
     }
 }

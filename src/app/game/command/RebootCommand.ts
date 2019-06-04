@@ -17,4 +17,9 @@ export class RebootCommand extends Command
             await Emulator.reboot();
         }
     }
+
+    public get description(): string
+    {
+        return 'Reboots the Emulator';
+    }
 }

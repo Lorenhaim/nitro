@@ -1,5 +1,5 @@
-import { UnitActionComposer, UnitDanceComposer, UnitEffectComposer, UnitHandItemComposer, UnitStatusComposer } from '../../packets';
-import { Item } from '../item/Item';
+import { UnitActionComposer, UnitDanceComposer, UnitEffectComposer, UnitHandItemComposer } from '../../packets';
+import { Item } from '../item';
 import { Direction, PathFinder, Position } from '../pathfinder';
 import { RoomTile } from '../room';
 import { UnitStatus, UnitStatusType } from './status';
@@ -33,8 +33,7 @@ export class UnitLocation
     private _handType: UnitHandItem;
     private _effectType: UnitEffect;
 
-    private _clickGoal: { position: Position, item: Item};
-    private _goalLook: Position;
+    private _goalAction: Function;
 
     constructor(unit: Unit)
     {
@@ -63,93 +62,49 @@ export class UnitLocation
         this._handType          = null;
         this._effectType        = null;
 
-        this._clickGoal         = null;
-        this._goalLook          = null;
+        this._goalAction        = null;
     }
 
-    public walkTo(position: Position, selfWalk: boolean = false, goalLook: Position = null, inform: boolean = true): void
+    public walkTo(position: Position, selfWalk: boolean = false, inform: boolean = true, path: Position[] = null, direct: boolean = false): void
     {
-        if(this._unit && this._unit.room && position)
-        {
-            if(this._unit.location.position.compare(position)) return;
+        if(!this._unit || !this._unit.room || !this._position) return;
 
-            this._unit.timer.resetIdleTimer();
+        if(this._position.compare(position)) return;
+        
+        if(this._unit.type === UnitType.USER) this._unit.timer.resetIdleTimer();
 
-            if(this._unit.canLocate || !this._unit.canLocate && !selfWalk)
-            {
-                position = position.copy();
+        if(!this._unit.canLocate && selfWalk) return;
+        
+        position = position.copy();
                 
-                if(this._positionNext)
-                {
-                    this._position.x    = this._positionNext.x;
-                    this._position.y    = this._positionNext.y;
+        this.processNextPosition();
 
-                    this.updateHeight(this._position);
+        const goalTile = this._unit.room.map.getValidTile(this._unit, position);
 
-                    const currentItem = this.getCurrentItem();
+        if(!goalTile) return this.stopWalking();
+        
+        const goalItem = goalTile.highestItem;
 
-                    if(currentItem)
-                    {
-                        const interaction: any = currentItem.baseItem.interaction;
-
-                        if(interaction)
-                        {
-                            if(interaction.onStep) interaction.onStep(this._unit, currentItem);
-                        }
-                    }
-                }
-
-                const goalTile = this._unit.room.map.getValidTile(this._unit, position);
-
-                if(goalTile)
-                {
-                    const goalItem = goalTile.highestItem;
-
-                    if(goalItem)
-                    {
-                        if(goalItem.baseItem.canLay)
-                        {
-                            const closestPillow = this._unit.room.map.getClosestValidPillow(this._unit, position);
-
-                            if(closestPillow)
-                            {
-                                if(!closestPillow.compare(position)) return this.walkTo(closestPillow);
-                            }
-                        }
-                    }
-
-                    const positions = PathFinder.makePath(this._unit, position);
-
-                    if(positions.length)
-                    {
-                        if(goalLook) this._goalLook = goalLook.copy();
-
-                        // if(goalDirection === null) position.setDirection(-1);
-                        // else position.setDirection(goalDirection);
-                        
-                        this._positionGoal  = position;
-                        this._currentPath   = positions;
-                        this._isWalking     = true;
-                        this._isWalkingSelf = selfWalk;
-
-                        if(this._unit.connectedUnit && inform)
-                        {
-                            this._unit.connectedUnit.location.walkTo(position, false, null, false);
-                        }
-
-                        return;
-                    }
-                }
-                else
-                {
-                    this.stopWalking();
-                }
-            }
-            else
+        if(goalItem)
+        {
+            if(goalItem.baseItem.canLay)
             {
-                this.stopWalking();
+                const closestPillow = this._unit.room.map.getClosestValidPillow(this._unit, position);
+
+                if(closestPillow) if(!closestPillow.compare(position)) return this.walkTo(closestPillow);
             }
         }
+
+        const positions = path ? path : direct ? [ position ] : PathFinder.makePath(this._unit, position);
+
+        if(!positions.length) return this.stopWalking();
+        
+        this._positionGoal  = position;
+        this._currentPath   = positions;
+        this._isWalking     = true;
+        this._isWalkingSelf = selfWalk;
+
+        if(this._unit.connectedUnit && inform) this._unit.connectedUnit.location.walkTo(position, selfWalk, false, positions.slice(0));
     }
 
     public walkToUnit(unit: Unit, selfWalk: boolean = false): void
@@ -174,7 +129,7 @@ export class UnitLocation
 
             if(!this._unit.room.map.getValidTile(this._unit, position)) continue;
 
-            return this.walkTo(position, selfWalk, currentPosition);
+            return this.walkTo(position, selfWalk);
         }
     }
 
@@ -184,6 +139,8 @@ export class UnitLocation
 
         if(flag)
         {
+            if(this._unit.connectedUnit) return;
+
             if(this.hasStatus(UnitStatusType.SIT)) return;
             
             if(this._isWalking) this.stopWalking();
@@ -206,6 +163,8 @@ export class UnitLocation
 
         if(flag)
         {
+            if(this._unit.connectedUnit) return;
+
             if(this.hasStatus(UnitStatusType.LAY)) return;
             
             if(this._isWalking) this.stopWalking();
@@ -239,9 +198,16 @@ export class UnitLocation
 
         if(!this._danceType && !dance) return;
 
+        if(this._unit.connectedUnit) return;
+
         if(this.hasStatus(UnitStatusType.SIT, UnitStatusType.LAY)) return;
 
         if(this._danceType === dance) return;
+
+        if(this._unit.type === UnitType.USER)
+        {
+            if(this._danceType > UnitDance.NORMAL && !this._unit.user.details.clubActive) return;
+        }
 
         this._danceType = dance;
 
@@ -252,10 +218,12 @@ export class UnitLocation
     {
         if(!this._unit || !this._unit.room) return;
 
+        if(this._unit.connectedUnit && effect !== UnitEffect.HORSE_SADDLE) return;
+
         if(!this._effectType && !effect) return;
 
         if(this._effectType === effect) return;
-
+        
         this._effectType = effect;
 
         this._unit.room.unitManager.processOutgoing(new UnitEffectComposer(this._unit));
@@ -277,7 +245,7 @@ export class UnitLocation
 
     public roam(): void
     {
-        if(!this._unit.room) return;
+        if(!this._unit.room || !this._unit.room.map) return;
 
         const randomTile = this._unit.room.map.getValidRandomTile(this._unit);
 
@@ -289,6 +257,14 @@ export class UnitLocation
     public action(action: UnitAction): void
     {
         if(!this._unit || !this._unit.room) return;
+
+        if(this._unit.type === UnitType.USER)
+        {
+            if(action === UnitAction.BLOW_KISS || action === UnitAction.LAUGH)
+            {
+                if(!this._unit.user.details.clubActive) return;
+            }
+        }
 
         this._unit.room.unitManager.processOutgoing(new UnitActionComposer(this._unit, action));
     }
@@ -407,33 +383,9 @@ export class UnitLocation
         return currentTile && currentTile.highestItem || null;
     }
 
-    public setClickGoal(position: Position, item: Item): void
-    {
-        if(position && item)
-        {
-            this._clickGoal = { position, item };
-        }
-        else
-        {
-            this._clickGoal = null;
-        }
-    }
-
     public invokeCurrentItem(): void
     {
-        const currentTile = this.getCurrentTile();
-
-        if(currentTile)
-        {
-            const height = currentTile.walkingHeight;
-
-            if(height !== this._position.z)
-            {
-                this._position.z = height;
-
-                this._unit.needsUpdate = true;
-            }
-        }
+        this.updateHeight(this._position);
 
         const currentItem = this.getCurrentItem();
 
@@ -447,49 +399,51 @@ export class UnitLocation
         {
             const interaction: any = currentItem.baseItem.interaction;
 
-            if(interaction) if(interaction.onStop && this._unit.type !== UnitType.PET) interaction.onStop(this._unit, currentItem);
+            if(interaction) if(interaction.onStop) interaction.onStop(this._unit, currentItem);
         }
 
         this.updateHeight(this._position);
+        
         this._unit.needsInvoke = false;
-    }
-
-    public fastInvoke(): void
-    {
-        if(this._unit.room)
-        {
-            setTimeout(() =>
-            {
-                this.invokeCurrentItem();
-
-                if(this._unit.needsUpdate)
-                {
-                    this._unit.needsUpdate = false;
-                    
-                    this._unit.room.unitManager.processOutgoing(new UnitStatusComposer(this._unit));
-                }
-            }, 250);
-        }
     }
 
     public updateHeight(position: Position): void
     {
-        if(this._unit && this._unit.room)
-        {
-            const tile = this._unit.room.map.getTile(position);
+        if(!this._unit || !this._unit.room) return;
+        
+        const tile = this._unit.room.map.getTile(position);
 
-            if(tile)
-            {
-                const height      = tile.walkingHeight;
-                const oldHeight   = this._position.z;
+        if(!tile) return;
+        
+        const height      = tile.walkingHeight;
+        const oldHeight   = this._position.z;
 
-                if(height !== oldHeight)
-                {
-                    this._position.z        = height;
-                    this._unit.needsUpdate  = true;
-                }
-            }
-        }
+        if(height === oldHeight) return;
+        
+        this._position.z        = height;
+        this._unit.needsUpdate  = true;
+    }
+
+    public processNextPosition(): void
+    {
+        if(!this._positionNext) return;
+        
+        this._position.x    = this._positionNext.x;
+        this._position.y    = this._positionNext.y;
+
+        this.updateHeight(this._position);
+
+        const currentItem = this.getCurrentItem();
+
+        if(!currentItem) return;
+        
+        const interaction: any = currentItem.baseItem.interaction;
+
+        if(!interaction) return;
+        
+        if(interaction.onStep) interaction.onStep(this._unit, currentItem);
+
+        this._unit.needsUpdate = true;
     }
 
     public clearPath(): void
@@ -497,39 +451,72 @@ export class UnitLocation
         this._currentPath   = [];
     }
 
+    private clearWalking(): void
+    {
+        this.clearPath();
+
+        this.processNextPosition();
+
+        this.doGoalAction();
+
+        this._isWalking     = false;
+        this._isWalkingSelf = true;
+        this._positionNext  = null;
+        this._positionGoal  = null;
+
+        this._unit.needsUpdate = true;
+
+        this.removeStatus(UnitStatusType.MOVE);
+    }
+
     public stopWalking(): void
     {
-        if(this._isWalking)
-        {
-            this.clearPath();
+        this.clearWalking();
 
-            if(this._positionGoal)
+        if(this._unit.type === UnitType.USER)
+        {
+            if(this._unit.connectedUnit)
             {
-                if(this._goalLook)
+                if(this._position.direction !== this._unit.connectedUnit.location.position.direction)
                 {
-                    this.lookAtPosition(this._goalLook);
-                    
-                    this._goalLook = null;
+                    this._position.setDirection(this._unit.connectedUnit.location.position.direction);
+
+                    this._unit.needsUpdate = true;
                 }
 
-                // if(this._positionGoal.direction !== -1)
-                // {
-                //     this._position.setDirection(this._positionGoal.direction);
-                // }
+                this._unit.connectedUnit.location.clearWalking();
+
+                this._unit.connectedUnit.location.position.x = this._position.x + 0;
+                this._unit.connectedUnit.location.position.y = this._position.y + 0;
+
+                this._unit.connectedUnit.location.updateHeight(this._unit.connectedUnit.location.position);
+
+                this._unit.connectedUnit.needsUpdate = true;
             }
-
-            this._positionGoal  = null;
-            this._positionNext  = null;
-            this._clickGoal     = null;
-            this._isWalking     = false;
-            this._isWalkingSelf = true;
-
-            this.removeStatus(UnitStatusType.MOVE);
-
-            this._unit.needsUpdate = true;
-
-            this.invokeCurrentItem();
         }
+        
+        this.invokeCurrentItem();
+    }
+
+    public setGoalAction(f: Function): void
+    {
+        if(!f)
+        {
+            this._goalAction = null;
+
+            return;
+        }
+
+        this._goalAction = f;
+    }
+
+    public doGoalAction(): void
+    {
+        if(!this._goalAction) return;
+
+        this._goalAction();
+
+        this.setGoalAction(null);
     }
 
     public lookAtPosition(position: Position, headOnly: boolean = false, selfActivated: boolean = false): void
@@ -561,7 +548,7 @@ export class UnitLocation
                     else this._position.setDirection(this._position.calculateHumanDirection(position));
                 }
 
-                this._unit.needsUpdate = true;
+                this._unit.updateNow();
             }
         }
     }
@@ -654,11 +641,6 @@ export class UnitLocation
     public set additionalHeight(height: number)
     {
         this._additionalHeight = height;
-    }
-
-    public get clickGoal(): { position: Position, item: Item }
-    {
-        return this._clickGoal;
     }
 
     public get danceType(): UnitDance

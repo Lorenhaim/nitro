@@ -13,8 +13,9 @@ export class PetRideEvent extends Incoming
             const pet = currentRoom.petManager.getPet(this.packet.readInt());
 
             if(!pet) return;
-            
-            pet.ridePet(this.client.user.unit);
+
+            if(this.client.user.unit.connectedUnit && this.client.user.unit.connectedUnit === pet.unit) return pet.stopRiding();
+            else pet.ridePet(this.client.user.unit);
         }
 
         catch(err)

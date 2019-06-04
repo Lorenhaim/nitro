@@ -20,21 +20,8 @@ export class ItemFloorAddComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this._item.parseFloorData(this.packet);
-            this.packet.writeInt(1)
-            this._item.parseExtraData(this.packet);
-            this.packet
-                .writeInt(-1, this._item.baseItem.canToggle ? 1 : 0, this._item.userId)
-                .writeString(this._username);
+        this._item.parseItem(this.packet, 1);
 
-            return this.packet.prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeString(this._username).prepare();
     }
 }

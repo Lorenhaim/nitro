@@ -1,4 +1,4 @@
-export * from './currency';
+export * from './access';
 export * from './inventory';
 export * from './messenger';
 export * from './UserAchievementScoreComposer';
@@ -11,9 +11,6 @@ export * from './UserFowardRoomComposer';
 export * from './UserHomeRoomComposer';
 export * from './UserIgnoredComposer';
 export * from './UserInfoComposer';
-export * from './UserPerksComposer';
-export * from './UserPermissionsComposer';
 export * from './UserProfileComposer';
 export * from './UserRespectComposer';
-export * from './UserRightsComposer';
 export * from './UserSettingsComposer';

@@ -11,80 +11,65 @@ export class UnitStatusComposer extends Outgoing
     {
         super(OutgoingHeader.UNIT_STATUS);
 
-        let someUnits: Unit[]   = [];
-        this._units             = someUnits.concat(units);
+        this._units = [ ...units ];
     }
 
     public compose(): OutgoingPacket
     {
-        try
+        const totalUnits = this._units.length;
+
+        if(!totalUnits) return this.packet.writeInt(0).prepare();
+        
+        this.packet.writeInt(totalUnits);
+
+        for(let i = 0; i < totalUnits; i++)
         {
-            if(this._units !== null)
+            const unit = this._units[i];
+
+            if(!unit) continue;
+            
+            this.packet
+                .writeInt(unit.id)
+                .writeInt(unit.location.position.x)
+                .writeInt(unit.location.position.y)
+                .writeString((unit.location.position.z + unit.location.additionalHeight).toFixed(2))
+                .writeInt(unit.location.position.headDirection)
+                .writeInt(unit.location.position.direction);
+                    
+            let actions = '/';
+
+            const statuses = unit.location.statuses;
+
+            if(statuses !== null)
             {
-                const totalUnits = this._units.length;
+                const totalStatuses = statuses.length;
 
-                if(totalUnits > 0)
+                if(totalStatuses > 0)
                 {
-                    this.packet.writeInt(totalUnits);
-
-                    for(let i = 0; i < totalUnits; i++)
+                    for(let i = 0; i < totalStatuses; i++)
                     {
-                        const unit = this._units[i];
+                        const status = statuses[i];
 
-                        if(!unit) continue;
-                        
-                        this.packet
-                            .writeInt(unit.id)
-                            .writeInt(unit.location.position.x)
-                            .writeInt(unit.location.position.y)
-                            .writeString((unit.location.position.z + unit.location.additionalHeight).toFixed(2))
-                            .writeInt(unit.location.position.headDirection)
-                            .writeInt(unit.location.position.direction);
-                                
-                        let actions = '/';
-
-                        const statuses = unit.location.statuses;
-
-                        if(statuses !== null)
+                        if(status !== undefined)
                         {
-                            const totalStatuses = statuses.length;
-
-                            if(totalStatuses > 0)
+                            if(status.key !== null)
                             {
-                                for(let i = 0; i < totalStatuses; i++)
-                                {
-                                    const status = statuses[i];
+                                actions += `${ status.key }`
 
-                                    if(status !== undefined)
-                                    {
-                                        if(status.key !== null)
-                                        {
-                                            actions += `${ status.key }`
-
-                                            if(status.value) actions += ` ${ status.value }`;
-                                        }
-
-                                        actions += '/';
-
-                                        if(status.key === UnitStatusType.SIGN) unit.location.statuses.splice(i, 1);
-                                    }
-                                }
+                                if(status.value) actions += ` ${ status.value }`;
                             }
-                        }
-                            
-                        this.packet.writeString(actions);
-                    }
 
-                    return this.packet.prepare();
+                            actions += '/';
+
+                            if(status.key === UnitStatusType.SIGN) unit.location.statuses.splice(i, 1);
+                        }
+                    }
                 }
             }
-
-            return this.cancel();
+                
+            this.packet.writeString(actions);
         }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        
+        return this.packet.prepare();
     }
 }

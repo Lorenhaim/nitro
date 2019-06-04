@@ -35,9 +35,14 @@ export class UserDao
     {
         if(!id) return null;
 
-        const result = await getManager().findOne(UserEntity, id, {
-            relations: ['info', 'statistics']
-        });
+        const result = await getManager()
+            .createQueryBuilder(UserEntity, 'user')
+            .select(['user', 'info', 'statistics'])
+            .where('user.id = :id', { id })
+            .innerJoin('user.info', 'info')
+            .innerJoin('user.statistics', 'statistics')
+            .loadRelationCountAndMap('user.totalFriends', 'user.messengerFriends')
+            .getOne();
 
         if(!result) return null;
 
@@ -48,10 +53,14 @@ export class UserDao
     {
         if(!username) return null;
 
-        const result = await getManager().findOne(UserEntity, {
-            where: { username },
-            relations: ['info', 'statistics']
-        });
+        const result = await getManager()
+            .createQueryBuilder(UserEntity, 'user')
+            .select(['user'])
+            .where('user.username = :username', { username })
+            .innerJoin('user.info', 'info')
+            .innerJoin('user.statistics', 'statistics')
+            .loadRelationCountAndMap('user.totalFriends', 'user.messengerFriends')
+            .getOne();
 
         if(!result) return null;
 

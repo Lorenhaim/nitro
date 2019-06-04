@@ -1,2 +1,2 @@
-export * from './ClothingComposer';
-export * from './ClothingOutfitsComposer';
+export * from './UserClothingComposer';
+export * from './UserOutfitsComposer';

@@ -1,8 +1,10 @@
+import { getManager } from 'typeorm';
 import { BotEntity } from '../../database';
 import { Emulator } from '../../Emulator';
-import { OutgoingPacket, UnitInfoComposer } from '../../packets';
+import { OutgoingPacket, UnitChangeNameComposer, UnitInfoComposer } from '../../packets';
 import { Room } from '../room';
-import { Unit, UnitDance, UnitType } from '../unit';
+import { PermissionList } from '../security';
+import { Unit, UnitDance, UnitGender, UnitType } from '../unit';
 import { User } from '../user';
 
 export class Bot
@@ -24,107 +26,147 @@ export class Bot
     {
         if(this._unit && this._unit.location.position)
         {
-            this._entity.x          = this._unit.location.position.x || 0;
-            this._entity.y          = this._unit.location.position.y || 0;
-            this._entity.z          = this._unit.location.position.z.toString() || '0.00';
-            this._entity.direction  = this._unit.location.position.direction || 0;
+            this._entity.x          = this._unit.location.position.x + 0;
+            this._entity.y          = this._unit.location.position.y + 0;
+            this._entity.z          = this._unit.location.position.z.toFixed();
+            this._entity.direction  = this._unit.location.position.direction;
         }
 
         Emulator.gameScheduler.saveBot(this);
     }
 
-    public savePosition(): void
+    public async saveNow(): Promise<void>
     {
+        Emulator.gameScheduler.removeBot(this);
+
         if(this._unit && this._unit.location.position)
         {
-            const position = this._unit.location.position.copy();
-
-            this._entity.x          = position.x || 0;
-            this._entity.y          = position.y || 0;
-            this._entity.z          = position.z.toString() || '0.00';
-            this._entity.direction  = position.direction || 0;
-
-            this.save();
+            this._entity.x          = this._unit.location.position.x + 0;
+            this._entity.y          = this._unit.location.position.y + 0;
+            this._entity.z          = this._unit.location.position.z.toFixed();
+            this._entity.direction  = this._unit.location.position.direction;
         }
+
+        await getManager().save(this._entity);
     }
 
-    public updateFigure(figure: string, gender: 'M' | 'F'): void
+    public isOwner(user: User): boolean
     {
+        if(!user) return false;
+
+        if(this._entity.userId === user.id) return true;
+
+        if(user.hasPermission(PermissionList.ANY_BOT_OWNER)) return true;
+
+        return false;
+    }
+
+    public updateName(user: User, name: string): void
+    {
+        if(!user || !name) return;
+
+        if(!this.isOwner(user)) return;
+
+        this._entity.name = name;
+
+        this.save();
+
+        if(this._unit.room) this._unit.room.unitManager.processOutgoing(new UnitChangeNameComposer(this._unit));
+    }
+
+    public updateFigure(user: User, figure: string, gender: UnitGender): void
+    {
+        if(!user || !figure || !gender) return;
+
+        if(!this.isOwner(user)) return;
+
         this._entity.figure = figure;
-        this._entity.gender = gender === 'M' ? 'M' : 'F';
+        this._entity.gender = gender === UnitGender.MALE ? UnitGender.MALE : UnitGender.FEMALE;
 
         this.save();
 
         if(this._unit.room) this._unit.room.unitManager.processOutgoing(new UnitInfoComposer(this._unit));
     }
 
-    public updateDance(dance: UnitDance): void
+    public updateMotto(user: User, motto: string): void
     {
-        this._entity.dance = dance;
+        if(!user || !motto) return;
+
+        if(!this.isOwner(user)) return;
+
+        this._entity.motto = motto;
 
         this.save();
 
-        if(this._unit.room) this._unit.location.dance(dance);
+        if(this._unit.room) this._unit.room.unitManager.processOutgoing(new UnitInfoComposer(this._unit));
     }
 
-    public updateRoaming(status: boolean): void
+    public toggleDance(user: User): void
     {
-        this._entity.freeRoam = status ? '1' : '0';
+        if(!user) return;
+
+        if(!this.isOwner(user)) return;
+        
+        this._entity.dance = this._entity.dance > UnitDance.NONE ? UnitDance.NONE : UnitDance.NORMAL;
 
         this.save();
 
-        if(status)
-        {
-            if(this._unit && this._unit.room)
-            {
-                this._unit.location.roam();
+        if(this._unit.room) this._unit.location.dance(this._entity.dance);
+    }
 
-                this._unit.timer.startRoamTimer();
-            }
+    public toggleRoaming(user: User): void
+    {
+        if(!user) return;
+
+        if(!this.isOwner(user)) return;
+        
+        if(!this._unit.room) return;
+
+        if(this._entity.freeRoam === '1')
+        {
+            this._entity.freeRoam = '0';
+
+            this._unit.timer.stopRoamTimer();
+
+            this._unit.location.stopWalking();
         }
         else
         {
-            if(this._unit && this._unit.room)
-            {
-                this._unit.timer.stopRoamTimer();
-            }
+            this._entity.freeRoam = '1';
+
+            this._unit.location.roam();
+
+            this._unit.timer.startRoamTimer();
         }
+
+        this.save();
     }
 
     public setUser(user: User): void
     {
         if(!user) return;
-        
-        if(this._entity.userId !== user.id)
-        {
-            this._entity.userId = user.id;
 
-            this.save();
-        }
+        if(this._entity.userId === user.id) return;
+        
+        this._entity.userId = user.id;
+
+        this.save();
     }
 
     public setRoom(room: Room): void
     {
         if(!room) return;
         
-        if(this._entity.roomId !== room.id)
-        {
-            this._entity.roomId = room.id;
+        if(this._entity.roomId === room.id) return;
+        
+        this._entity.roomId = room.id;
 
-            this.save();
-        }
+        this.save();
     }
 
     public clearRoom(): void
     {
         this._entity.roomId = null;
-
-        this.save();
-    }
-
-    public clearUser(): void
-    {
-        this._entity.userId = null;
 
         this.save();
     }
@@ -135,10 +177,7 @@ export class Bot
 
         return packet
             .writeInt(this._entity.id)
-            .writeString(this._entity.name)
-            .writeString(this._entity.motto)
-            .writeString(this._entity.gender.toLocaleLowerCase())
-            .writeString(this._entity.figure);
+            .writeString(this._entity.name, this._entity.motto, this._entity.gender.toLocaleLowerCase(), this._entity.figure);
     }
 
     public get id(): number
@@ -194,5 +233,10 @@ export class Bot
     public get unit(): Unit
     {
         return this._unit;
+    }
+
+    public set unit(unit: Unit)
+    {
+        this._unit = unit;
     }
 }

@@ -1,4 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { UnitGender } from '../../game';
 import { UserEntity } from './UserEntity';
 
 @Entity('user_outfits')
@@ -14,8 +15,8 @@ export class UserOutfitEntity
     @Column({ name: 'figure' })
     public figure: string;
 
-    @Column({ name: 'gender', type: 'enum', enum: ['M', 'F'], default: 'M' })
-    public gender: 'M' | 'F';
+    @Column({ name: 'gender', type: 'enum', enum: UnitGender, default: UnitGender.MALE })
+    public gender: UnitGender;
 
     @Column({ name: 'slot_number' })
     public slotNumber: number;

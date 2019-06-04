@@ -60,7 +60,7 @@ export class MessengerSearchComposer extends Outgoing
             .writeBoolean(false, false)
             .writeString(null)
             .writeInt(1)
-            .writeString(result.figure)
+            .writeString(result.online === '1' ? result.figure : null)
             .writeString(null);
     }
 }

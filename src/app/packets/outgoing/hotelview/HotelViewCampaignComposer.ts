@@ -11,17 +11,9 @@ export class HotelViewCampaignComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet
-                .writeString('') // data
-                .writeString('') // key
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeString('') // data
+            .writeString('') // key
+            .prepare();
     }
 }

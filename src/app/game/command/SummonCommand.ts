@@ -1,5 +1,4 @@
 import { Emulator } from '../../Emulator';
-import { GenericAlertComposer } from '../../packets';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { Command } from './Command';
@@ -13,30 +12,32 @@ export class SummonCommand extends Command
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        if(user && user.unit && parts)
+        if(!user || !user.unit || !parts) return;
+        
+        const currentRoom = user.unit.room;
+
+        if(!currentRoom) return;
+        
+        const username = parts[0];
+
+        if(!username || username === user.details.username) return;
+        
+        const onlineUser = Emulator.gameManager.userManager.getUserByUsername(username);
+
+        if(!onlineUser || !onlineUser.unit) return;
+
+        if(onlineUser.unit.room !== currentRoom)
         {
-            const currentRoom = user.unit.room;
-
-            if(currentRoom)
-            {
-                const username = parts[0];
-
-                if(username && username !== user.details.username)
-                {
-                    const onlineUser = Emulator.gameManager.userManager.getUserByUsername(username);
-
-                    if(onlineUser && onlineUser.unit)
-                    {
-                        if(onlineUser.unit.room && onlineUser.unit.room.id === currentRoom.id) return;
-
-                        await onlineUser.unit.fowardRoom(currentRoom.id);
-                    }
-                    else
-                    {
-                        user.connections.processOutgoing(new GenericAlertComposer('Invalid User'));
-                    }
-                }
-            }
+            await onlineUser.unit.fowardRoom(currentRoom.id);
         }
+
+        onlineUser.unit.location.walkToUnit(user.unit, false);
+
+        //onlineUser.unit.location.setGoalAction(onlineUser.unit.location.lookAtPosition, onlineUser.unit.location.position);
+    }
+
+    public get description(): string
+    {
+        return 'Brings a user to you';
     }
 }

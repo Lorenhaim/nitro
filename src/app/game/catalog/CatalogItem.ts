@@ -4,6 +4,7 @@ import { CatalogItemDao, CatalogItemEntity, ItemDao } from '../../database';
 import { Emulator } from '../../Emulator';
 import { CatalogPurchaseComposer, CatalogPurchaseFailedComposer, CatalogPurchaseUnavailableComposer, CatalogSoldOutComposer, OutgoingPacket } from '../../packets';
 import { BaseItem, BaseItemType, InteractionTeleport, Item } from '../item';
+import { PermissionList } from '../security';
 import { CurrencyType, User } from '../user';
 import { CatalogPage } from './CatalogPage';
 import { CatalogPurchaseFailed } from './CatalogPurchaseFailed';
@@ -93,62 +94,58 @@ export class CatalogItem
         this._availableNumbers = possibleNumbers.length > 1 ? shuffleArray(possibleNumbers) : possibleNumbers;
     }
 
-    public async purchaseItem(userId: number, amount: number = 1, extraData: string = null): Promise<void>
+    public async purchaseItem(user: User, amount: number = 1, extraData: string = null): Promise<void>
     {
-        if(!userId || !amount) return;
+        if(!user || !amount) return user.connections.processOutgoing(new CatalogPurchaseUnavailableComposer(CatalogPurchaseUnavailable.ILLEGAL));
 
-        const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
-
-        if(!user) return null;
-
-        if(!this._page.isVisible || !this.hasOffer && amount > 1) return user.connections.processOutgoing(new CatalogPurchaseUnavailableComposer(CatalogPurchaseUnavailable.ILLEGAL));
+        if(!this._page.isVisible && !user.hasPermission(PermissionList.CATALOG_VIEW_HIDDEN) || this._page.minRank && this._page.minRank > user.details.rankId || !this.hasOffer && amount > 1) return user.connections.processOutgoing(new CatalogPurchaseUnavailableComposer(CatalogPurchaseUnavailable.ILLEGAL));
 
         if(this.clubOnly && !user.details.clubActive) return user.connections.processOutgoing(new CatalogPurchaseUnavailableComposer(CatalogPurchaseUnavailable.HABBO_CLUB));
 
         if(this.isLimited && this.limitedRemaining === 0) return user.connections.processOutgoing(new CatalogSoldOutComposer());
 
-        let totalCostCredits    = 0;
-        let totalCostCurrency   = 0;
-
-        if(this.costCredits) totalCostCredits = this.costCredits * amount;
-
-        if(this.costCurrency) totalCostCurrency = this.costCurrency * amount;
+        let totalCostCredits    = this.costCredits || 0 * amount;
+        let totalCostCurrency   = this.costCurrency || 0 * amount;
 
         if(totalCostCredits)
         {
-            const currentCredits = user.inventory.currencies.getCurrency(CurrencyType.CREDITS);
+            const currentCredits = user.inventory.currency.getCurrency(CurrencyType.CREDITS);
 
             if(!currentCredits || currentCredits.amount < totalCostCredits) return user.connections.processOutgoing(new CatalogPurchaseFailedComposer(CatalogPurchaseFailed.ERROR));
+
+            if(!await user.inventory.currency.modifyCurrency(CurrencyType.CREDITS, -totalCostCredits)) return user.connections.processOutgoing(new CatalogPurchaseFailedComposer(CatalogPurchaseFailed.ERROR));
         }
 
         if(totalCostCurrency)
         {
-            const currentCurrency = user.inventory.currencies.getCurrency(this.costCurrencyType);
+            const currentCurrency = user.inventory.currency.getCurrency(this.costCurrencyType);
 
             if(!currentCurrency || currentCurrency.amount < totalCostCurrency) return user.connections.processOutgoing(new CatalogPurchaseFailedComposer(CatalogPurchaseFailed.ERROR));
+
+            if(!await user.inventory.currency.modifyCurrency(this.costCurrencyType, -totalCostCurrency))
+            {
+                if(totalCostCredits) await user.inventory.currency.modifyCurrency(CurrencyType.CREDITS, totalCostCredits);
+
+                return user.connections.processOutgoing(new CatalogPurchaseFailedComposer(CatalogPurchaseFailed.ERROR));
+            }
         }
 
-        if(totalCostCredits && await !user.inventory.currencies.modifyCurrency(CurrencyType.CREDITS, -totalCostCredits)) return user.connections.processOutgoing(new CatalogPurchaseFailedComposer(CatalogPurchaseFailed.ERROR));
-
-        if(totalCostCurrency && await !user.inventory.currencies.modifyCurrency(this.costCurrencyType, -totalCostCurrency)) return user.connections.processOutgoing(new CatalogPurchaseFailedComposer(CatalogPurchaseFailed.ERROR));
-
-        if(this.isLimited) return await this.purchaseLimitedItem(user);
-        //restore currency if failed
+        if(this.isLimited) return this.purchaseLimitedItem(user);
 
         const newItems: Item[] = [];
 
         const totalBaseItems = this._baseItems.length;
 
-        for(let i = 0; i < amount; i++)
+        if(!totalBaseItems) return;
+
+        for(let i = 0; i < totalBaseItems; i++)
         {
-            if(!totalBaseItems) return;
+            const baseItem = this._baseItems[i];
 
-            for(let j = 0; j < totalBaseItems; j++)
+            if(!baseItem) continue;
+
+            for(let j = 0; j < amount; j++)
             {
-                const baseItem = this._baseItems[j];
-
-                if(!baseItem) continue;
-
                 if(baseItem.hasInteraction(InteractionTeleport))
                 {
                     const teleportOne = await Emulator.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
@@ -162,11 +159,11 @@ export class CatalogItem
                 }
                 else
                 {
-                    const newItem = await Emulator.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
+                    const item = await Emulator.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
 
-                    if(!newItem) continue;
-                    
-                    newItems.push(newItem);
+                    if(!item) continue;
+
+                    newItems.push(item);
                 }
             }
         }
@@ -185,7 +182,7 @@ export class CatalogItem
 
         if(!this._entity.limitedStack) return;
 
-        if(this._entity.limitedSells >= this._entity.limitedStack) return user.connections.processOutgoing(new CatalogSoldOutComposer());;
+        if(this._entity.limitedSells >= this._entity.limitedStack) return user.connections.processOutgoing(new CatalogSoldOutComposer());
         
         const limitedNumber = this._availableNumbers[0];
 
@@ -227,81 +224,71 @@ export class CatalogItem
 
     public parseItem(packet: OutgoingPacket): OutgoingPacket
     {
-        if(packet)
+        if(!packet) return;
+
+        packet
+            .writeInt(this._entity.id)
+            .writeString(this._entity.productName)
+            .writeBoolean(false)
+            .writeInt(this._entity.costCredits, this._entity.costCurrency, this._entity.costCurrencyType)
+            .writeBoolean(false); // can gift
+
+        const totalBaseItems = this._baseItems.length;
+
+        if(totalBaseItems)
         {
-            const baseItem = Emulator.gameManager.itemManager.getBaseItem(this._entity.baseId);
+            packet.writeInt(totalBaseItems);
 
-            if(!baseItem) return packet;
-            
-            packet
-                .writeInt(this._entity.id)
-                .writeString(this._entity.productName)
-                .writeBoolean(false)
-                .writeInt(this._entity.costCredits, this._entity.costCurrency, this._entity.costCurrencyType)
-                .writeBoolean(false); // can gift
-
-            const totalBaseItems = this._baseItems.length;
-
-            if(totalBaseItems)
+            for(let i = 0; i < totalBaseItems; i++)
             {
-                packet.writeInt(totalBaseItems);
+                const baseItem = this._baseItems[i];
 
-                for(let i = 0; i < totalBaseItems; i++)
+                packet.writeString(baseItem.type.toLowerCase());
+
+                if(baseItem.type === BaseItemType.BADGE)
                 {
-                    const baseItem = this._baseItems[i];
+                    packet.writeString(this._entity.productName);
+                }
+                else
+                {
+                    packet.writeInt(baseItem.spriteId);
 
-                    packet.writeString(baseItem.type.toLowerCase());
-
-                    if(baseItem.type === BaseItemType.BADGE)
+                    if(baseItem.type === BaseItemType.ROBOT)
                     {
-                        packet.writeString(this._entity.productName);
+                        packet.writeString(this._entity.extraData);
                     }
-                    else
+
+                    else if(baseItem.productName === 'landscape' || baseItem.productName === 'wallpaper' || baseItem.productName === 'floor')
                     {
-                        packet.writeInt(baseItem.spriteId);
-
-                        if(baseItem.type === BaseItemType.ROBOT)
-                        {
-                            packet.writeString(this._entity.extraData);
-                        }
-
-                        else if(baseItem.productName === 'landscape' || baseItem.productName === 'wallpaper' || baseItem.productName === 'floor')
-                        {
-                            packet.writeString(this._entity.productName.split('_')[2]);
-                        }
-
-                        else if(baseItem.productName === 'poster')
-                        {
-                            packet.writeString(this._entity.extraData);
-                        }
-
-                        else if(baseItem.productName.startsWith('sound_set_'))
-                        {
-                            packet.writeString(this._entity.extraData);
-                        }
-
-                        else
-                        {
-                            packet.writeString(null);
-                        }
-
-                        packet.writeInt(1);
-                        packet.writeBoolean(this.isLimited);
-
-                        if(this.isLimited) packet.writeInt(this._entity.limitedStack, this.limitedRemaining);
+                        packet.writeString(this._entity.productName.split('_')[2]);
                     }
+
+                    else if(baseItem.productName === 'poster')
+                    {
+                        packet.writeString(this._entity.extraData);
+                    }
+
+                    else if(baseItem.productName.startsWith('sound_set_'))
+                    {
+                        packet.writeString(this._entity.extraData);
+                    }
+
+                    else packet.writeString(null);
+
+                    packet.writeInt(1);
+                    packet.writeBoolean(this.isLimited);
+
+                    if(this.isLimited) packet.writeInt(this._entity.limitedStack, this.limitedRemaining);
                 }
             }
-            else packet.writeInt(0);
-            
-            return packet
-                .writeInt(this._entity.clubOnly === '1' ? 1 : 0) // club only
-                .writeBoolean(this.hasOffer)
-                .writeBoolean(false)
-                .writeString(`${ baseItem.productName }.png`);
         }
-
-        return null;
+        else packet.writeInt(0);
+        
+        return packet
+            .writeInt(this._entity.clubOnly === '1' ? 1 : 0)
+            .writeBoolean(this.hasOffer)
+            .writeBoolean(false)
+            .writeString(`${ this._baseItems[0].productName }.png`);
     }
 
     public get id(): number

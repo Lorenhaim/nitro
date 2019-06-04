@@ -12,6 +12,9 @@ export class UserProfileEvent extends Incoming
 
             if(!user) return;
 
+            await user.inventory.badges.init();
+            await user.inventory.groups.init();
+
             this.client.processOutgoing(new UserProfileComposer(user));
         }
 

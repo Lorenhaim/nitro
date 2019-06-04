@@ -39,7 +39,9 @@ export class UserPets extends Manager
         {
             const pet = this._pets[i];
 
-            if(pet.id === id) return pet;
+            if(pet.id !== id) continue;
+            
+            return pet;
         }
 
         return null;

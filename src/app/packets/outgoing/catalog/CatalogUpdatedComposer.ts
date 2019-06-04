@@ -11,14 +11,6 @@ export class CatalogUpdatedComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeBoolean(false).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeBoolean(false).prepare();
     }
 }

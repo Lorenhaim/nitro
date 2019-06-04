@@ -60,13 +60,11 @@ export class UnitTeleportEvent extends RoomEvent
 
                     if(room)
                     {
-                        const roomAdd = Emulator.gameManager.roomManager.addRoom(room);
+                        await room.init();
 
-                        await roomAdd.init();
+                        foundTeleport = room.itemManager.getItem(pairTeleportId);
 
-                        foundTeleport = roomAdd.itemManager.getItem(pairTeleportId);
-
-                        roomAdd.tryDispose();
+                        room.tryDispose();
                     }
                 }
 

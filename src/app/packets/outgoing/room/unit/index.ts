@@ -1,4 +1,5 @@
 export * from './UnitActionComposer';
+export * from './UnitChangeNameComposer';
 export * from './UnitChatComposer';
 export * from './UnitChatShoutComposer';
 export * from './UnitChatWhisperComposer';
@@ -12,4 +13,3 @@ export * from './UnitRemoveComposer';
 export * from './UnitRollingComposer';
 export * from './UnitStatusComposer';
 export * from './UnitTypingComposer';
-

@@ -1,4 +1,4 @@
-export const enum RoomChatSpeed
+export enum RoomChatSpeed
 {
     FAST    = 0,
     NORMAL  = 1,

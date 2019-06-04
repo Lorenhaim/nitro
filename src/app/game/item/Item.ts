@@ -2,12 +2,12 @@ import { getManager } from 'typeorm';
 import { NumberHelper } from '../../common';
 import { ItemEntity } from '../../database';
 import { Emulator } from '../../Emulator';
-import { ItemExtraDataComposer, ItemStateComposer, OutgoingPacket } from '../../packets';
+import { ItemExtraDataComposer, ItemStateComposer, ItemWallUpdateComposer, OutgoingPacket } from '../../packets';
 import { AffectedPositions, Direction, Position } from '../pathfinder';
 import { Room, RoomTile, RoomTileState } from '../room';
 import { User } from '../user';
 import { BaseItem, BaseItemType } from './base';
-import { InteractionDice, InteractionGate, InteractionRoller, InteractionTeleport } from './interaction';
+import { InteractionGate, InteractionRoller, InteractionTeleport } from './interaction';
 import { ItemRolling } from './ItemRolling';
 
 export class Item
@@ -22,7 +22,6 @@ export class Item
     private _position: Position;
     private _rolling: ItemRolling;
 
-    private _didCancelState: boolean;
     private _willRemove: boolean;
 
     constructor(entity: ItemEntity)
@@ -39,7 +38,6 @@ export class Item
         this._position          = null;
         this._rolling           = null;
 
-        this._didCancelState    = false;
         this._willRemove        = false;
 
         if(entity.roomId) this._position = new Position(this._entity.x, this._entity.y, parseFloat(this._entity.z), parseInt(<any> this._entity.direction));
@@ -73,11 +71,22 @@ export class Item
         Emulator.gameScheduler.saveItem(this);
     }
 
-    public async delete(): Promise<void>
+    public async saveNow(): Promise<void>
     {
-        if(this._entity.roomId || this._entity.userId) return;
+        Emulator.gameScheduler.removeItem(this);
 
-        await getManager().delete(ItemEntity, this._entity);
+        if(this._baseItem.type === BaseItemType.FLOOR)
+        {
+            if(this._entity.roomId)
+            {
+                this._entity.x          = this._position.x || 0;
+                this._entity.y          = this._position.y || 0;
+                this._entity.z          = this._position.z.toString() || '0.00';
+                this._entity.direction  = this._position.direction || 0;
+            }
+        }
+
+        await getManager().save(this._entity);
     }
 
     public getTile(): RoomTile
@@ -154,7 +163,12 @@ export class Item
 
             //if(tile.tileHeight !== goalHeight) return false;
 
-            if(tile.units.length > 0 && !this._baseItem.canWalk) return false;
+            if(tile.units.length > 0)
+            {
+                if(this._baseItem.canLay) return false;
+                
+                if(!this._baseItem.canWalk) return false;
+            }
 
             const highestItem = tile.highestItem;
 
@@ -224,15 +238,27 @@ export class Item
 
     public setExtraData(extraData: string | number, send: boolean = true): void
     {
-        this._entity.extraData = extraData.toString();
+        this._entity.extraData = extraData === null ? null : extraData.toString();
 
         this.save();
 
         if(this._room && send)
         {
-            if(this.isLimited) this._room.unitManager.processOutgoing(new ItemExtraDataComposer(this));
-            else this._room.unitManager.processOutgoing(new ItemStateComposer(this));
+            if(this._baseItem.type === BaseItemType.WALL)
+            {
+                this._room.unitManager.processOutgoing(new ItemWallUpdateComposer(this));
+            }
+            else
+            {
+                if(this.isLimited) this._room.unitManager.processOutgoing(new ItemExtraDataComposer(this));
+                else this._room.unitManager.processOutgoing(new ItemStateComposer(this));
+            }
         }
+    }
+
+    private loadDimmerData(): void
+    {
+        
     }
 
     public setUser(user: User): void
@@ -274,6 +300,19 @@ export class Item
         this.save();
     }
 
+    public parseItem(packet: OutgoingPacket, type: 0 | 1 = 0): OutgoingPacket
+    {
+        if(!packet) return null;
+
+        if(this._baseItem.type === BaseItemType.FLOOR) this.parseFloorData(packet);
+
+        packet.writeInt(type);
+
+        this.parseExtraData(packet);
+
+        return packet.writeInt(-1, this._baseItem.canToggle ? 1 : 0, this._entity.userId);
+    }
+
     public parseFloorData(packet: OutgoingPacket): OutgoingPacket
     {
         if(!packet) return;
@@ -281,7 +320,7 @@ export class Item
         return packet
             .writeInt(this._entity.id)
             .writeInt(this._baseItem.spriteId)
-            .writeShort(0, this._position.x, 0, this._position.y)
+            .writeInt(this._position.x, this._position.y)
             .writeInt(this._position.direction)
             .writeString(this._position.z.toFixed(2))
             .writeString(this._baseItem.canWalk || this._baseItem.canSit ? this._baseItem.stackHeight.toFixed(2) : null);
@@ -475,7 +514,9 @@ export class Item
     {
         if(this._baseItem.hasInteraction(InteractionGate, InteractionTeleport))
         {
-            if(this._entity.extraData === '1') return true;
+            if(this._entity.extraData && this._entity.extraData !== '0') return true;
+
+            return false;
         }
 
         return this._baseItem.canWalk;
@@ -483,9 +524,11 @@ export class Item
 
     public get isItemClosed(): boolean
     {
-        if(this._baseItem.hasInteraction(InteractionGate, InteractionTeleport, InteractionDice))
+        if(this._baseItem.hasInteraction(InteractionGate, InteractionTeleport))
         {
             if(this._entity.extraData === '0') return true;
+
+            return false;
         }
 
         return !this._baseItem.canWalk;

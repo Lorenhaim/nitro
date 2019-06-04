@@ -14,7 +14,9 @@ export class CatalogPurchaseEvent extends Incoming
 
             const catalogItem = Emulator.gameManager.catalogManager.getItem(itemId);
 
-            if(catalogItem) await catalogItem.purchaseItem(this.client.user.id, amount, extraData);
+            if(!catalogItem) return;
+
+            await catalogItem.purchaseItem(this.client.user, amount, extraData);
         }
 
         catch(err)

@@ -1,3 +1,4 @@
+import { InteractionDice } from '../../../../game';
 import { Incoming } from '../../Incoming';
 
 export class ItemDiceCloseEvent extends Incoming
@@ -8,20 +9,19 @@ export class ItemDiceCloseEvent extends Incoming
         {
             const currentRoom = this.client.user.unit.room;
 
-            if(currentRoom)
-            {
-                const item = currentRoom.itemManager.getItem(this.packet.readInt());
+            if(!currentRoom) return;
 
-                if(item)
-                {
-                    const interaction: any = item.baseItem.interaction;
+            if(!this.client.user.unit.canLocate) return;
 
-                    if(interaction)
-                    {
-                        if(interaction.onClickAlternative) interaction.onClickAlternative(this.client.user.unit, item);
-                    }
-                }
-            }
+            const item = currentRoom.itemManager.getItem(this.packet.readInt());
+
+            if(!item) return;
+            
+            const interaction = <InteractionDice> item.baseItem.interaction;
+
+            if(!(interaction instanceof InteractionDice)) return;
+
+            interaction.onClickAlternative(this.client.user.unit, item);
         }
 
         catch(err)

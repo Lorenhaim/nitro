@@ -10,7 +10,7 @@ export class ModerationUserInfoComposer extends Outgoing
 
     constructor(user: User)
     {
-        super(OutgoingHeader.MOD_TOOL_USER_INFO);
+        super(OutgoingHeader.MODERATION_USER_INFO);
 
         if(!(user instanceof User)) throw new Error('invalid_user');
 
@@ -19,27 +19,19 @@ export class ModerationUserInfoComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet
-                .writeInt(this._user.id)
-                .writeString(this._user.details.username, this._user.details.figure)
-                .writeInt((TimeHelper.currentTimestamp - TimeHelper.to(this._user.details.timestampCreated, 'milliseconds')) * 60) // created
-                .writeInt(TimeHelper.to(this._user.details.timestampCreated, 'seconds')) // last online
-                .writeBoolean(this._user.details.online)
-                .writeInt(0, 0, 0, 0, 0)
-                .writeString('', '')
-                .writeInt(this._user.id, 0)
-                .writeString(this._user.details.username)
-                .writeString('test')
-                .writeString('test')
-                .writeInt(31)
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeInt(this._user.id)
+            .writeString(this._user.details.username, this._user.details.figure)
+            .writeInt(TimeHelper.between(this._user.details.timestampCreated, TimeHelper.now, 's')) // created
+            .writeInt(TimeHelper.between(this._user.details.timestampCreated, TimeHelper.now, 's')) // last online
+            .writeBoolean(this._user.details.online)
+            .writeInt(0, 0, 0, 0, 0)
+            .writeString('', '')
+            .writeInt(this._user.id, 0)
+            .writeString(this._user.details.username)
+            .writeString('test')
+            .writeString('test')
+            .writeInt(31)
+            .prepare();
     }
 }

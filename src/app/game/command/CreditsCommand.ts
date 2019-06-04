@@ -12,17 +12,23 @@ export class CreditsCommand extends Command
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        if(user)
-        {
-            const username  = parts[0];
-            const amount    = parts[1];
+        if(!user) return;
 
-            if(username && amount)
-            {
-                const onlineUser = Emulator.gameManager.userManager.getUserByUsername(username);
+        if(parts.length !== 2) return;
 
-                if(onlineUser) await onlineUser.inventory.currencies.modifyCurrency(-1, <any> amount);
-            }
-        }
+        const activeUser = Emulator.gameManager.userManager.getUserByUsername(parts[0]);
+
+        if(!activeUser) return;
+        
+        await activeUser.inventory.currency.modifyCurrency(-1, parseInt(parts[1]));
+
+        user.unit.chatSelf(`${ activeUser.details.username } has received ${ parts[1] } credits!`);
+
+        activeUser.unit.chatSelf(`You have received ${ parts[1] } credits!`);
+    }
+
+    public get description(): string
+    {
+        return 'Gives credits';
     }
 }

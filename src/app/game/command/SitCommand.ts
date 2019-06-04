@@ -13,4 +13,9 @@ export class SitCommand extends Command
     {
         if(user && user.unit) user.unit.location.sit(true, parseInt(parts[0]), parseInt(parts[1]));
     }
+
+    public get description(): string
+    {
+        return 'Sit';
+    }
 }

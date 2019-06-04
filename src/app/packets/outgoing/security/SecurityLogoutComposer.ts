@@ -11,18 +11,6 @@ export class SecurityLogoutComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this.packet.writeBoolean(true);
-
-            this.packet.prepare();
-
-            return this.packet;
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeBoolean(true).prepare();
     }
 }

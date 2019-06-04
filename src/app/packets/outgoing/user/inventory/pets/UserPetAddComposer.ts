@@ -18,16 +18,8 @@ export class UserPetAddComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this._pet.parseInventoryData(this.packet);
+        this._pet.parseInventoryData(this.packet);
 
-            return this.packet.writeBoolean(false).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeBoolean(false).prepare();
     }
 }

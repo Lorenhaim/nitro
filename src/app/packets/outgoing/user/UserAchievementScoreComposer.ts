@@ -11,14 +11,6 @@ export class UserAchievementScoreComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this.client.user.details.achievementScore).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this.client.user.details.achievementScore).prepare();
     }
 }

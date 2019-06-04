@@ -1,4 +1,4 @@
-export const enum MessengerUpdateType
+export enum MessengerUpdateType
 {
     UPDATE      = 0,
     ADD         = 1,

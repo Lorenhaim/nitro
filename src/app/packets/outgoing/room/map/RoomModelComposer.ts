@@ -18,18 +18,10 @@ export class RoomModelComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet
-                .writeBoolean(true)
-                .writeInt(this._room.details.wallHeight)
-                .writeString(this._room.model.model)
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeBoolean(true)
+            .writeInt(this._room.details.wallHeight)
+            .writeString(this._room.model.model)
+            .prepare();
     }
 }

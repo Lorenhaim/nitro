@@ -177,11 +177,6 @@ export class RoomTile
         return this._tileHeight * 256;
     }
 
-    public copyTile(): RoomTile
-    {
-        return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
-    }
-
     public get room(): Room
     {
         return this._room;

@@ -4,7 +4,7 @@ import { MessengerDao, MessengerFriendEntity, MessengerRequestEntity } from '../
 import { Emulator } from '../../../Emulator';
 import { MessengerChatComposer, MessengerRequestComposer, MessengerUpdateComposer } from '../../../packets';
 import { User } from '../User';
-import { MessengerRelationships, MessengerUpdateType } from './interfaces';
+import { MessengerRelationships, MessengerRelationshipType, MessengerUpdateType } from './interfaces';
 import { MessengerCategory } from './MessengerCategory';
 import { MessengerFriend } from './MessengerFriend';
 import { MessengerRequest } from './MessengerRequest';
@@ -129,12 +129,13 @@ export class UserMessenger extends Manager
 
             if(!friend) continue;
 
-            if(friend.relation > 0)
-            {
-                if(friend.relation === 1) lovers.push(friend);
-                if(friend.relation === 2) friends.push(friend);
-                if(friend.relation === 3) haters.push(friend);
-            }
+            if(friend.relation === MessengerRelationshipType.NONE) continue;
+
+            if(friend.relation === MessengerRelationshipType.LOVER) lovers.push(friend);
+
+            if(friend.relation === MessengerRelationshipType.FRIENDS) friends.push(friend);
+
+            if(friend.relation === MessengerRelationshipType.HATERS) haters.push(friend);
         }
 
         return { lovers, friends, haters };
@@ -162,7 +163,7 @@ export class UserMessenger extends Manager
         }));
     }
 
-    public async updateRelation(friendId: number, relation: 0 | 1 | 2 | 3)
+    public async updateRelation(friendId: number, relation: MessengerRelationshipType)
     {
         if(!friendId || relation === null) return;
 
@@ -256,6 +257,8 @@ export class UserMessenger extends Manager
                     friendId: myFriend.id,
                     friend: myFriend
                 }));
+
+                this._user.details.totalFriends++;
             }
 
             if(friendInstance.isLoaded)
@@ -325,6 +328,8 @@ export class UserMessenger extends Manager
 
             if(!this.removeFriendArray(userId)) continue;
 
+            this._user.details.totalFriends--;
+
             this._user.connections.processOutgoing(new MessengerUpdateComposer({
                 type: MessengerUpdateType.REMOVE,
                 friendId: userId
@@ -334,10 +339,15 @@ export class UserMessenger extends Manager
 
             if(!user) continue;
 
-            if(user.messenger.removeFriendArray(this._user.id)) user.connections.processOutgoing(new MessengerUpdateComposer({
-                type: MessengerUpdateType.REMOVE,
-                friendId: this._user.id
-            }));
+            if(user.messenger.removeFriendArray(this._user.id))
+            {
+                user.details.totalFriends--;
+
+                user.connections.processOutgoing(new MessengerUpdateComposer({
+                    type: MessengerUpdateType.REMOVE,
+                    friendId: this._user.id
+                }));
+            }
         }
     }
 
@@ -416,7 +426,7 @@ export class UserMessenger extends Manager
 
                 if(request.id === userId)
                 {
-                    this._requests.splice(i, 1);
+                    this._requests.splice(j, 1);
 
                     await MessengerDao.removeRequest(userId, this._user.id);
 
@@ -517,6 +527,28 @@ export class UserMessenger extends Manager
             if(!result) continue;
 
             this._requests.push(new MessengerRequest(result));
+        }
+    }
+
+    public async loadRelationships(): Promise<void>
+    {
+        if(this._isLoaded) return;
+        
+        const results = await MessengerDao.loadRelationships(this._user.id);
+
+        if(!results) return;
+        
+        const totalResults = results.length;
+
+        if(!totalResults) return;
+        
+        for(let i = 0; i < totalResults; i++)
+        {
+            const result = results[i];
+
+            if(!result) continue;
+
+            this._friends.push(new MessengerFriend(result));
         }
     }
 

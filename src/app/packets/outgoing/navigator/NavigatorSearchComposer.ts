@@ -1,4 +1,3 @@
-import { Emulator } from '../../../Emulator';
 import { NavigatorSearchResult } from '../../../game/navigator/search';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
@@ -16,47 +15,27 @@ export class NavigatorSearchComposer extends Outgoing
 
         this._tab       = tab || null;
         this._query     = query || null;
-        this._results   = null;
-
-        if(searchResults)
-        {
-            let someResults = [];
-            this._results = someResults.concat(searchResults);
-        }
+        this._results   = [ ...searchResults ];
     }
 
     public compose(): OutgoingPacket
     {
-        try
+        this.packet
+            .writeString(this._tab)
+            .writeString(this._query);
+            
+        if(this._results)
         {
-            if(Emulator.gameManager.navigatorManager.isLoaded)
-            {
-                this.packet
-                    .writeString(this._tab)
-                    .writeString(this._query);
+            const totalResults = this._results.length;
 
-                if(this._results)
-                {
-                    const totalResults = this._results.length;
+            if(!totalResults) return this.packet.writeInt(0).prepare();
 
-                    this.packet.writeInt(totalResults);
-
-                    if(totalResults) for(let i = 0; i < totalResults; i++) this.packet.writeBytes(...this._results[i].parseBytes());
-                }
-                else
-                {
-                    this.packet.writeInt(0);
-                }
-
-                return this.packet.prepare();
-            }
-
-            return this.cancel();
+            this.packet.writeInt(totalResults);
+            
+            for(let i = 0; i < totalResults; i++) this._results[i].parseResult(this.packet);
         }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        else this.packet.writeInt(0);
+        
+        return this.packet.prepare();
     }
 }

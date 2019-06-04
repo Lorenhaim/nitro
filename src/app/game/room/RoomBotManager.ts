@@ -1,5 +1,6 @@
 import { Manager } from '../../common';
 import { BotDao } from '../../database';
+import { Emulator } from '../../Emulator';
 import { Bot } from '../bot';
 import { Position } from '../pathfinder';
 import { User } from '../user';
@@ -10,7 +11,6 @@ export class RoomBotManager extends Manager
     private _room: Room;
 
     private _bots: Bot[];
-    private _botOwners: { id: number, username: string }[];
 
     constructor(room: Room)
     {
@@ -20,8 +20,7 @@ export class RoomBotManager extends Manager
 
         this._room  = room;
 
-        this._bots      = [];
-        this._botOwners = [];
+        this._bots  = [];
     }
 
     protected async onInit(): Promise<void>
@@ -41,9 +40,9 @@ export class RoomBotManager extends Manager
 
             if(!bot) continue;
 
-            bot.savePosition();
-
             this._room.unitManager.removeUnit(bot.unit);
+
+            await bot.saveNow();
 
             this._bots.splice(i, 1);
         }
@@ -114,8 +113,6 @@ export class RoomBotManager extends Manager
 
         bot.unit.location.dance(bot.dance);
 
-        this._room.map.generateCollisions();
-
         this._room.unitManager.updateUnits(bot.unit);
 
         if(bot.freeRoam)
@@ -131,6 +128,8 @@ export class RoomBotManager extends Manager
     public pickupBot(user: User, botId: number): Promise<void>
     {
         if(!user || !botId) return;
+
+        if(!this._room.securityManager.hasRights(user)) return;
 
         const totalBots = this._bots.length;
 
@@ -150,7 +149,16 @@ export class RoomBotManager extends Manager
 
             bot.clearRoom();
 
-            user.inventory.bots.addBot(bot);
+            if(bot.userId === user.id)
+            {
+                user.inventory.bots.addBot(bot);
+            }
+            else
+            {
+                const activeUser = Emulator.gameManager.userManager.getUserById(bot.userId);
+
+                if(activeUser) activeUser.inventory.bots.addBot(bot);
+            }
 
             bot.save();
 
@@ -185,7 +193,7 @@ export class RoomBotManager extends Manager
                 this._room.addObjectOwnerName(bot.userId, username);
             }
 
-            await this._room.unitManager.addUnit(bot.unit, new Position(result.x, result.y, parseFloat(result.z), result.direction, result.direction));
+            this._room.unitManager.addUnit(bot.unit, new Position(result.x, result.y, parseFloat(result.z), result.direction, result.direction));
 
             this._bots.push(bot);
 

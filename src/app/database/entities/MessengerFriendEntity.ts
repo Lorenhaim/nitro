@@ -1,4 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { MessengerRelationshipType } from '../../game';
 import { MessengerCategoryEntity } from './MessengerCategoryEntity';
 import { UserEntity } from './UserEntity';
 
@@ -18,8 +19,8 @@ export class MessengerFriendEntity
     @Column({ name: 'category_id', nullable: true })
     public categoryId: number;
 
-    @Column({ name: 'relation', type: 'enum', enum: ['0', '1', '2', '3'], default: '0' })
-    public relation: 0 | 1 | 2 | 3;
+    @Column({ name: 'relation', type: 'enum', enum: MessengerRelationshipType, default: '0' })
+    public relation: MessengerRelationshipType;
 
     @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })
     public timestampCreated: Date;

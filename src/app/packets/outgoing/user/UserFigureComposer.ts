@@ -11,17 +11,9 @@ export class UserFigureComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet
-                .writeString(this.client.user.details.figure)
-                .writeString(this.client.user.details.gender)
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeString(this.client.user.details.figure)
+            .writeString(this.client.user.details.gender)
+            .prepare();
     }
 }

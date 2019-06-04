@@ -1,4 +1,4 @@
-export const enum RoomState
+export enum RoomState
 {
     OPEN        = 0,
     LOCKED      = 1,

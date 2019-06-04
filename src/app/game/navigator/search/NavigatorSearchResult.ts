@@ -117,7 +117,7 @@ export class NavigatorSearchResult
 
         const results = await getManager().find(RoomEntity, {
             where,
-            relations: ['user'],
+            relations: ['user', 'group'],
             order: {
                 usersNow: 'DESC'
             }
@@ -139,7 +139,7 @@ export class NavigatorSearchResult
                 where: {
                     categoryId: categoryId
                 },
-                relations: ['user'],
+                relations: ['user', 'group'],
                 order: {
                     usersNow: 'DESC'
                 }
@@ -166,7 +166,7 @@ export class NavigatorSearchResult
 
             const results = await getManager().find(RoomEntity, {
                 where,
-                relations: ['user'],
+                relations: ['user', 'group'],
                 order: {
                     usersNow: 'DESC'
                 }
@@ -197,7 +197,7 @@ export class NavigatorSearchResult
 
                 const results = await getManager().find(RoomEntity, {
                     where,
-                    relations: ['user'],
+                    relations: ['user', 'group'],
                     order: {
                         usersNow: 'DESC'
                     }
@@ -226,7 +226,7 @@ export class NavigatorSearchResult
 
             const results = await getManager().find(RoomEntity, {
                 where,
-                relations: ['user'],
+                relations: ['user', 'group'],
                 order: {
                     usersNow: 'DESC'
                 }
@@ -241,10 +241,10 @@ export class NavigatorSearchResult
         }
     }
 
-    public parseBytes(): number[]
+    public parseResult(packet: OutgoingPacket): OutgoingPacket
     {
-        const packet = new OutgoingPacket(null);
-
+        if(!packet) return null;
+        
         packet
             .writeString(this._resultQuery)
             .writeString(this._resultName)
@@ -272,6 +272,8 @@ export class NavigatorSearchResult
 
                 let base = 0;
 
+                if(room.group) base += 2;
+
                 if(!category || !category.isPublic) base += 8;
 
                 if(room.allowPets) base += 16;
@@ -287,14 +289,13 @@ export class NavigatorSearchResult
                     .writeInt(category.id || 0)
                     .writeInt(0) //tags foreach, string
                     .writeInt(base);
+
+                if(room.group) packet.writeInt(room.group.id).writeString(room.group.name, room.group.badge);
             }
         }
-        else
-        {
-            packet.writeInt(0);
-        }
+        else packet.writeInt(0);
 
-        return packet.bytes;
+        return packet;
     }
 
     public get rooms(): RoomEntity[]

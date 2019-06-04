@@ -28,7 +28,7 @@ export class CatalogItemEntity
     @Column({ name: 'cost_currency', default: 0 })
     public costCurrency: number;
 
-    @Column({ name: 'cost_currency_type', default: 0 })
+    @Column({ name: 'cost_currency_type', type: 'enum', enum: CurrencyType })
     public costCurrencyType: CurrencyType;
 
     @Column({ name: 'amount', default: 1 })
@@ -60,6 +60,6 @@ export class CatalogItemEntity
     @JoinColumn({ name: 'base_id' })
     public base: ItemBaseEntity;
 
-    @OneToMany(type => CatalogItemLimitedEntity, item => item.catalogItemId)
+    @OneToMany(type => CatalogItemLimitedEntity, item => item.catalogItem)
     public sellsLimited: CatalogItemLimitedEntity[];
 }

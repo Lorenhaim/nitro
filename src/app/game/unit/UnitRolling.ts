@@ -1,24 +1,23 @@
-import { Item } from '../item';
-import { Position } from '../pathfinder';
+import { RollerData } from '../item';
 import { Unit } from './Unit';
 
 export class UnitRolling
 {
     private _unit: Unit;
-    private _roller: Item;
+    private _rollerData: RollerData;
 
-    private _position: Position;
-    private _positionNext: Position;
+    private _height: number;
+    private _nextHeight: number;
 
-    constructor(unit: Unit, roller: Item, position: Position, positionNext: Position)
+    constructor(unit: Unit, rollerData: RollerData, height: number, nextHeight: number)
     {
-        if(!(unit instanceof Unit) || !(roller instanceof Item) || !position || !positionNext) throw new Error('invalid_rolling');
+        if(!(unit instanceof Unit) || !(rollerData instanceof RollerData)) throw new Error('invalid_roll');
 
         this._unit          = unit;
-        this._roller        = roller;
+        this._rollerData    = rollerData;
 
-        this._position      = position;
-        this._positionNext  = positionNext;
+        this._height        = height;
+        this._nextHeight    = nextHeight;
     }
 
     public get unit(): Unit
@@ -26,23 +25,18 @@ export class UnitRolling
         return this._unit;
     }
 
-    public get roller(): Item
+    public get rollerData(): RollerData
     {
-        return this._roller;
+        return this._rollerData;
     }
 
-    public get position(): Position
+    public get height(): number
     {
-        return this._position;
+        return this._height;
     }
 
-    public get positionNext(): Position
+    public get nextHeight(): number
     {
-        return this._positionNext;
-    }
-
-    public copy(): UnitRolling
-    {
-        return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+        return this._nextHeight;
     }
 }

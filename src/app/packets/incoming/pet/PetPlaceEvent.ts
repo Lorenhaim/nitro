@@ -1,3 +1,4 @@
+import { Direction, Position } from '../../../game';
 import { Incoming } from '../Incoming';
 
 export class PetPlaceEvent extends Incoming
@@ -14,7 +15,7 @@ export class PetPlaceEvent extends Incoming
 
             if(!petId) return;
             
-            currentRoom.petManager.placePet(this.client.user, petId, null);
+            currentRoom.petManager.placePet(this.client.user, petId, new Position(this.packet.readInt(), this.packet.readInt(), 0, Direction.SOUTH, Direction.SOUTH));
         }
 
         catch(err)

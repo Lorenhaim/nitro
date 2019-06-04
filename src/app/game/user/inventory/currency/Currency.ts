@@ -1,5 +1,7 @@
+import { CurrencyType } from './CurrencyType';
+
 export interface Currency
 {
-    type: number;
+    type: CurrencyType;
     amount: number;
 }

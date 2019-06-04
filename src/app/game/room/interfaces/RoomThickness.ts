@@ -1,4 +1,4 @@
-export const enum RoomThickness
+export enum RoomThickness
 {
     THINNEST    = -2,
     THIN        = -1,

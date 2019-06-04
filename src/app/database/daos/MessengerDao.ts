@@ -1,4 +1,5 @@
 import { getManager } from 'typeorm';
+import { MessengerRelationshipType } from '../../game';
 import { MessengerCategoryEntity, MessengerFriendEntity, MessengerRequestEntity } from '../entities';
 
 export class MessengerDao
@@ -48,6 +49,23 @@ export class MessengerDao
         return null;
     }
 
+    public static async loadRelationships(userId: number): Promise<MessengerFriendEntity[]>
+    {
+        if(!userId) return;
+
+        const results = await getManager()
+            .createQueryBuilder(MessengerFriendEntity, 'friendship')
+            .select(['friendship.id', 'friendship.userId', 'friendship.friendId', 'friendship.categoryId', 'friendship.relation', 'friend.id', 'friend.username', 'friend.motto', 'friend.gender', 'friend.figure', 'friend.online' ])
+            .where('friendship.userId = :userId', { userId })
+            .andWhere('friendship.relation >= :relation', { relation: MessengerRelationshipType.LOVER })
+            .innerJoin('friendship.friend', 'friend')
+            .getMany();
+
+        if(results.length) return results;
+
+        return null;
+    }
+
     public static async loadRequestsSent(userId: number): Promise<MessengerRequestEntity[]>
     {
         if(!userId) return;
@@ -77,7 +95,7 @@ export class MessengerDao
         });
     }
 
-    public static async updateRelation(userId: number, friendId: number, relation: 0 | 1 | 2 | 3): Promise<void>
+    public static async updateRelation(userId: number, friendId: number, relation: MessengerRelationshipType): Promise<void>
     {
         if(!userId || !friendId || relation < 0 || relation > 3) return;
 

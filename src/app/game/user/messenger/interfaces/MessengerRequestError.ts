@@ -1,4 +1,4 @@
-export const enum MessengerRequestError
+export enum MessengerRequestError
 {
     USER_MAX_FRIENDS            = 1,
     FRIEND_MAX_FRIENDS          = 2,

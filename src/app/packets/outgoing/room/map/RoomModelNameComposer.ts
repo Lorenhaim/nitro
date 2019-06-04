@@ -18,24 +18,9 @@ export class RoomModelNameComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            if(this._room && this._room.model)
-            {
-                this.packet.writeString(this._room.model.name);
-                this.packet.writeInt(this._room.id);
+        this.packet.writeString(this._room.model.name);
+        this.packet.writeInt(this._room.id);
                     
-                this.packet.prepare();
-
-                return this.packet;
-            }
-            
-            return this.cancel();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.prepare();
     }
 }

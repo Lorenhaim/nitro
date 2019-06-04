@@ -17,4 +17,9 @@ export class HotelAlertCommand extends Command
 
         if(message) Emulator.gameManager.userManager.processOutgoing(new GenericAlertComposer(message + `\r\r- <b> ${ user.details.username }</b>`));
     }
+
+    public get description(): string
+    {
+        return 'Sends an alert to everyone';
+    }
 }

@@ -11,27 +11,17 @@ export class HotelViewNewsComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this.packet.writeInt(0); // total articles
+        this.packet.writeInt(0); // total articles
 
-            //foreach
-            //this.packet.writeInt(0); // widget id
-            //this.packet.writeString(''); // title
-            //this.packet.writeString(''); // message
-            //this.packet.writeString(''); // button message
-            //this.packet.writeInt(0); // widget type
-            //this.packet.writeString(''); // link
-            //this.packet.writeString(''); // image
-        
-            this.packet.prepare();
-
-            return this.packet;
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        //foreach
+        //this.packet.writeInt(0); // widget id
+        //this.packet.writeString(''); // title
+        //this.packet.writeString(''); // message
+        //this.packet.writeString(''); // button message
+        //this.packet.writeInt(0); // widget type
+        //this.packet.writeString(''); // link
+        //this.packet.writeString(''); // image
+    
+        return this.packet.prepare();
     }
 }

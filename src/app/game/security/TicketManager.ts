@@ -3,6 +3,7 @@ import { FindConditions, getManager, Not } from 'typeorm';
 import { TimeHelper } from '../../common';
 import { SecurityTicketEntity } from '../../database';
 import { Emulator } from '../../Emulator';
+import { TicketType } from './TicketType';
 
 export class TicketManager
 {
@@ -14,7 +15,7 @@ export class TicketManager
         {
             const whereOptions: FindConditions<SecurityTicketEntity> = {
                 ticket: ticket,
-                ticketType: 'web'
+                ticketType: TicketType.WEB
             };
 
             if(Emulator.config.web.ticket.validateIp) whereOptions.ipAddress = ip;
@@ -48,7 +49,7 @@ export class TicketManager
         {
             const whereOptions: FindConditions<SecurityTicketEntity> = {
                 ticket: ticket,
-                ticketType: 'game'
+                ticketType: TicketType.GAME
             };
 
             if(Emulator.config.game.ticket.validateIp) whereOptions.ipAddress = ip;
@@ -85,7 +86,7 @@ export class TicketManager
 
                 ticketEntity.userId             = userId;
                 ticketEntity.ticket             = ticket;
-                ticketEntity.ticketType         = 'web';
+                ticketEntity.ticketType         = TicketType.WEB;
                 ticketEntity.ipAddress          = ip;
                 ticketEntity.timestampExpires   = TimeHelper.add(TimeHelper.now, Emulator.config.web.ticket.maxLength, Emulator.config.web.ticket.maxLengthType);
 
@@ -116,7 +117,7 @@ export class TicketManager
 
                 ticketEntity.userId             = userId;
                 ticketEntity.ticket             = ticket;
-                ticketEntity.ticketType         = 'game';
+                ticketEntity.ticketType         = TicketType.GAME;
                 ticketEntity.ipAddress          = ip;
                 ticketEntity.timestampExpires   = TimeHelper.add(TimeHelper.now, Emulator.config.game.ticket.maxLength, Emulator.config.game.ticket.maxLengthType);
 

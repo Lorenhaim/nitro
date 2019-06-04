@@ -1,3 +1,4 @@
+import { InteractionDice } from '../../../../game';
 import { Incoming } from '../../Incoming';
 
 export class ItemDiceClickEvent extends Incoming
@@ -8,23 +9,19 @@ export class ItemDiceClickEvent extends Incoming
         {
             const currentRoom = this.client.user.unit.room;
 
-            if(currentRoom)
-            {
-                if(this.client.user.unit.canLocate)
-                {
-                    const item = currentRoom.itemManager.getItem(this.packet.readInt());
+            if(!currentRoom) return;
 
-                    if(item)
-                    {
-                        const interaction: any = item.baseItem.interaction;
+            if(!this.client.user.unit.canLocate) return;
 
-                        if(interaction)
-                        {
-                            if(interaction.onClick) interaction.onClick(this.client.user.unit, item, this.packet.readInt());
-                        }
-                    }
-                }
-            }
+            const item = currentRoom.itemManager.getItem(this.packet.readInt());
+
+            if(!item) return;
+            
+            const interaction = <InteractionDice> item.baseItem.interaction;
+
+            if(!(interaction instanceof InteractionDice)) return;
+
+            interaction.onClick(this.client.user.unit, item);
         }
 
         catch(err)

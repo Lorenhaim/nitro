@@ -1,4 +1,4 @@
-export const enum UnitDance
+export enum UnitDance
 {
     NONE        = 0,
     NORMAL      = 1,

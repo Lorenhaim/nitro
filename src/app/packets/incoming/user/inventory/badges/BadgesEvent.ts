@@ -1,4 +1,4 @@
-import { BadgesComposer } from '../../../../outgoing';
+import { UserBadgesComposer } from '../../../../outgoing';
 import { Incoming } from '../../../Incoming';
 
 export class BadgesEvent extends Incoming
@@ -9,7 +9,7 @@ export class BadgesEvent extends Incoming
         {
             if(!this.client.user.inventory.badges.isLoaded) await this.client.user.inventory.badges.init();
             
-            this.client.processOutgoing(new BadgesComposer());
+            this.client.processOutgoing(new UserBadgesComposer());
         }
 
         catch(err)

@@ -20,7 +20,7 @@ export class Emulator
         {
             const timeStarted = Date.now();
 
-            Emulator._logger.log(`Starting HabboAPI`);
+            Emulator._logger.log(`Starting Nitro`);
 
             Emulator._database      = await createConnection();
             Emulator._gameManager   = new GameManager();
@@ -50,11 +50,11 @@ export class Emulator
     {
         try
         {
-            if(Emulator._networkManager) await Emulator._networkManager.dispose();
             if(Emulator._gameManager) await Emulator._gameManager.dispose();
             if(Emulator._gameScheduler) await Emulator._gameScheduler.dispose();
+            if(Emulator._networkManager) await Emulator._networkManager.dispose();
 
-            if(Emulator._database.isConnected) Emulator._database.close();
+            if(Emulator._database && Emulator._database.isConnected) Emulator._database.close();
         }
 
         catch(err)
@@ -67,8 +67,8 @@ export class Emulator
     {
         try
         {
-            this.dispose();
-            this.bootstrap();
+            await this.dispose();
+            await this.bootstrap();
         }
 
         catch(err)

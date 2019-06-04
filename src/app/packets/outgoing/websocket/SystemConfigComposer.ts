@@ -12,76 +12,68 @@ export class SystemConfigComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        const publicItems: { key: string, value: string }[] = [];
+
+        const publicKeys = ['general', 'client'];
+
+        for(let parentKey in Emulator.config)
         {
-            const publicItems: { key: string, value: string }[] = [];
+            if(!parentKey) continue;
 
-            const publicKeys = ['general', 'client'];
+            if(publicKeys.indexOf(parentKey) === -1) continue;
 
-            for(let parentKey in Emulator.config)
+            const items = Emulator.config[parentKey];
+
+            if(!items) continue;
+
+            for(let childKey in items)
             {
-                if(!parentKey) continue;
+                if(!childKey) continue;
 
-                if(publicKeys.indexOf(parentKey) === -1) continue;
+                const value = items[childKey];
 
-                const items = Emulator.config[parentKey];
+                if(!value) continue;
 
-                if(!items) continue;
-
-                for(let childKey in items)
+                if(typeof value === 'object')
                 {
-                    if(!childKey) continue;
+                    const items = Emulator.config[parentKey][childKey];
 
-                    const value = items[childKey];
+                    if(!items) continue;
 
-                    if(!value) continue;
-
-                    if(typeof value === 'object')
+                    for(let grandChildKey in items)
                     {
-                        const items = Emulator.config[parentKey][childKey];
+                        if(!grandChildKey) continue;
 
-                        if(!items) continue;
+                        const value = items[grandChildKey];
 
-                        for(let grandChildKey in items)
-                        {
-                            if(!grandChildKey) continue;
+                        if(!value || typeof value === 'object') continue;
 
-                            const value = items[grandChildKey];
-
-                            if(!value || typeof value === 'object') continue;
-
-                            publicItems.push({ key: `${ parentKey }.${ childKey }.${ grandChildKey }`, value });
-                        }
-                    }
-                    else
-                    {
-                        publicItems.push({ key: `${ parentKey }.${ childKey }`, value });
+                        publicItems.push({ key: `${ parentKey }.${ childKey }.${ grandChildKey }`, value });
                     }
                 }
-            }
-            
-            const totalItems = publicItems.length;
-
-            if(totalItems)
-            {
-                this.packet.writeInt(totalItems);
-
-                for(let i = 0; i < totalItems; i++)
+                else
                 {
-                    const item = publicItems[i];
-
-                    if(!item) continue;
-
-                    this.packet.writeString(item.key, item.value.toString());
+                    publicItems.push({ key: `${ parentKey }.${ childKey }`, value });
                 }
             }
-
-            return this.packet.prepare();
         }
+        
+        const totalItems = publicItems.length;
 
-        catch(err)
+        if(totalItems)
         {
-            this.error(err);
+            this.packet.writeInt(totalItems);
+
+            for(let i = 0; i < totalItems; i++)
+            {
+                const item = publicItems[i];
+
+                if(!item) continue;
+
+                this.packet.writeString(item.key, item.value.toString());
+            }
         }
+
+        return this.packet.prepare();
     }
 }

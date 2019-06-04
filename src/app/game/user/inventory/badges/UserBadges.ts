@@ -1,8 +1,9 @@
 import { Manager } from '../../../../common';
 import { UserBadgeDao } from '../../../../database';
-import { BadgeAddComposer, BadgesComposer, BadgesCurrentComposer } from '../../../../packets';
+import { UserBadgeAddComposer, UserBadgesComposer, UserBadgesCurrentComposer } from '../../../../packets';
 import { User } from '../../User';
 import { Badge } from './Badge';
+import { BadgeSlot } from './BadgeSlot';
 
 export class UserBadges extends Manager
 {
@@ -44,7 +45,9 @@ export class UserBadges extends Manager
         {
             const badge = this._badges[i];
 
-            if(badge.badgeCode === badgeCode) return badge;
+            if(badge.badgeCode !== badgeCode) continue;
+            
+            return badge;
         }
 
         return null;
@@ -104,11 +107,11 @@ export class UserBadges extends Manager
 
             this._badges.push(badge);
 
-            this._user.connections.processOutgoing(new BadgeAddComposer(badge));
+            this._user.connections.processOutgoing(new UserBadgeAddComposer(badge));
         }
     }
 
-    public async setCurrentBadges(...badges: { slotNumber: 1 | 2 | 3 | 4 | 5, badgeCode: string }[]): Promise<void>
+    public async setCurrentBadges(...badges: { slotNumber: BadgeSlot, badgeCode: string }[]): Promise<void>
     {
         await this.resetBadgeSlots();
 
@@ -126,7 +129,7 @@ export class UserBadges extends Manager
 
             if(!badge) continue;
 
-            if(!badge.slotNumber || badge.slotNumber > 5 || badge.slotNumber < 0) continue;
+            if(!badge.slotNumber || badge.slotNumber > BadgeSlot.FIVE || badge.slotNumber < BadgeSlot.NONE) continue;
 
             const activeBadge = this.getBadge(badge.badgeCode);
 
@@ -139,7 +142,7 @@ export class UserBadges extends Manager
 
         this.loadCurrentBadges();
 
-        this._user.connections.processOutgoing(new BadgesCurrentComposer(this._user.id, ...this._currentBadges));
+        this._user.connections.processOutgoing(new UserBadgesCurrentComposer(this._user));
     }
 
     public async resetBadgeSlots(): Promise<void>
@@ -150,7 +153,7 @@ export class UserBadges extends Manager
 
         await UserBadgeDao.resetBadgeSlots(this._user.id);
 
-        for(let i = 0; i < totalBadges; i++) this._badges[i].slotNumber = 0;
+        for(let i = 0; i < totalBadges; i++) this._badges[i].slotNumber = BadgeSlot.NONE;
 
         this._currentBadges = [];
     }
@@ -170,6 +173,8 @@ export class UserBadges extends Manager
         {
             const code = removedBadges[i];
 
+            if(!code) continue;
+
             for(let j = 0; j < totalActiveBadges; j++)
             {
                 const activeBadge = this._badges[j];
@@ -188,7 +193,7 @@ export class UserBadges extends Manager
 
         await UserBadgeDao.removeBadge(this._user.id, ...removedBadges);
         
-        this._user.connections.processOutgoing(new BadgesComposer());
+        this._user.connections.processOutgoing(new UserBadgesComposer());
     }
 
     private async loadBadges(): Promise<void>
@@ -233,7 +238,7 @@ export class UserBadges extends Manager
         {
             const badge = this._badges[i];
 
-            if(badge.slotNumber && badge.slotNumber > 0 && badge.slotNumber <= 5) this._currentBadges.push(badge);
+            if(badge.slotNumber && badge.slotNumber > BadgeSlot.NONE && badge.slotNumber <= BadgeSlot.FIVE) this._currentBadges.push(badge);
         }
     }
 

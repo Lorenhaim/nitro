@@ -12,14 +12,7 @@ export class SecurityMachineComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            if(this.client instanceof GameClient) return this.packet.writeString(this.client.machineId || null).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        if(this.client instanceof GameClient) return this.packet.writeString(this.client.machineId || null).prepare();
+        else return this.cancel();
     }
 }

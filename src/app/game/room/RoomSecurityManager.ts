@@ -1,7 +1,8 @@
 import { Manager } from '../../common';
 import { RoomRightsDao } from '../../database';
 import { Emulator } from '../../Emulator';
-import { RoomRightsListAddComposer, RoomRightsListRemoveComposer } from '../../packets';
+import { Outgoing, RoomRightsListAddComposer, RoomRightsListRemoveComposer } from '../../packets';
+import { GroupRank } from '../group';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { Room } from './Room';
@@ -42,23 +43,34 @@ export class RoomSecurityManager extends Manager
         return false;
     }
 
-    public hasRights(userId: number): boolean
+    public hasRights(user: User): boolean
     {
-        if(!userId) return false;
+        if(!user) return false;
 
-        if(userId === this._room.details.ownerId) return true;
-        
-        const totalRights = this._rights.length;
+        if(this.isOwner(user)) return true;
 
-        if(!totalRights) return false;
-        
-        for(let i = 0; i < totalRights; i++)
+        if(user.hasPermission(PermissionList.ANY_ROOM_RIGHTS)) return true;
+
+        if(this._room.group && this._room.group.memberRights)
         {
-            const user = this._rights[i];
+            const rank = user.inventory.groups.getMembershipRank(this._room.group.id);
 
-            if(!user) continue;
+            if(rank !== null && rank !== GroupRank.REQUESTED) return true;
+        }
+        else
+        {
+            const totalRights = this._rights.length;
 
-            if(user.id === userId) return true;
+            if(!totalRights) return false;
+            
+            for(let i = 0; i < totalRights; i++)
+            {
+                const user = this._rights[i];
+
+                if(!user) continue;
+
+                if(user.id === user.id) return true;
+            }
         }
 
         return false;
@@ -67,6 +79,8 @@ export class RoomSecurityManager extends Manager
     public async giveRights(user: User, userId: number): Promise<void>
     {
         if(!user || !userId) return;
+
+        if(this._room.group) return;
 
         if(!user.unit.isOwner()) return;
 
@@ -80,7 +94,7 @@ export class RoomSecurityManager extends Manager
 
         this._rights.push(right);
 
-        this.giveRightsNotification(right);
+        this.ownersOutgoing(new RoomRightsListAddComposer(this._room, right));
 
         if(offlineUser.unit && offlineUser.unit.room === this._room) offlineUser.unit.loadRights();
     }
@@ -103,7 +117,15 @@ export class RoomSecurityManager extends Manager
 
             this._rights.splice(i, 1);
 
-            this.removeRightsNotification(right.id);
+            this.ownersOutgoing(new RoomRightsListRemoveComposer(this._room, right.id));
+
+            const user = Emulator.gameManager.userManager.getUserById(right.id);
+
+            if(!user) continue;
+
+            if(!user.unit || user.unit.room !== this._room) continue;
+                
+            user.unit.loadRights();
         }
 
         await RoomRightsDao.removeAllRights(this._room.id);
@@ -145,7 +167,7 @@ export class RoomSecurityManager extends Manager
 
                 this._rights.splice(j, 1);
 
-                this.removeRightsNotification(userId);
+                this.ownersOutgoing(new RoomRightsListRemoveComposer(this._room, userId));
 
                 const user = Emulator.gameManager.userManager.getUserById(userId);
 
@@ -162,9 +184,9 @@ export class RoomSecurityManager extends Manager
         if(validatedIds.length) await RoomRightsDao.removeRights(this._room.id, ...validatedIds);
     }
 
-    private giveRightsNotification(right: { id: number, username: string }): void
+    public rightsOutgoing(...outgoing: Outgoing[]): void
     {
-        if(!right || !right.id || !right.username) return;
+        if(!outgoing) return;
 
         const activeUnits = this._room.unitManager.units;
 
@@ -180,15 +202,15 @@ export class RoomSecurityManager extends Manager
 
             if(!unit) continue;
 
-            if(!unit.isOwner()) continue;
+            if(!unit.hasRights()) continue;
 
-            unit.user.connections.processOutgoing(new RoomRightsListAddComposer(this._room, right));
+            unit.user.connections.processOutgoing(...outgoing);
         }
     }
 
-    private removeRightsNotification(userId: number): void
+    public ownersOutgoing(...outgoing: Outgoing[]): void
     {
-        if(!userId) return;
+        if(!outgoing) return;
 
         const activeUnits = this._room.unitManager.units;
 
@@ -206,7 +228,7 @@ export class RoomSecurityManager extends Manager
 
             if(!unit.isOwner()) continue;
 
-            unit.user.connections.processOutgoing(new RoomRightsListRemoveComposer(this._room, userId));
+            unit.user.connections.processOutgoing(...outgoing);
         }
     }
 

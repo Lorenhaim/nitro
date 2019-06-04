@@ -39,7 +39,9 @@ export class UserBots extends Manager
         {
             const bot = this._bots[i];
 
-            if(bot.id === id) return bot;
+            if(bot.id !== id) continue;
+            
+            return bot;
         }
 
         return null;

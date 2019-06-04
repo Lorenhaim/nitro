@@ -1,4 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { BadgeSlot } from '../../game';
 import { UserEntity } from './UserEntity';
 
 @Entity('user_badges')
@@ -14,8 +15,8 @@ export class UserBadgeEntity
     @Column({ name: 'badge_code' })
     public badgeCode: string;
 
-    @Column({ name: 'slot_number', type: 'enum', enum: ['0', '1', '2', '3', '4', '5'], default: '0' })
-    public slotNumber: 0 | 1 | 2 | 3 | 4 | 5;
+    @Column({ name: 'slot_number', type: 'enum', enum: BadgeSlot, default: BadgeSlot.NONE })
+    public slotNumber: BadgeSlot;
 
     @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })
     public timestampCreated: Date;

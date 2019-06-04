@@ -18,14 +18,6 @@ export class UnitHandItemComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._unit.id, this._unit.location.handType || 0).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._unit.id, this._unit.location.handType || 0).prepare();
     }
 }

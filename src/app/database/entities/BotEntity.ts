@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Direction, UnitDance } from '../../game';
+import { Direction, UnitDance, UnitGender } from '../../game';
 import { RoomEntity } from './RoomEntity';
 import { UserEntity } from './UserEntity';
 
@@ -21,8 +21,8 @@ export class BotEntity
     @Column({ name: 'motto', nullable: true })
     public motto: string;
 
-    @Column({ name: 'gender', type: 'enum', enum: ['M', 'F'], default: 'M' })
-    public gender: 'M' | 'F';
+    @Column({ name: 'gender', type: 'enum', enum: UnitGender, default: UnitGender.MALE })
+    public gender: UnitGender;
 
     @Column({ name: 'figure', default: 'hr-115-42.hd-195-19.ch-3030-82.lg-275-1408.fa-1201.ca-1804-64' })
     public figure: string;
@@ -36,10 +36,10 @@ export class BotEntity
     @Column({ name: 'z', type: 'decimal', precision: 3, scale: 2, default: '0' })
     public z: string;
 
-    @Column({ name: 'direction', type: 'enum', enum: ['0', '1', '2', '3', '4', '5', '6', '7'], default: '0' })
+    @Column({ name: 'direction', type: 'enum', enum: Direction, default: Direction.NORTH })
     public direction: Direction;
 
-    @Column({ name: 'dance', type: 'enum', enum: ['0', '1', '2', '3', '4'], default: '0' })
+    @Column({ name: 'dance', type: 'enum', enum: UnitDance, default: '0' })
     public dance: UnitDance;
 
     @Column({ name: 'free_roam', type: 'enum', enum: ['0', '1'], default: '0' })

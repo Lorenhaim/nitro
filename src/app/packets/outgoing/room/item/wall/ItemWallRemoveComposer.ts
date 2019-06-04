@@ -18,17 +18,9 @@ export class ItemWallRemoveComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet
-                .writeString(this._item.id.toString())
-                .writeInt(this._item.userId)
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeString(this._item.id.toString())
+            .writeInt(this._item.userId)
+            .prepare();
     }
 }

@@ -1,4 +1,5 @@
 export const enum GenericError
 {
-    INVALID_ROOM_PASSWORD = -100002
+    INVALID_ROOM_PASSWORD   = -100002,
+    KICKED                  = 4008
 }

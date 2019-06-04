@@ -1,7 +1,7 @@
-import { Unit } from '../../../unit';
+import { User } from '../../../user';
 import { Item } from '../../Item';
 
 export interface OnRedeem
 {
-    onRedeem(unit: Unit, item: Item): Promise<void>;
+    onRedeem(user: User, item: Item): Promise<void>;
 }

@@ -15,14 +15,6 @@ export class SecurtiyDebugComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeBoolean(this._status).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeBoolean(this._status).prepare();
     }
 }

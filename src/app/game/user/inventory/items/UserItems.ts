@@ -39,7 +39,9 @@ export class UserItems extends Manager
         {
             const item = this._items[i];
 
-            if(item.id === id) return item;
+            if(item.id !== id) continue;
+            
+            return item;
         }
 
         return null;
@@ -66,8 +68,6 @@ export class UserItems extends Manager
             const item = addedItems[i];
 
             if(!item) continue;
-
-            if(item.willRemove) continue;
 
             if(this.hasItem(item.id)) continue;
 
@@ -97,8 +97,8 @@ export class UserItems extends Manager
 
         if(!removedItems) return;
         
-        const totalItems = removedItems.length;
-        const totalActiveItems = this._items.length;
+        const totalItems        = removedItems.length;
+        const totalActiveItems  = this._items.length;
 
         if(!totalItems || !totalActiveItems) return;
 

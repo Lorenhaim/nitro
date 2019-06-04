@@ -1,5 +1,6 @@
 import { Manager } from '../../common';
 import { PetDao } from '../../database';
+import { Emulator } from '../../Emulator';
 import { Position } from '../pathfinder';
 import { Pet } from '../pet';
 import { User } from '../user';
@@ -39,9 +40,9 @@ export class RoomPetManager extends Manager
 
             if(!pet) continue;
 
-            pet.savePosition();
-
             this._room.unitManager.removeUnit(pet.unit);
+
+            await pet.saveNow();
 
             this._pets.splice(i, 1);
         }
@@ -84,9 +85,9 @@ export class RoomPetManager extends Manager
         return null;
     }
 
-    public placePet(user: User, petId: number, position: Position): void
+    public placePet(user: User, petId: number, position: Position): Pet
     {
-        if(!user || !petId) return;
+        if(!user || !petId || !position) return;
 
         const pet = user.inventory.pets.getPet(petId);
 
@@ -94,22 +95,34 @@ export class RoomPetManager extends Manager
 
         if(this.hasPet(pet.id)) return;
 
-        pet.setRoom(this._room);
+        const tile = this._room.map.getTile(position);
 
-        this._pets.push(pet);
+        //if(!tile) return;
+
+        position.z = tile.walkingHeight;
+
+        pet.setRoom(this._room);
 
         user.inventory.pets.removePet(pet);
 
         this._room.addObjectOwnerName(pet.userId, user.details.username);
 
-        this._room.unitManager.addUnit(pet.unit, null);
+        this._room.unitManager.addUnit(pet.unit, position);
+
+        this._pets.push(pet);
+
+        this._room.unitManager.updateUnits(pet.unit);
 
         pet.save();
+
+        return pet;
     }
 
     public pickupPet(user: User, petId: number): Promise<void>
     {
         if(!user || !petId) return;
+
+        if(!this._room.securityManager.hasRights(user)) return;
 
         const totalPets = this._pets.length;
 
@@ -129,7 +142,16 @@ export class RoomPetManager extends Manager
 
             pet.clearRoom();
 
-            user.inventory.pets.addPet(pet);
+            if(pet.userId === user.id)
+            {
+                user.inventory.pets.addPet(pet);
+            }
+            else
+            {
+                const activeUser = Emulator.gameManager.userManager.getUserById(pet.userId);
+
+                if(activeUser) activeUser.inventory.pets.addPet(pet);
+            }
 
             pet.save();
 

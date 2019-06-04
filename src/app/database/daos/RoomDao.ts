@@ -5,25 +5,18 @@ export class RoomDao
 {
     public static async loadRoom(id: number): Promise<RoomEntity>
     {
-        if(id)
-        {
-            const result = await getManager().findOne(RoomEntity, id);
+        if(!id) return null;
 
-            if(result) return result;
-        }
+        const result = await getManager()
+            .createQueryBuilder(RoomEntity, 'room')
+            .select(['room', 'group.id' ])
+            .where('room.id = :id', { id })
+            .leftJoin('room.group', 'group')
+            .loadRelationCountAndMap('room.totalLikes', 'room.userLikes')
+            .getOne();
 
-        return null;
-    }
-    
-    public static async loadDetailsById(id: number): Promise<RoomEntity>
-    {
-        if(id > 0)
-        {
-            const result = await getManager().findOne(RoomEntity, id);
+        if(!result) return null;
 
-            if(result !== null) return result;
-        }
-
-        return null;
+        return result;
     }
 }

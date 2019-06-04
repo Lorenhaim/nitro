@@ -12,45 +12,30 @@ export class NavigatorCategoriesComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        const categories = Emulator.gameManager.navigatorManager.categories;
+
+        if(!categories) return this.packet.writeInt(0).prepare();
+        
+        const totalCategories = categories.length;
+
+        if(!totalCategories) return this.packet.writeInt(0).prepare();
+        
+        this.packet.writeInt(totalCategories);
+
+        for(let i = 0; i < totalCategories; i++)
         {
-            if(Emulator.gameManager.navigatorManager.isLoaded)
-            {
-                const categories        = Emulator.gameManager.navigatorManager.categories;
-                const totalCategories   = categories.length;
+            const category = categories[i];
 
-                if(categories && totalCategories)
-                {
-                    this.packet.writeInt(totalCategories);
-
-                    for(let i = 0; i < totalCategories; i++)
-                    {
-                        const category = categories[i];
-
-                        this.packet
-                            .writeInt(category.id)
-                            .writeString(category.name)
-                            .writeBoolean(true) // can access
-                            .writeBoolean(false)
-                            .writeString(null)
-                            .writeString(null)
-                            .writeBoolean(false);
-                    }
-                }
-                else
-                {
-                    this.packet.writeInt(0);
-                }
-
-                return this.packet.prepare();
-            }
-
-            return this.cancel();
+            this.packet
+                .writeInt(category.id)
+                .writeString(category.name)
+                .writeBoolean(true) // can access
+                .writeBoolean(false)
+                .writeString(null)
+                .writeString(null)
+                .writeBoolean(false);
         }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        
+        return this.packet.prepare();
     }
 }

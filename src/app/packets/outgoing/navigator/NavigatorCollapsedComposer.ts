@@ -1,4 +1,3 @@
-import { Emulator } from '../../../Emulator';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
@@ -12,16 +11,6 @@ export class NavigatorCollapsedComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            if(Emulator.gameManager.navigatorManager.isLoaded) return this.packet.writeInt(0).prepare();
-
-            return this.cancel();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(0).prepare();
     }
 }

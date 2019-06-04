@@ -37,4 +37,9 @@ export class PullCommand extends Command
             }
         }
     }
+
+    public get description(): string
+    {
+        return 'Pulls a unit towards you';
+    }
 }

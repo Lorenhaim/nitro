@@ -20,14 +20,6 @@ export class ItemStackHelperComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._item.id, this._height).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._item.id, this._height).prepare();
     }
 }

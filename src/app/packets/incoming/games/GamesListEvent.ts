@@ -1,3 +1,4 @@
+import { GameCenterAchievementsComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
 export class GamesListEvent extends Incoming
@@ -6,7 +7,7 @@ export class GamesListEvent extends Incoming
     {
         try
         {
-            //
+            this.client.processOutgoing(new GameCenterAchievementsComposer());
         }
 
         catch(err)

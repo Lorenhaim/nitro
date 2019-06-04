@@ -15,10 +15,15 @@ export class EjectAllCommand extends Command
 
         if(!currentRoom) return;
 
-        const items = currentRoom.itemManager.getUserItems(user.id);
+        const items = currentRoom.itemManager.getItemsByUser(user);
 
         if(!items || !items.length) return;
 
         currentRoom.itemManager.removeItem(user, ...items);
+    }
+
+    public get description(): string
+    {
+        return 'Ejects all owned furniture from the room';
     }
 }

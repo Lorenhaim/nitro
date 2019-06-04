@@ -2,24 +2,22 @@ import { Manager } from '../../common';
 import { User } from '../user';
 import { AboutCommand } from './AboutCommand';
 import { Command } from './Command';
-import { ConnectUnitCommand } from './ConnectUnitCommand';
+import { CommandsListCommand } from './CommandsListCommand';
 import { CoordinatesCommand } from './CoordinatesCommand';
 import { CreditsCommand } from './CreditsCommand';
 import { EjectAllCommand } from './EjectAllCommand';
-import { GenerateAccountsCommand } from './GenerateAccountsCommand';
 import { GiveBadgeCommand } from './GiveBadgeCommand';
 import { HotelAlertCommand } from './HotelAlertCommand';
-import { LayCommand } from './LayCommand';
 import { PickupAllCommand } from './PickupAllCommand';
 import { PullCommand } from './PullCommand';
 import { RebootCommand } from './RebootCommand';
-import { RefreshInventoryCommand } from './RefreshInventoryCommand';
 import { RollDiceCommand } from './RollDiceCommand';
 import { RoomSpectateCommand } from './RoomSpectateCommand';
 import { ShutdownCommand } from './ShutdownCommand';
 import { SitCommand } from './SitCommand';
-import { StopLocatingCommand } from './StopLocatingCommand';
 import { SummonCommand } from './SummonCommand';
+import { ToggleLocatingCommand } from './ToggleLocatingCommand';
+import { UnloadRoomCommand } from './UnloadRoomCommand';
 import { UpdateCatalogCommand } from './UpdateCatalogCommand';
 import { UpdateItemsCommand } from './UpdateItemsCommand';
 
@@ -37,8 +35,6 @@ export class CommandManager extends Manager
     protected async onInit(): Promise<void>
     {
         this.loadCommands();
-        
-        this.logger.log(`Loaded ${ this._commands.length } commands`);
     }
 
     protected async onDispose(): Promise<void>
@@ -50,56 +46,57 @@ export class CommandManager extends Manager
     {
         const totalCommands = this._commands.length;
 
-        if(totalCommands)
+        if(!totalCommands) return null;
+        
+        for(let i = 0; i < totalCommands; i++)
         {
-            for(let i = 0; i < totalCommands; i++)
-            {
-                const command = this._commands[i];
+            const command = this._commands[i];
 
-                if(command.aliases.indexOf(nameOrAlias) >= 0) return command;
-            }
+            if(!command) continue;
+
+            if(command.aliases.indexOf(nameOrAlias) === -1) continue;
+
+            return command;
         }
 
         return null;
     }
 
-    public removeCommand(nameOrAlias: string): void
+    public async processMessageAsCommand(user: User, message: string): Promise<boolean>
     {
-        const totalCommands = this._commands.length;
+        if(!message) return false;
 
-        if(totalCommands)
-        {
-            for(let i = 0; i < totalCommands; i++)
-            {
-                const command = this._commands[i];
+        if(message.charAt(0) !== ':') return false;
+        
+        const parts = message.substr(1).split(' ');
 
-                if(command.aliases.indexOf(nameOrAlias) >= 0)
-                {
-                    this._commands.splice(i, 1);
+        if(!parts.length) return false;
+        
+        const command = this.getCommand(parts[0]);
 
-                    return;
-                }
-            }
-        }
+        if(!command) return false;
+        
+        parts.splice(0, 1);
 
-        return null;
+        await command.process(user, parts);
+
+        return true;
     }
 
     public registerCommand(command: Command): void
     {
         const totalAliases = command.aliases.length;
 
-        if(totalAliases)
+        if(!totalAliases) return;
+        
+        for(let i = 0; i < totalAliases; i++)
         {
-            for(let i = 0; i < totalAliases; i++)
-            {
-                const alias = command.aliases[i];
+            const alias = command.aliases[i];
 
-                if(this.getCommand(alias)) return;
-            }
-
-            this._commands.push(command);
+            if(this.getCommand(alias)) return;
         }
+
+        this._commands.push(command);
     }
 
     public getCommandList(user: User): Command[]
@@ -122,30 +119,34 @@ export class CommandManager extends Manager
 
             validatedCommands.push(command);
         }
+
+        if(validatedCommands.length) return validatedCommands;
+
+        return null;
     }
 
     private loadCommands(): void
     {
         this.registerCommand(new AboutCommand());
+        this.registerCommand(new CommandsListCommand());
         this.registerCommand(new CoordinatesCommand());
         this.registerCommand(new CreditsCommand());
+        this.registerCommand(new EjectAllCommand());
         this.registerCommand(new GiveBadgeCommand());
         this.registerCommand(new HotelAlertCommand());
-        this.registerCommand(new LayCommand());
+        this.registerCommand(new PickupAllCommand());
+        this.registerCommand(new PullCommand());
+        this.registerCommand(new RebootCommand());
+        this.registerCommand(new RollDiceCommand());
+        this.registerCommand(new RoomSpectateCommand());
+        this.registerCommand(new ShutdownCommand());
         this.registerCommand(new SitCommand());
         this.registerCommand(new SummonCommand());
-        this.registerCommand(new UpdateItemsCommand());
-        this.registerCommand(new ShutdownCommand());
-        this.registerCommand(new RebootCommand());
+        this.registerCommand(new ToggleLocatingCommand());
+        this.registerCommand(new UnloadRoomCommand());
         this.registerCommand(new UpdateCatalogCommand());
-        this.registerCommand(new RefreshInventoryCommand());
-        this.registerCommand(new PickupAllCommand());
-        this.registerCommand(new EjectAllCommand());
-        this.registerCommand(new StopLocatingCommand());
-        this.registerCommand(new RollDiceCommand());
-        this.registerCommand(new PullCommand());
-        this.registerCommand(new ConnectUnitCommand());
-        this.registerCommand(new RoomSpectateCommand());
-        this.registerCommand(new GenerateAccountsCommand());
+        this.registerCommand(new UpdateItemsCommand());
+
+        this.logger.log(`Loaded ${ this._commands.length } commands`);
     }
 }

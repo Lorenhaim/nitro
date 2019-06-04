@@ -9,19 +9,19 @@ export abstract class Task
         this._isRunning     = false;
     }
 
-    public async run(): Promise<void>
+    public run(): void
     {
         if(!this._isRunning)
         {
             this._isRunning = true;
 
-            await this.onRun();
+            this.onRun();
 
             this._isRunning = false;
         }
     }
 
-    protected abstract async onRun(): Promise<void>;
+    protected abstract onRun(): void;
 
     public get name(): string
     {

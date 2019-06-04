@@ -1,48 +1,63 @@
+import { Manager } from '../../common';
 import { GameClient, SocketClient } from '../../networking';
-import { Outgoing } from '../../packets';
+import { Outgoing, OutgoingHeader } from '../../packets';
 import { User } from './User';
 
-export class UserConnections
+export class UserConnections extends Manager
 {
     private _user: User;
 
     private _gameClient: GameClient;
     private _socketClient: SocketClient;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
+    private _socketHeaders: OutgoingHeader[];
     
     constructor(user: User)
     {
+        super('UserConnections', user.logger);
+
         if(!(user instanceof User)) throw new Error('invalid_user');
 
         this._user          = user;
 
         this._gameClient    = null;
         this._socketClient  = null;
-
-        this._isDisposed    = false;
-        this._isDisposing   = false;
+        this._socketHeaders = [ OutgoingHeader.SECURITY_LOGOUT, OutgoingHeader.SYSTEM_CONFIG, OutgoingHeader.VALIDATOR, OutgoingHeader.SECURITY_REGISTER, OutgoingHeader.SECURITY_PING, OutgoingHeader.SECURITY_TICKET ];
     }
 
-    public async dispose(): Promise<void>
+    protected async onInit(): Promise<void> {}
+
+    protected async onDispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing)
-        {
-            this._isDisposing = true;
-
-            if(this._gameClient !== null)   await this._gameClient.dispose();
-            if(this._socketClient !== null) await this._socketClient.dispose();
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-        }
+        if(this._gameClient)    await this._gameClient.dispose();
+        if(this._socketClient)  await this._socketClient.dispose();
     }
 
     public processOutgoing(...outgoing: Outgoing[]): void
     {
-        if(this._gameClient)    this._gameClient.processOutgoing(...outgoing);
-        if(this._socketClient)  this._socketClient.processOutgoing(...outgoing);
+        if(this._gameClient) this._gameClient.processOutgoing(...outgoing);
+
+        if(this._socketClient)
+        {
+            const allowedOutgoing: Outgoing[] = [];
+
+            const totalOutgoing = outgoing.length;
+
+            if(totalOutgoing)
+            {
+                for(let i = 0; i < totalOutgoing; i++)
+                {
+                    const packet = outgoing[i];
+
+                    if(!packet) continue;
+
+                    if(this._socketHeaders.indexOf(packet.header) !== -1) continue;
+
+                    allowedOutgoing.push(packet);
+                }
+            }
+
+            if(allowedOutgoing.length) this._socketClient.processOutgoing(...allowedOutgoing);
+        }
     }
 
     public async setGameClient(client: GameClient)
@@ -61,6 +76,8 @@ export class UserConnections
             this._gameClient.willDestroyUser    = false;
             this._socketClient.willDestroyUser  = false;
         }
+
+        client.setUser(this._user);
     }
 
     public async disposeGameClient(runDisposer: boolean = true)
@@ -93,6 +110,8 @@ export class UserConnections
             this._socketClient.willDestroyUser  = false;
             this._gameClient.willDestroyUser    = false;
         }
+
+        client.setUser(this._user);
     }
 
     public async disposeSocketClient(runDisposer: boolean = true)
@@ -127,10 +146,5 @@ export class UserConnections
     public get isConnected(): boolean
     {
         return this._gameClient instanceof GameClient || this._socketClient instanceof SocketClient;
-    }
-
-    public get isDisposed(): boolean
-    {
-        return this._isDisposed;
     }
 }

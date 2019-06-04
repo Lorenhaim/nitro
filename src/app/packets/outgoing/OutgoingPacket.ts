@@ -5,7 +5,7 @@ export class OutgoingPacket
 {
     private _header: OutgoingHeader;
     private _bytes: number[];
-    private _encoded: { type: string, value: string }[];
+    private _encoded: { type: string, value: any }[];
 
     private _isPrepared: boolean;
     private _isCancelled: boolean;
@@ -34,7 +34,8 @@ export class OutgoingPacket
         for(let number of numbers)
         {
             this.writeBytes(...PacketEncoder.encodeInt(number));
-            this._encoded.push({ type: 'int', value: number.toString() });
+
+            this._encoded.push({ type: 'int', value: number });
         }
 
         return this;
@@ -45,7 +46,7 @@ export class OutgoingPacket
         for(let number of numbers)
         {
             this.writeBytes(...PacketEncoder.encodeShort(number));
-            this._encoded.push({ type: 'short', value: number.toString() });
+            this._encoded.push({ type: 'short', value: number });
         }
 
         return this;
@@ -74,7 +75,7 @@ export class OutgoingPacket
         for(let flag of flags)
         {
             this.writeBytes(PacketEncoder.encodeBoolean(flag));
-            this._encoded.push({ type: 'boolean', value: flag ? 'true' : 'fase' });
+            this._encoded.push({ type: 'boolean', value: flag });
         }
 
         return this;

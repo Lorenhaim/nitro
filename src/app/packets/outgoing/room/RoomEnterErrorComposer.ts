@@ -16,24 +16,6 @@ export class RoomEnterErrorComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            if(this._errorCode)
-            {
-                this.packet.writeInt(this._errorCode);
-                this.packet.writeString('');
-                    
-                this.packet.prepare();
-
-                return this.packet;
-            }
-            
-            return this.cancel();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._errorCode).writeString('').prepare();
     }
 }

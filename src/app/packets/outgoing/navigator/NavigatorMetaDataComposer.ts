@@ -12,38 +12,23 @@ export class NavigatorMetaDataComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        const tabs = Emulator.gameManager.navigatorManager.tabs;
+
+        if(!tabs) return this.packet.writeInt(0).prepare();
+
+        const totalTabs = tabs.length;
+
+        if(!totalTabs) return this.packet.writeInt(0).prepare();
+        
+        this.packet.writeInt(totalTabs);
+        
+        for(let i = 0; i < totalTabs; i++)
         {
-            if(Emulator.gameManager.navigatorManager.isLoaded)
-            {
-                const tabs      = Emulator.gameManager.navigatorManager.tabs;
-                const totalTabs = tabs.length;
+            const tab = tabs[i];
 
-                if(tabs && totalTabs)
-                {
-                    this.packet.writeInt(totalTabs);
-
-                    for(let i = 0; i < totalTabs; i++)
-                    {
-                        const tab = tabs[i];
-
-                        this.packet.writeString(tab.name).writeInt(0);
-                    }
-                }
-                else
-                {
-                    this.packet.writeInt(0);
-                }
-
-                return this.packet.prepare();
-            }
-
-            return this.cancel();
+            this.packet.writeString(tab.name).writeInt(0);
         }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        
+        return this.packet.prepare();
     }
 }

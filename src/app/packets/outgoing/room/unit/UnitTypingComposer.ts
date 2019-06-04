@@ -11,27 +11,14 @@ export class UnitTypingComposer extends Outgoing
     {
         super(OutgoingHeader.UNIT_TYPING);
 
-        if(unitId > 0)
-        {
-            this._unitId    = unitId;
-            this._flag      = flag || false;
-        }
-        else
-        {
-            throw new Error('invalid_unitId');
-        }
+        if(!unitId) throw new Error('invalid_unit');
+        
+        this._unitId    = unitId;
+        this._flag      = flag || false;
     }
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._unitId, this._flag ? 1 : 0).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._unitId, this._flag ? 1 : 0).prepare();
     }
 }

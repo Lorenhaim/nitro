@@ -1,79 +1,135 @@
+import { Manager } from '../../../../common';
 import { UserCurrencyDao } from '../../../../database';
-import { CurrencyComposer, CurrencyCreditsComposer } from '../../../../packets';
+import { UserCreditsComposer, UserCurrencyComposer } from '../../../../packets';
 import { User } from '../../User';
 import { Currency } from './Currency';
 import { CurrencyType } from './CurrencyType';
 
-export class UserCurrency
+export class UserCurrency extends Manager
 {
     private _user: User;
     private _currencies: Currency[];
 
-    private _isLoaded: boolean;
-    private _isLoading: boolean;
-
-    private _isPending: boolean;
-    private _isSaving: boolean;
-
-    private _isDisposed: boolean;
-    private _isDisposing: boolean;
-
     constructor(user: User)
     {
+        super('UserCurrency', user.logger);
+
         if(!(user instanceof User)) throw new Error('invalid_user');
 
         this._user          = user;
         this._currencies    = [];
-
-        this._isLoaded      = false;
-        this._isLoading     = false;
-
-        this._isDisposed    = false;
-        this._isDisposing   = false;
     }
 
-    public async init(): Promise<void>
+    protected async onInit(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading)
-        {
-            this._isLoading = true;
-
-            await this.loadCurrencies();
-
-            this._isLoaded  = true;
-            this._isLoading = false;
-        }
+        await this.loadCurrencies();
     }
 
-    public async dispose(): Promise<void>
+    protected async onDispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing)
-        {
-            this._isDisposing = true;
-
-            this._currencies = [];
-
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
-        }
+        this._currencies = [];
     }
 
     public getCurrency(type: CurrencyType): Currency
     {
         const totalCurrencies = this._currencies.length;
 
-        if(totalCurrencies)
+        if(!totalCurrencies) return null;
+        
+        for(let i = 0; i < totalCurrencies; i++)
         {
-            for(let i = 0; i < totalCurrencies; i++)
-            {
-                const currency = this._currencies[i];
+            const currency = this._currencies[i];
 
-                if(currency.type === type) return currency;
-            }
+            if(currency.type === type) return currency;
         }
 
         return null;
+    }
+
+    public getAllCurrencies(ignore: CurrencyType): Currency[]
+    {
+        const totalCurrencies = this._currencies.length;
+
+        if(!totalCurrencies) return null;
+
+        const results: Currency[] = [];
+        
+        for(let i = 0; i < totalCurrencies; i++)
+        {
+            const currency = this._currencies[i];
+
+            if(currency.type === ignore) continue;
+
+            results.push(currency);
+        }
+
+        if(results.length) return results;
+
+        return null;
+    }
+
+    public hasCurrency(type: CurrencyType): boolean
+    {
+        return this.getCurrency(type) !== null;
+    }
+
+    private async createCurrency(type: CurrencyType): Promise<Currency>
+    {
+        if(type === null) return;
+
+        if(this.hasCurrency(type)) return;
+
+        const newCurrency = await UserCurrencyDao.createCurrency(this._user.id, type, 0);
+
+        if(!newCurrency) return;
+
+        const currency: Currency = {
+            type: newCurrency.type,
+            amount: newCurrency.amount
+        };
+        
+        this._currencies.push(currency);
+
+        if(type === -1) this._user.connections.processOutgoing(new UserCreditsComposer());
+        else this._user.connections.processOutgoing(new UserCurrencyComposer());
+
+        return currency;
+    }
+
+    public async modifyCurrency(type: CurrencyType, amount: number): Promise<boolean>
+    {
+        if(type === null || !amount) return;
+
+        const totalCurrencies = this._currencies.length;
+
+        if(!totalCurrencies) return false;
+        
+        for(let i = 0; i < totalCurrencies; i++)
+        {
+            const currency = this._currencies[i];
+
+            if(currency.type === type)
+            {
+                const newAmount = currency.amount + amount;
+
+                if(newAmount < 0) return false;
+
+                await UserCurrencyDao.updateCurrency(this._user.id, type, newAmount);
+
+                currency.amount = newAmount;
+
+                if(type === -1) this._user.connections.processOutgoing(new UserCreditsComposer());
+                else this._user.connections.processOutgoing(new UserCurrencyComposer());
+
+                return true;
+            }
+        }
+
+        const currency = await this.createCurrency(type);
+
+        if(!currency) return false;
+
+        return await this.modifyCurrency(type, amount);
     }
 
     private async loadCurrencies(): Promise<void>
@@ -82,75 +138,23 @@ export class UserCurrency
 
         const results = await UserCurrencyDao.loadCurrencies(this._user.id);
 
-        if(results !== null)
+        if(!results) return;
+        
+        const totalResults = results.length;
+
+        if(!totalResults) return;
+        
+        for(let i = 0; i < totalResults; i++)
         {
-            const totalResults = results.length;
+            const result = results[i];
 
-            if(totalResults)
-            {
-                for(let i = 0; i < totalResults; i++)
-                {
-                    const result = results[i];
+            if(!result) continue;
 
-                    this._currencies.push({
-                        type: result.type,
-                        amount: result.amount
-                    });
-                }
-            }
+            this._currencies.push({
+                type: result.type,
+                amount: result.amount
+            });
         }
-    }
-
-    public async modifyCurrency(type: CurrencyType, amount: number): Promise<boolean>
-    {
-        if(typeof type === 'number' && amount)
-        {
-            const totalCurrencies = this._currencies.length;
-
-            if(totalCurrencies)
-            {
-                for(let i = 0; i < totalCurrencies; i++)
-                {
-                    const currency = this._currencies[i];
-
-                    if(currency.type === type)
-                    {
-                        const newAmount = currency.amount + parseInt(<any> amount);
-
-                        if(newAmount < 0) return false;
-
-                        await UserCurrencyDao.updateCurrency(this._user.id, type, newAmount);
-
-                        this._currencies[i].amount = newAmount;
-
-                        if(type === -1) await this._user.connections.processOutgoing(new CurrencyCreditsComposer());
-                        else await this._user.connections.processOutgoing(new CurrencyComposer());
-
-                        return true;
-                    }
-                }
-
-                const newCurrency = await UserCurrencyDao.createCurrency(this._user.id, type, amount > 0 ? amount : 0);
-
-                if(newCurrency)
-                {
-                    this._currencies.push({
-                        type: newCurrency.type,
-                        amount: newCurrency.amount
-                    });
-
-                    if(amount > 0)
-                    {
-                        if(type === -1) await this._user.connections.processOutgoing(new CurrencyCreditsComposer());
-                        else await this._user.connections.processOutgoing(new CurrencyComposer());
-                        
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
     }
 
     public get user(): User

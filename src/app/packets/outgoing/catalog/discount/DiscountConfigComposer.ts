@@ -11,16 +11,8 @@ export class DiscountConfigComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet
-                .writeInt(100, 6, 1, 1, 2, 40, 99)
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeInt(100, 6, 1, 1, 2, 40, 99)
+            .prepare();
     }
 }

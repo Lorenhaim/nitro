@@ -17,7 +17,7 @@ export class NavigatorCategoryEntity
     @Column({ name: 'show_hidden', type: 'enum', enum: ['0', '1'], default: 0 })
     public showHidden: '0' | '1';
 
-    @Column({ name: 'list_mode', type: 'enum', enum: ['0', '1', '2'], default: '0' })
+    @Column({ name: 'list_mode', type: 'enum', enum: NavigatorListMode, default: '0' })
     public listMode: NavigatorListMode;
 
     @Column({ name: 'list_collapsed', type: 'enum', enum: ['0', '1'], default: '0' })

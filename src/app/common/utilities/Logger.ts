@@ -40,7 +40,7 @@ export class Logger
     {
         if(this._printLogger)
         {
-            process.stdout.write(` ${ color(`[HabboAPI]`) } ${ moment().format('M/D/YY h:mm:ss A') } `);
+            process.stdout.write(` ${ color(`[Nitro]`) } ${ moment().format('M/D/YY h:mm:ss A') } `);
             this._context && process.stdout.write(clc.cyan(`[${ this._context }] `));
             this._contextInstance && process.stdout.write(clc.blackBright(`[${ this._contextInstance }] `));
             process.stdout.write(color(message));

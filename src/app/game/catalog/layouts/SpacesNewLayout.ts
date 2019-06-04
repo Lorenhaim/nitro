@@ -11,16 +11,13 @@ export class SpacesNewLayout extends CatalogLayout
 
     public parsePage(page: CatalogPage, packet: OutgoingPacket): OutgoingPacket
     {
-        if(page && packet)
-        {
-            return packet
-                .writeString('spaces_new')
-                .writeInt(3)
-                .writeString(page.imageHeader, page.imageTeaser, page.imageSpecial)
-                .writeInt(3)
-                .writeString(page.textHeader, page.textDetails, page.textTeaser);
-        }
-
-        return null;
+        if(!page || !packet) return null;
+        
+        return packet
+            .writeString(this.name)
+            .writeInt(3)
+            .writeString(page.imageHeader, page.imageTeaser, page.imageSpecial)
+            .writeInt(3)
+            .writeString(page.textHeader, page.textDetails, page.textTeaser);
     }
 }

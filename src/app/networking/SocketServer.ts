@@ -1,3 +1,4 @@
+import * as express from 'express';
 import { readFileSync } from 'fs';
 import { IncomingMessage } from 'http';
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https';
@@ -9,6 +10,7 @@ import { SocketClient } from './SocketClient';
 
 export class SocketServer extends Server<ws.Server>
 {
+    private _expressApp: any;
     private _webServer: HttpsServer;
 
     constructor()
@@ -18,10 +20,16 @@ export class SocketServer extends Server<ws.Server>
 
     protected onInit(): void
     {
-        this._webServer = createHttpsServer({
+        this._expressApp = express();
+
+        this._expressApp.use(express.static('./public'))
+
+        const options = {
             key: readFileSync('./src/ssl/private.pem'),
             cert: readFileSync('./src/ssl/public.pem')
-        });
+        };
+
+        this._webServer = createHttpsServer(options, this._expressApp);
         
         this._server = new ws.Server({ server: this._webServer });
 
@@ -33,6 +41,7 @@ export class SocketServer extends Server<ws.Server>
     protected onDispose(): void
     {
         this._server.close();
+        this._webServer.close();
     }
 
     private onServerListening()

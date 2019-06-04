@@ -1,5 +1,5 @@
 import { Emulator } from '../../../../../Emulator';
-import { BadgesCurrentComposer } from '../../../../outgoing';
+import { UserBadgesCurrentComposer } from '../../../../outgoing';
 import { Incoming } from '../../../Incoming';
 
 export class BadgesCurrentEvent extends Incoming
@@ -8,9 +8,13 @@ export class BadgesCurrentEvent extends Incoming
     {
         try
         {
-            const user = Emulator.gameManager.userManager.getUserById(this.packet.readInt());
+            const user = await Emulator.gameManager.userManager.getOfflineUserById(this.packet.readInt());
 
-            if(user) this.client.processOutgoing(new BadgesCurrentComposer(user.id, ...user.inventory.badges.currentBadges));
+            if(!user) return;
+
+            await user.inventory.init();
+            
+            this.client.processOutgoing(new UserBadgesCurrentComposer(user));
         }
 
         catch(err)

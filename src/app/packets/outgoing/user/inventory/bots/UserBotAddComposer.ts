@@ -18,16 +18,8 @@ export class UserBotAddComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this._bot.parseInventoryData(this.packet);
+        this._bot.parseInventoryData(this.packet);
 
-            return this.packet.writeBoolean(true).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeBoolean(true).prepare();
     }
 }

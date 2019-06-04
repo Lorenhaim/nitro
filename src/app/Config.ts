@@ -2,7 +2,7 @@ import { ConfigOptions } from './common';
 
 export const Config: ConfigOptions = {
     general: {
-        siteName: 'HabboAPI',
+        siteName: 'Nitro',
         siteUrl: 'http://emulator.habboapi.com:4200',
         production: 'PRODUCTION-201611291003-338511768'
     },
@@ -17,7 +17,8 @@ export const Config: ConfigOptions = {
             incoming: true,
             outgoing: true,
             unknown: true,
-            unprepared: true
+            unprepared: true,
+            invalid: true
         },
         connections: {
             game: true,
@@ -29,13 +30,21 @@ export const Config: ConfigOptions = {
         port: 1242,
         enabled: true,
         url: {
-            figureData: 'http://emulator.habboapi.com:3000/gamedata/figuredata.xml',
-            furniData: 'http://emulator.habboapi.com:3000/gamedata/furnidata.xml',
-            productData: 'http://emulator.habboapi.com:3000/gamedata/productdata.txt',
-            swf: 'http://emulator.habboapi.com:3000/swf/edit/habbo/habbo.swf',
-            swfBase: 'http://emulator.habboapi.com:3000/gordon/',
-            texts: 'http://emulator.habboapi.com:3000/gamedata/external_texts.txt',
-            variables: 'http://emulator.habboapi.com:3000/gamedata/external_variables.txt',
+            // figureData: 'http://emulator.habboapi.com:3000/gamedata/figuredata.xml',
+            // furniData: 'http://emulator.habboapi.com:3000/gamedata/furnidata.xml',
+            // productData: 'http://emulator.habboapi.com:3000/gamedata/productdata.txt',
+            // swf: 'http://emulator.habboapi.com:3000/gordon/PRODUCTION-201611291003-338511768/Habbo.swf',
+            // swfBase: 'http://emulator.habboapi.com:3000/gordon/',
+            // texts: 'http://emulator.habboapi.com:3000/gamedata/external_texts.txt',
+            // variables: 'http://emulator.habboapi.com:3000/gamedata/external_variables2.txt',
+            // avatarUrl: 'http://www.habbo.com/habbo-imaging/avatarimage?figure='
+            figureData: 'https://nitrots.co/assets/gamedata/figuredata.xml',
+            furniData: 'https://nitrots.co/assets/gamedata/furnidata.xml',
+            productData: 'https://nitrots.co/assets/gamedata/productdata.txt',
+            swf: 'https://nitrots.co/assets/gordon/PRODUCTION-201611291003-338511768/Habbo.swf',
+            swfBase: 'https://nitrots.co/assets/gordon/',
+            texts: 'https://nitrots.co/assets/gamedata/external_texts.txt',
+            variables: 'https://nitrots.co/assets/gamedata/external.variables.txt',
             avatarUrl: 'http://www.habbo.com/habbo-imaging/avatarimage?figure='
         }
     },
@@ -56,9 +65,13 @@ export const Config: ConfigOptions = {
             },
             alert: {
                 enabled: false,
-                message: 'Welcome to HabboAPI!',
+                message: `Welcome to Nitro!\r\r`,
                 type: 'default'
             }
+        },
+        camera: {
+            savePath: "C:/Users/willi/Desktop/habboapi-assets/camera/",
+            saveUrl: "http://emulator.habboapi.com:3000/camera/"
         },
         catalog: {
             maxPurchaseStack: 50
@@ -92,7 +105,7 @@ export const Config: ConfigOptions = {
         }
     },
     web: {
-        enabled: true,
+        enabled: false,
         ip: '0.0.0.0',
         port: 443,
         ticket: {

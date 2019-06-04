@@ -1,5 +1,4 @@
 import { Emulator } from '../../Emulator';
-import { CatalogModeComposer, CatalogUpdatedComposer, DiscountConfigComposer, GiftConfigComposer, MarketplaceConfigComposer, RecyclerPrizesComposer } from '../../packets';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { Command } from './Command';
@@ -15,12 +14,11 @@ export class UpdateCatalogCommand extends Command
     {
         await Emulator.gameManager.catalogManager.reload();
 
-        Emulator.gameManager.userManager.processOutgoing(
-            new CatalogUpdatedComposer(),
-            new CatalogModeComposer(0),
-            new DiscountConfigComposer(),
-            new MarketplaceConfigComposer(),
-            new GiftConfigComposer(),
-            new RecyclerPrizesComposer());
+        Emulator.gameManager.catalogManager.notifyReload();
+    }
+
+    public get description(): string
+    {
+        return 'Reloads the catalog';
     }
 }

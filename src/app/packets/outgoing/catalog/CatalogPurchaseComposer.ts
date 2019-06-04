@@ -18,14 +18,6 @@ export class CatalogPurchaseComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this._item.parseItem(this.packet).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this._item.parseItem(this.packet).prepare();
     }
 }

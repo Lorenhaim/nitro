@@ -1,4 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { UnitGender } from '../../game';
+import { GroupEntity } from './GroupEntity';
+import { GroupMemberEntity } from './GroupMemberEntity';
 import { ItemEntity } from './ItemEntity';
 import { MessengerCategoryEntity } from './MessengerCategoryEntity';
 import { MessengerFriendEntity } from './MessengerFriendEntity';
@@ -11,7 +14,7 @@ import { SecurityTicketEntity } from './SecurityTicketEntity';
 import { UserBadgeEntity } from './UserBadgeEntity';
 import { UserCurrencyEntity } from './UserCurrencyEntity';
 import { UserEffectEntity } from './UserEffectEntity';
-import { UserFavoriteRoomsEntity } from './UserFavoriteRoomsEntity';
+import { UserFavoriteRoomEntity } from './UserFavoriteRoomEntity';
 import { UserFavoriteSearchesEntity } from './UserFavoriteSearchesEntity';
 import { UserInfoEntity } from './UserInfoEntity';
 import { UserOutfitEntity } from './UserOutfitEntity';
@@ -35,8 +38,8 @@ export class UserEntity
     @Column({ name: 'motto', nullable: true })
     public motto: string;
 
-    @Column({ name: 'gender', type: 'enum', enum: ['M', 'F'], default: 'M' })
-    public gender: 'M' | 'F';
+    @Column({ name: 'gender', type: 'enum', enum: UnitGender, default: UnitGender.MALE })
+    public gender: UnitGender;
 
     @Column({ name: 'figure', default: 'hr-115-42.hd-195-19.ch-3030-82.lg-275-1408.fa-1201.ca-1804-64' })
     public figure: string;
@@ -97,7 +100,7 @@ export class UserEntity
     public badges: UserBadgeEntity[];
 
     @OneToMany(type => UserCurrencyEntity, currency => currency.user)
-    public currency: UserCurrencyEntity[];
+    public currencies: UserCurrencyEntity[];
 
     @OneToMany(type => UserEffectEntity, effect => effect.user)
     public effects: UserEffectEntity[];
@@ -105,8 +108,8 @@ export class UserEntity
     @OneToOne(type => UserInfoEntity, info => info.user, { cascade: ['insert', 'update' ] })
     public info: UserInfoEntity;
 
-    @OneToMany(type => UserFavoriteRoomsEntity, room => room.user)
-    public favoriteRooms: UserFavoriteRoomsEntity[];
+    @OneToMany(type => UserFavoriteRoomEntity, room => room.user)
+    public favoriteRooms: UserFavoriteRoomEntity[];
 
     @OneToMany(type => UserFavoriteSearchesEntity, search => search.user)
     public favoriteSearches: UserFavoriteSearchesEntity[];
@@ -116,4 +119,12 @@ export class UserEntity
 
     @OneToOne(type => UserStatisticsEntity, statistics => statistics.user, { cascade: ['insert', 'update' ] })
     public statistics: UserStatisticsEntity;
+
+    @OneToMany(type => GroupEntity, group => group.user)
+    public groups: GroupEntity[];
+
+    @OneToMany(type => GroupMemberEntity, member => member.user)
+    public groupMembers: GroupMemberEntity[];
+
+    public totalFriends: number;
 }

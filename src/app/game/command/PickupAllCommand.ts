@@ -73,4 +73,9 @@ export class PickupAllCommand extends Command
             if(pendingOutgoing.length) room.unitManager.processOutgoing(...pendingOutgoing);
         }
     }
+
+    public get description(): string
+    {
+        return 'Pickups all items in the room';
+    }
 }

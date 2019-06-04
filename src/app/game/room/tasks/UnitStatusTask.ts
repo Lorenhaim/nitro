@@ -15,77 +15,75 @@ export class UnitStatusTask extends Task
         this._room = room;
     }
 
-    protected async onRun(): Promise<void>
+    protected onRun(): void
     {
         const currentUnits = this._room.unitManager.units;
 
-        if(currentUnits)
-        {
-            const totalUnits = currentUnits.length;
+        if(!currentUnits) return;
+        
+        const totalUnits = currentUnits.length;
 
-            if(totalUnits) for(let i = 0; i < totalUnits; i++) this.processUnit(currentUnits[i]);
-        }
+        if(totalUnits) for(let i = 0; i < totalUnits; i++) this.processUnit(currentUnits[i]);
     }
 
     private processUnit(unit: Unit): void
     {
-        if(unit)
+        if(!unit) return;
+        
+        const statuses = unit.location.statuses;
+
+        if(!statuses) return;
+        
+        const totalStatuses = statuses.length;
+
+        if(!totalStatuses) return;
+        
+        for(let i = 0; i < totalStatuses; i++)
         {
-            const statuses = unit.location.statuses;
+            const status = statuses[i];
 
-            if(statuses)
+            if(!status) continue;
+
+            if(status.actionSwapCountdown > 0)
             {
-                const totalStatuses = statuses.length;
+                status.actionSwapCountdown -= 1;
+            }
 
-                if(totalStatuses)
-                {
-                    for(let i = 0; i < totalStatuses; i++)
-                    {
-                        const status = statuses[i];
+            else if(status.actionSwapCountdown === 0)
+            {
+                status.actionSwapCountdown = -1;
 
-                        if(status.actionSwapCountdown > 0)
-                        {
-                            status.actionSwapCountdown -= 1;
-                        }
+                status.swapKeys();
 
-                        else if(status.actionSwapCountdown === 0)
-                        {
-                            status.actionSwapCountdown = -1;
+                unit.needsUpdate = true;
+            }
 
-                            status.swapKeys();
+            if(status.actionCountdown > 0)
+            {
+                status.actionCountdown -= 1;
+            }
 
-                            unit.needsUpdate = true;
-                        }
+            else if(status.actionCountdown === 0)
+            {
+                status.actionCountdown = -1;
 
-                        if(status.actionCountdown > 0)
-                        {
-                            status.actionCountdown -= 1;
-                        }
+                status.swapKeys();
 
-                        else if(status.actionCountdown === 0)
-                        {
-                            status.actionCountdown = -1;
+                unit.needsUpdate = true;
+            }
 
-                            status.swapKeys();
+            if(status.lifetimeCountdown > 0)
+            {
+                status.lifetimeCountdown -= 1;
+            }
 
-                            unit.needsUpdate = true;
-                        }
+            else if(status.lifetimeCountdown === 0)
+            {
+                status.lifetimeCountdown = -1;
+                
+                unit.location.removeStatus(status.key);
 
-                        if(status.lifetimeCountdown > 0)
-                        {
-                            status.lifetimeCountdown -= 1;
-                        }
-
-                        else if(status.lifetimeCountdown === 0)
-                        {
-                            status.lifetimeCountdown = -1;
-                            
-                            //unit.location.removeStatus(status.key);
-
-                            unit.needsUpdate = true;
-                        }
-                    }
-                }
+                unit.needsUpdate = true;
             }
         }
     }

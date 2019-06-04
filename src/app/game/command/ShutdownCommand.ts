@@ -17,4 +17,9 @@ export class ShutdownCommand extends Command
             await Emulator.dispose();
         }
     }
+
+    public get description(): string
+    {
+        return 'Shutdowns the emulator';
+    }
 }

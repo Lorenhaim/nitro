@@ -55,4 +55,9 @@ export class RollDiceCommand extends Command
             }
         }
     }
+
+    public get description(): string
+    {
+        return 'Rolls all dice around you';
+    }
 }

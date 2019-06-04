@@ -1,4 +1,4 @@
-export const enum RoomChatProtection
+export enum RoomChatProtection
 {
     EXTRA   = 0,
     NORMAL  = 1,

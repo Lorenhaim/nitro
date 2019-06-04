@@ -1,3 +1,7 @@
+import { existsSync, writeFile } from 'fs';
+import { TimeHelper } from '../../../common';
+import { Emulator } from '../../../Emulator';
+import { CameraUrlComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
 export class CameraSaveEvent extends Incoming
@@ -7,26 +11,33 @@ export class CameraSaveEvent extends Incoming
         try
         {
             const pictureLength = this.packet.readInt();
-            const pictureData   = this.packet.readBytes(pictureLength);
 
-            // console.log(pictureLength, pictureData);
+            if(!pictureLength) return;
+
+            const pictureData = this.packet.readBuffer(pictureLength);
+
+            const savePath = Emulator.config.game.camera.savePath;
+
+            if(!savePath) return;
+
+            const fileName = `${ this.client.user.id }_${ TimeHelper.currentTimestamp }.png`;
+
+            try
+            {
+                if(existsSync(savePath + fileName)) return;
+
+                writeFile(savePath + fileName, pictureData, 'binary', err =>
+                {
+                    if(err) throw err;
+
+                    return this.client.processOutgoing(new CameraUrlComposer(Emulator.config.game.camera.saveUrl + fileName));
+                });
+            }
             
-            // const buffer = Buffer.alloc(pictureLength);
-
-            // for(let i = 0; i < pictureLength; i++) buffer[i] = pictureData[i];
-
-            // writeFile('./camera/picture.png', buffer, 'binary', err =>
-            // {
-            //     if(err) console.log(err);
-            //     else console.log('done!');
-            // });
-
-            //const something     = this.packet.readString();
-            //const something2    = this.packet.readString();
-            //const something3    = this.packet.readInt();
-            //const something4    = this.packet.readInt();
-            
-            //this.client.processOutgoing(new CameraPriceComposer());
+            catch(err)
+            {
+                this.error(err);
+            }
         }
 
         catch(err)

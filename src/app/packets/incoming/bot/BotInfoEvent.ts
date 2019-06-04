@@ -13,10 +13,6 @@ export class BotInfoEvent extends Incoming
             const bot = currentRoom.botManager.getBot(this.packet.readInt());
 
             if(!bot) return;
-
-            console.log(bot, this.packet.readInt());
-            
-            //this.client.processOutgoing(new PetInfoComposer(pet));
         }
 
         catch(err)

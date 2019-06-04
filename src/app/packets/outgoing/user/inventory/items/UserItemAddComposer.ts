@@ -18,25 +18,14 @@ export class UserItemAddComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            const totalItems = this._items.length;
+        const totalItems = this._items.length;
 
-            if(totalItems)
-            {
-                this.packet.writeInt(1, 1, totalItems);
+        if(!totalItems) return this.packet.writeInt(1, 1, 0).prepare();
+        
+        this.packet.writeInt(1, 1, totalItems);
+        
+        for(let i = 0; i < totalItems; i++) this.packet.writeInt(this._items[i].id);
 
-                for(let i = 0; i < totalItems; i++) this.packet.writeInt(this._items[i].id);
-
-                return this.packet.prepare();
-            }
-
-            return this.packet.writeInt(1, 1, 0).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.prepare();
     }
 }

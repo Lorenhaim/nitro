@@ -25,4 +25,9 @@ export class GiveBadgeCommand extends Command
             }
         }
     }
+
+    public get description(): string
+    {
+        return 'Give badges';
+    }
 }

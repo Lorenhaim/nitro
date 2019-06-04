@@ -11,30 +11,18 @@ export class UserBotsComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            const bots = this.client.user.inventory.bots.bots;
+        const bots = this.client.user.inventory.bots.bots;
 
-            if(bots)
-            {
-                const totalBots = bots.length;
+        if(!bots) return this.packet.writeInt(0).prepare();
 
-                if(totalBots)
-                {
-                    this.packet.writeInt(totalBots);
-                    
-                    for(let i = 0; i < totalBots; i++) bots[i].parseInventoryData(this.packet);
-                }
-                else this.packet.writeInt(0);
-            }
-            else this.packet.writeInt(0);
-            
-            return this.packet.prepare();
-        }
+        const totalBots = bots.length;
 
-        catch(err)
-        {
-            this.error(err);
-        }
+        if(!totalBots) return this.packet.writeInt(0).prepare();
+        
+        this.packet.writeInt(totalBots);
+        
+        for(let i = 0; i < totalBots; i++) bots[i].parseInventoryData(this.packet);
+        
+        return this.packet.prepare();
     }
 }

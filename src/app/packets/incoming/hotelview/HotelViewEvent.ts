@@ -1,4 +1,3 @@
-import { HotelViewComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
 export class HotelViewEvent extends Incoming
@@ -7,11 +6,7 @@ export class HotelViewEvent extends Incoming
     {
         try
         {
-            if(this.client.user.unit) this.client.user.unit.reset(false);
-
-            if(this.client.user.unit.isSpectating) this.client.user.unit.spectate(false);
-
-            this.client.processOutgoing(new HotelViewComposer());
+            if(this.client.user.unit) this.client.user.unit.reset();
         }
 
         catch(err)

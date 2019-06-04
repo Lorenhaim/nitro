@@ -18,18 +18,13 @@ export class CatalogPage
         this._entity    = entity;
         this._offerIds  = [];
 
-        if(this._entity.layout)
-        {
-            const layout = Emulator.gameManager.catalogManager.getLayout(this._entity.layout);
+        if(!this._entity.layout) throw new Error('invalid_layout');
 
-            if(!layout) throw new Error('invalid_layout');
+        const layout = Emulator.gameManager.catalogManager.getLayout(this._entity.layout);
 
-            this._layout = layout;
-        }
-        else
-        {
-            throw new Error('invalid_layout');
-        }
+        if(!layout) throw new Error('invalid_layout');
+
+        this._layout = layout;
     }
 
     public getItems(): CatalogItem[]
@@ -39,7 +34,9 @@ export class CatalogPage
 
     public parsePage(packet: OutgoingPacket): OutgoingPacket
     {
-        if(packet) return this._layout.parsePage(this, packet);
+        if(!packet) return null;
+        
+        return this._layout.parsePage(this, packet);
     }
 
     public get id(): number
@@ -100,6 +97,11 @@ export class CatalogPage
     public get textTeaser(): string
     {
         return this._entity.textTeaser;
+    }
+
+    public get minRank(): number
+    {
+        return this._entity.minRank;
     }
 
     public get isVisible(): boolean

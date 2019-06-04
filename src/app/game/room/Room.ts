@@ -1,10 +1,9 @@
-import { Subject, Subscription } from 'rxjs';
 import { Manager } from '../../common';
 import { RoomEntity } from '../../database';
 import { Emulator } from '../../Emulator';
 import { OutgoingPacket } from '../../packets';
+import { Group } from '../group';
 import { NavigatorCategory } from '../navigator';
-import { RoomEvent } from './events';
 import { RoomMap } from './mapping';
 import { RoomModel } from './models';
 import { RoomBotManager } from './RoomBotManager';
@@ -20,10 +19,8 @@ export class Room extends Manager
 {
     private _id: number;
 
-    private _events: Subject<RoomEvent>;
-    private _subscription: Subscription;
-
     private _details: RoomDetails;
+    private _group: Group;
     private _category: NavigatorCategory;
     private _model: RoomModel;
     private _map: RoomMap;
@@ -46,16 +43,13 @@ export class Room extends Manager
         if(!(entity instanceof RoomEntity)) throw new Error('invalid_room');
 
         this._id                = entity.id;
-
-        this._events            = new Subject();
-        this._subscription      = null;
-
         this._details           = new RoomDetails(this, entity);
+        this._group             = null;
 
-        this.loadCategory();
-        this.loadModel();
-
+        this._model             = null;
         this._map               = null;
+        
+        this.loadCategory();
 
         this._unitManager       = new RoomUnitManager(this);
         this._taskManager       = new RoomTaskManager(this);
@@ -71,7 +65,13 @@ export class Room extends Manager
 
     protected async onInit(): Promise<void>
     {
-        this._map = new RoomMap(this);
+        await this.loadMapping();
+
+        if(!this._model || !this._map) throw new Error('invalid_mapping');
+
+        const group = await Emulator.gameManager.groupManager.getGroup(this._details.groupId);
+
+        if(group) this._group = group;
 
         this._taskManager.init();
 
@@ -80,17 +80,13 @@ export class Room extends Manager
         await this._petManager.init();
         await this._securityManager.init();
 
-        this._subscription  = this._events.subscribe(async roomEvent => await this.handleEvent(roomEvent));
-
         this._map.generateMap();
 
-        this._didCancelDispose = true;
+        this.cancelDispose();
     }
 
     protected async onDispose(): Promise<void>
     {
-        if(this._subscription) this._subscription.unsubscribe();
-
         this._taskManager.dispose();
 
         await this._botManager.dispose();
@@ -99,7 +95,9 @@ export class Room extends Manager
 
         this._unitManager.dispose();
 
-        this._details.save();
+        this._details.setUsersNow(0);
+
+        await this._details.saveNow();
 
         this._map = null;
     }
@@ -120,62 +118,44 @@ export class Room extends Manager
         }, 60000);
     }
 
-    private async handleEvent(event: RoomEvent)
+    public cancelDispose(): void
     {
-        if(event instanceof RoomEvent)
-        {
-            try
-            {
-                event.setRoom(this);
-                
-                await event.runEvent();
-            }
-
-            catch(err)
-            {
-                this.logger.error(err);
-            }
-        }
+        this._didCancelDispose = true;
     }
 
     private loadCategory(): void
     {
-        if(this._details && this._details.categoryId)
-        {
-            const category = Emulator.gameManager.navigatorManager.getCategory(this._details.categoryId);
-
-            if(category)
-            {
-                this._category = category;
-
-                return;
-            }
-        }
-
         this._category = null;
+
+        if(!this._details || !this._details.categoryId) return;
+        
+        const category = Emulator.gameManager.navigatorManager.getCategory(this._details.categoryId);
+
+        if(!category) return;
+        
+        this._category = category;
     }
 
-    private loadModel(): void
+    public async loadMapping(): Promise<void>
     {
-        if(this._details && this._details.modelId)
-        {
-            const model = Emulator.gameManager.roomManager.getModel(this._details.modelId);
+        this._model = null;
+        this._map   = null;
 
-            if(model)
-            {
-                this._model = model;
+        if(!this._details || !this._details.modelId) return;
 
-                return;
-            }
-            else
-            {
-                throw new Error('invalid_model');
-            }
-        }
-        else
+        let model = Emulator.gameManager.roomManager.getModel(this._details.modelId);
+
+        if(!model)
         {
-            throw new Error('invalid_model');
+            await Emulator.gameManager.roomManager.loadCustomModel(this._details.modelId);
+
+            model = Emulator.gameManager.roomManager.getModel(this._details.modelId);
         }
+
+        if(!model || !model.didGenerate) return;
+
+        this._model = model;
+        this._map   = new RoomMap(this);
     }
 
     public parseInfo(packet: OutgoingPacket): OutgoingPacket
@@ -194,19 +174,23 @@ export class Room extends Manager
             .writeString(this._details.description)
             .writeInt(this._details.tradeType)
             .writeInt(2)
-            .writeInt(0) // score
+            .writeInt(this._details.totalLikes)
             .writeInt(this._details.categoryId)
             .writeInt(0); //tags foreach, string
 
         let start = 0;
 
+        if(this._group) start += 2;
+
         if(!this._category || !this._category.isPublic) start += 8;
 
         if(this._details.allowPets) start += 16;
         
-        // group + 2, promoted + 4
+        // promoted + 4
 
         packet.writeInt(start);
+
+        if(this._group) this._group.parseSimpleInfo(packet);
 
         return packet;
     }
@@ -248,14 +232,14 @@ export class Room extends Manager
         return this._id;
     }
 
-    public get events(): Subject<RoomEvent>
-    {
-        return this._events;
-    }
-
     public get details(): RoomDetails
     {
         return this._details;
+    }
+
+    public get group(): Group
+    {
+        return this._group;
     }
 
     public get category(): NavigatorCategory
@@ -316,10 +300,5 @@ export class Room extends Manager
     public get didCancelDispose(): boolean
     {
         return this._didCancelDispose;
-    }
-
-    public set didCancelDispose(flag: boolean)
-    {
-        this._didCancelDispose = flag;
     }
 }

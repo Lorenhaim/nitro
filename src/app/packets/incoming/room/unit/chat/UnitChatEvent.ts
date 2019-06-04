@@ -1,4 +1,5 @@
-import { ChatEvent, ChatType } from '../../../../../game';
+import { Emulator } from '../../../../../Emulator';
+import { ChatType } from '../../../../../game';
 import { Incoming } from '../../../Incoming';
 
 export class UnitChatEvent extends Incoming
@@ -7,12 +8,15 @@ export class UnitChatEvent extends Incoming
     {
         try
         {
-            if(this.client.user.unit)
-            {
-                const currentRoom = this.client.user.unit.room;
+            if(!this.client.user.unit) return;
 
-                if(currentRoom) currentRoom.events.next(new ChatEvent(this.client.user.unit, this.packet.readString(), ChatType.NORMAL));
-            }
+            const message = this.packet.readString();
+
+            if(!message) return;
+
+            if(await Emulator.gameManager.commandManager.processMessageAsCommand(this.client.user, message)) return;
+
+            this.client.user.unit.chat(ChatType.NORMAL, message);
         }
 
         catch(err)

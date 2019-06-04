@@ -22,7 +22,6 @@ export class ItemFloorClickEvent extends Incoming
             if(!interaction) return;
             
             if(interaction.onClick) interaction.onClick(this.client.user.unit, item, true);
-            console.log('clicked');
             
             currentRoom.wiredManager.processTrigger(WiredTriggerStateChanged, item, this.client.user);
         }

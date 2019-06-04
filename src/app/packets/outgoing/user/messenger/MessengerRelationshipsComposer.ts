@@ -1,90 +1,78 @@
-import { Emulator } from '../../../../Emulator';
-import { MessengerRelationshipType } from '../../../../game';
+import { NumberHelper } from '../../../../common';
+import { MessengerRelationshipType, User } from '../../../../game';
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class MessengerRelationshipsComposer extends Outgoing
 {
-    private _userId: number;
+    private _user: User;
 
-    constructor(userId: number)
+    constructor(user: User)
     {
         super(OutgoingHeader.MESSENGER_RELATIONSHIPS);
 
-        if(userId < 0) throw new Error('invalid_user_id');
+        if(!(user instanceof User)) throw new Error('invalid_user');
 
-        this._userId = userId;
+        this._user = user;
     }
 
     public compose(): OutgoingPacket
     {
         try
         {
-            const user = Emulator.gameManager.userManager.getUserById(this._userId);
+            this.packet.writeInt(this._user.id);
 
-            if(!user) return this.packet.writeInt(0, 0).prepare();
-            
-            this.packet.writeInt(this._userId);
-            
-            const relationships = user.messenger.getRelationships();
+            const relationships = this._user.messenger.getRelationships();
 
-            if(!relationships) return this.packet.writeInt(0, 0).prepare();
+            if(!relationships) return this.packet.writeInt(0).prepare();
+
+            let total = 0;
             
             const totalLovers   = relationships.lovers.length;
             const totalFriends  = relationships.friends.length;
             const totalHaters   = relationships.haters.length;
 
-            const total = totalLovers + totalFriends + totalHaters;
+            if(totalLovers) total++;
+            if(totalFriends) total++;
+            if(totalHaters) total++;
 
-            if(!total) return this.packet.writeInt(0, 0).prepare();
+            if(!total) return this.packet.writeInt(0).prepare();
             
             this.packet.writeInt(total);
 
-            this.packet.writeInt(MessengerRelationshipType.LOVER);
-
             if(totalLovers)
             {
+                this.packet.writeInt(MessengerRelationshipType.LOVER);
+
                 this.packet.writeInt(totalLovers);
                 
-                for(let i = 0; i < totalLovers; i++)
-                {
-                    const lover = relationships.lovers[i];
+                const lover = relationships.lovers[NumberHelper.randomNumber(0, totalLovers - 1)];
 
-                    this.packet.writeInt(lover.id).writeString(lover.username, lover.figure);
-                }
+                this.packet.writeInt(lover.id).writeString(lover.username, lover.figure);
             }
-            else this.packet.writeInt(0);
-
-            this.packet.writeInt(MessengerRelationshipType.FRIENDS);
 
             if(totalFriends)
             {
+                this.packet.writeInt(MessengerRelationshipType.FRIENDS);
+
                 this.packet.writeInt(totalFriends);
+
+                const friend = relationships.friends[NumberHelper.randomNumber(0, totalFriends - 1)];
                 
-                for(let i = 0; i < totalFriends; i++)
-                {
-                    const friend = relationships.friends[i];
-
-                    this.packet.writeInt(friend.id).writeString(friend.username, friend.figure);
-                }
+                this.packet.writeInt(friend.id).writeString(friend.username, friend.figure);
             }
-            else this.packet.writeInt(0);
-
-            this.packet.writeInt(MessengerRelationshipType.HATERS);
 
             if(totalHaters)
             {
-                this.packet.writeInt(totalHaters);
-                
-                for(let i = 0; i < totalHaters; i++)
-                {
-                    const hater = relationships.haters[i];
+                this.packet.writeInt(MessengerRelationshipType.HATERS);
 
-                    this.packet.writeInt(hater.id).writeString(hater.username, hater.figure);
-                }
+                this.packet.writeInt(totalHaters);
+
+                const hater = relationships.haters[NumberHelper.randomNumber(0, totalHaters - 1)];
+                
+                this.packet.writeInt(hater.id).writeString(hater.username, hater.figure);
             }
-            else this.packet.writeInt(0);
 
             return this.packet.prepare();
         }

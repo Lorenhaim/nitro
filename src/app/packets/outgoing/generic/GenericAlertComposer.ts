@@ -17,24 +17,11 @@ export class GenericAlertComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            if(this._message)
-            {
-                this.packet.writeString(this._message);
-                this.packet.writeString(this._url);
+        if(!this._message) return this.cancel();
+            
+        this.packet.writeString(this._message);
+        this.packet.writeString(this._url);
 
-                this.packet.prepare();
-
-                return this.packet;
-            }
-
-            return this.cancel();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.prepare();
     }
 }

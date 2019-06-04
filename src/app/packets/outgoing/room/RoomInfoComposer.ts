@@ -1,4 +1,4 @@
-import { Room } from '../../../game';
+import { Room, RoomMuteType } from '../../../game';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
@@ -22,25 +22,17 @@ export class RoomInfoComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this.packet.writeBoolean(this._someBoolean2);
+        this.packet.writeBoolean(this._someBoolean2);
 
-            this._room.parseInfo(this.packet);
+        this._room.parseInfo(this.packet);
 
-            this.packet
-                .writeBoolean(this._someBoolean, false, this._room.category.isPublic, false) // last false is (isMuted)
-                .writeInt(this._room.details.allowMute, this._room.details.allowKick, this._room.details.allowBan)
-                .writeBoolean(this._room.securityManager.hasRights(this.client.user.id)); // mute all
+        this.packet
+            .writeBoolean(this._someBoolean, false, this._room.category.isPublic, false) // last false is (isMuted)
+            .writeInt(this._room.details.allowMute, this._room.details.allowKick, this._room.details.allowBan)
+            .writeBoolean(this._room.details.allowMute === RoomMuteType.RIGHTS && this._room.securityManager.hasRights(this.client.user) || this._room.securityManager.isOwner(this.client.user)); // mute all
 
-            this._room.parseChatSettings(this.packet);
-                
-            return this.packet.prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        this._room.parseChatSettings(this.packet);
+            
+        return this.packet.prepare();
     }
 }

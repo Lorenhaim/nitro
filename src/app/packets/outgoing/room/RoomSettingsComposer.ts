@@ -18,38 +18,30 @@ export class RoomSettingsComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this.packet
-                .writeInt(this._room.id)
-                .writeString(this._room.details.name)
-                .writeString(this._room.details.description)
-                .writeInt(this._room.details.state)
-                .writeInt(this._room.details.categoryId)
-                .writeInt(this._room.details.usersMax)
-                .writeInt(this._room.details.usersMax)
-                .writeInt(0) // tags length, each string
-                .writeInt(this._room.details.tradeType)
-                .writeInt(this._room.details.allowPets ? 1 : 0)
-                .writeInt(this._room.details.allowPetsEat ? 1 : 0)
-                .writeInt(this._room.details.allowWalkThrough ? 1 : 0)
-                .writeInt(this._room.details.hideWalls ? 1 : 0)
-                .writeInt(this._room.details.thicknessWall)
-                .writeInt(this._room.details.thicknessFloor);
+        this.packet
+            .writeInt(this._room.id)
+            .writeString(this._room.details.name)
+            .writeString(this._room.details.description)
+            .writeInt(this._room.details.state)
+            .writeInt(this._room.details.categoryId)
+            .writeInt(this._room.details.usersMax)
+            .writeInt(this._room.details.usersMax)
+            .writeInt(0) // tags length, each string
+            .writeInt(this._room.details.tradeType)
+            .writeInt(this._room.details.allowPets ? 1 : 0)
+            .writeInt(this._room.details.allowPetsEat ? 1 : 0)
+            .writeInt(this._room.details.allowWalkThrough ? 1 : 0)
+            .writeInt(this._room.details.hideWalls ? 1 : 0)
+            .writeInt(this._room.details.thicknessWall)
+            .writeInt(this._room.details.thicknessFloor);
 
-            this._room.parseChatSettings(this.packet);
+        this._room.parseChatSettings(this.packet);
 
-            return this.packet
-                .writeBoolean(false)
-                .writeInt(this._room.details.allowMute)
-                .writeInt(this._room.details.allowKick)
-                .writeInt(this._room.details.allowBan)
-                .prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet
+            .writeBoolean(false)
+            .writeInt(this._room.details.allowMute)
+            .writeInt(this._room.details.allowKick)
+            .writeInt(this._room.details.allowBan)
+            .prepare();
     }
 }

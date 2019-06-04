@@ -11,14 +11,6 @@ export class UserFirstLoginOfDayComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeBoolean(this.client.user.details.firstLoginOfDay).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeBoolean(this.client.user.details.firstLoginOfDay).prepare();
     }
 }

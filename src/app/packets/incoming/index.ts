@@ -3,6 +3,7 @@ export * from './camera';
 export * from './catalog';
 export * from './client';
 export * from './games';
+export * from './group';
 export * from './hotelview';
 export * from './Incoming';
 export * from './IncomingHeader';

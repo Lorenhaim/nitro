@@ -17,81 +17,72 @@ export class CatalogPagesComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        this.packet
+            .writeBoolean(true)
+            .writeInt(0, -1)
+            .writeString('root', '')
+            .writeInt(0);
+        
+        const pages = Emulator.gameManager.catalogManager.getPages(0, this.client.user.details.rankId);
+
+        if(pages)
         {
-            this.packet
-                .writeBoolean(true)
-                .writeInt(0, -1)
-                .writeString('root', '')
-                .writeInt(0);
-            
-            const pages = Emulator.gameManager.catalogManager.getPages(0);
+            const totalPages = pages.length;
 
-            if(pages)
+            if(totalPages)
             {
-                const totalPages = pages.length;
-
-                if(totalPages)
-                {
-                    this.packet.writeInt(totalPages);
-                    
-                    for(let i = 0; i < totalPages; i++) this.parsePage(pages[i]);
-                }
-                else this.packet.writeInt(0);
+                this.packet.writeInt(totalPages);
+                
+                for(let i = 0; i < totalPages; i++) this.parsePage(pages[i]);
             }
             else this.packet.writeInt(0);
-
-            return this.packet.writeBoolean(false).writeString('NORMAL').prepare();
         }
+        else this.packet.writeInt(0);
 
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeBoolean(false).writeString('NORMAL').prepare();
     }
 
-    private parsePage(page: CatalogPage)
+    private parsePage(page: CatalogPage): void
     {
-        if(page)
+        if(!page) return;
+        
+        this.packet
+            .writeBoolean(page.isVisible) // visible
+            .writeInt(page.iconImage) // icon image
+            .writeInt(page.isVisible ? page.id : -1) // if enabled id, else -1
+            .writeString(page.caption)
+            .writeString(page.name);
+
+        const offerIds = page.offerIds;
+
+        if(offerIds)
         {
-            this.packet
-                .writeBoolean(page.isVisible) // visible
-                .writeInt(page.iconImage) // icon image
-                .writeInt(page.isVisible ? page.id : -1) // if enabled id, else -1
-                .writeString(page.caption)
-                .writeString(page.name);
+            const totalOfferIds = offerIds.length;
 
-            const offerIds = page.offerIds;
-
-            if(offerIds)
+            if(totalOfferIds)
             {
-                const totalOfferIds = offerIds.length;
+                this.packet.writeInt(totalOfferIds);
 
-                if(totalOfferIds)
-                {
-                    this.packet.writeInt(totalOfferIds);
-
-                    for(let i = 0; i < totalOfferIds; i++) this.packet.writeInt(offerIds[i]);
-                }
-                else this.packet.writeInt(0);
-            }
-            else this.packet.writeInt(0);
-
-            const children = Emulator.gameManager.catalogManager.getPages(page.id);
-
-            if(children)
-            {
-                const totalChildren = children.length;
-
-                if(totalChildren)
-                {
-                    this.packet.writeInt(totalChildren);
-                    
-                    for(let i = 0; i < totalChildren; i++) this.parsePage(children[i]);
-                }
-                else this.packet.writeInt(0);
+                for(let i = 0; i < totalOfferIds; i++) this.packet.writeInt(offerIds[i]);
             }
             else this.packet.writeInt(0);
         }
+        else this.packet.writeInt(0);
+
+        const children = Emulator.gameManager.catalogManager.getPages(page.id, this.client.user.details.rankId);
+
+        if(children)
+        {
+            const totalChildren = children.length;
+
+            if(totalChildren)
+            {
+                this.packet.writeInt(totalChildren);
+                
+                for(let i = 0; i < totalChildren; i++) this.parsePage(children[i]);
+            }
+            else this.packet.writeInt(0);
+        }
+        else this.packet.writeInt(0);
     }
 }

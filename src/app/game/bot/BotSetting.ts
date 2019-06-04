@@ -4,6 +4,6 @@ export const enum BotSetting
     CHAT        = 2,
     FREE_ROAM   = 3,
     DANCE       = 4,
-    NAME        = 5
-
+    NAME        = 5,
+    MOTTO       = 9
 }

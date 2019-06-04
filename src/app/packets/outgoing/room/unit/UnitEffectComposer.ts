@@ -18,14 +18,6 @@ export class UnitEffectComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._unit.id, this._unit.location.effectType || 0, 0).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._unit.id, this._unit.location.effectType || 0, 0).prepare();
     }
 }

@@ -11,27 +11,14 @@ export class RoomCreatedComposer extends Outgoing
     {
         super(OutgoingHeader.ROOM_CREATED);
 
-        if(id > 0 && name !== null)
-        {
-            this._id    = id;
-            this._name  = name;
-        }
-        else
-        {
-            throw new Error('invalid_room');
-        }
+        if(!id || !name) throw new Error('invalid_room');
+        
+        this._id    = id;
+        this._name  = name;
     }
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._id).writeString(this._name).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._id).writeString(this._name).prepare();
     }
 }

@@ -18,16 +18,8 @@ export class ItemWallUpdateComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this._item.parseWallData(this.packet);
+        this._item.parseWallData(this.packet);
 
-            return this.packet.writeString(this._item.userId.toString()).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeString(this._item.userId.toString()).prepare();
     }
 }

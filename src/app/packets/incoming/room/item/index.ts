@@ -1,11 +1,12 @@
 export * from './floor';
+export * from './ItemClothingRedeemEvent';
+export * from './ItemColorWheelClick';
 export * from './ItemDiceClickEvent';
 export * from './ItemDiceCloseEvent';
+export * from './ItemExchangeRedeemEvent';
 export * from './ItemPaintEvent';
 export * from './ItemPickupEvent';
 export * from './ItemPlaceEvent';
-export * from './ItemRedeemEvent';
 export * from './ItemStackHelperEvent';
 export * from './wall';
 export * from './wired';
-

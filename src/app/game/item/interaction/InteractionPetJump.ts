@@ -1,4 +1,3 @@
-import { UnitStatusComposer } from '../../../packets';
 import { Position } from '../../pathfinder';
 import { Unit, UnitStatus, UnitStatusType, UnitType } from '../../unit';
 import { User } from '../../user';
@@ -29,59 +28,27 @@ export class InteractionPetJump extends InteractionDefault implements OnStop, On
 
         if(!unit) return;
 
-        if(unit.location.getCurrentItem() !== item) return;
-
         if(!unit.location.isWalking) return;
 
-        const connectedUnit = unit.connectedUnit;
+        const currentItem = unit.location.getCurrentItem();
 
-        if(connectedUnit)
+        if(unit.location.getCurrentItem() !== item) return;
+
+        if(unit.type === UnitType.PET)
         {
-            if(connectedUnit.type !== UnitType.PET) return;
+            if(unit.location.hasStatus(UnitStatusType.JUMP)) unit.location.removeStatus(UnitStatusType.JUMP);
+            else unit.location.addStatus(new UnitStatus(UnitStatusType.JUMP, '0'));
 
-            if(connectedUnit.location.getCurrentItem() !== item) return;
-
-            if(!connectedUnit.location.isWalking) return;
-            
-            if(connectedUnit.location.hasStatus(UnitStatusType.JUMP)) connectedUnit.location.removeStatus(UnitStatusType.JUMP);
-            else connectedUnit.location.addStatus(new UnitStatus(UnitStatusType.JUMP, '0'));
-
-            unit.room.unitManager.processOutgoing(new UnitStatusComposer(connectedUnit));
+            unit.updateNow();
         }
-        else
+
+        if(unit.type === UnitType.USER)
         {
-            if(unit.location.hasStatus(UnitStatusType.JUMP))
+            if(unit.connectedUnit && unit.connectedUnit.type === UnitType.PET)
             {
-                const move = unit.location.getStatus(UnitStatusType.MOVE);
-
-                if(move)
-                {
-                    unit.location.position.z += 0.5;
-
-                    const parts = move.value.split(',');
-
-                    //if(parts.length === 3) move.setValue(`${ parts[0] },${ parts[1] },${ parseFloat(parts[2]) - 0.5 }`);
-                }
-
-                unit.location.removeStatus(UnitStatusType.JUMP);
+                if(unit.connectedUnit.location.hasStatus(UnitStatusType.JUMP)) unit.location.removeStatus(UnitStatusType.JUMP);
+                else unit.location.addStatus(new UnitStatus(UnitStatusType.JUMP, '0'));
             }
-            else
-            {
-                const move = unit.location.getStatus(UnitStatusType.MOVE);
-
-                if(move)
-                {
-                    const parts = move.value.split(',');
-
-                    move.setValue(`${ parts[0] },${ parts[1] },${ parseFloat(parts[2]) + 0.5 }`);
-                }
-
-                unit.location.addStatus(new UnitStatus(UnitStatusType.JUMP, '0'));
-
-                unit.location.position.z += 0.5;
-            }
-
-            unit.room.unitManager.processOutgoing(new UnitStatusComposer(unit));
         }
     }
 
@@ -89,44 +56,36 @@ export class InteractionPetJump extends InteractionDefault implements OnStop, On
     {
         super.onStep(unit, item);
 
-        const connectedUnit = unit.connectedUnit;
+        // if(unit.type !== UnitType.PET) return;
 
-        if(!connectedUnit) return;
+        // if(unit.location.hasStatus(UnitStatusType.JUMP))
+        // {
+        //     item.toggleRandomState();
 
-        if(connectedUnit.type !== UnitType.PET) return;
+        //     unit.location.removeStatus(UnitStatusType.JUMP);
 
-        if(connectedUnit.location.hasStatus(UnitStatusType.JUMP)) item.toggleRandomState();
-
-        setTimeout(() => item.setExtraData(0), 2000);
+        //     setTimeout(() => item.setExtraData(0), 2000);
+        // }
+        // else unit.location.addStatus(new UnitStatus(UnitStatusType.JUMP, '0'));
     }
 
     public onStop(unit: Unit, item: Item): void
     {
         super.onStop(unit, item);
 
-        const connectedUnit = unit.connectedUnit;
+        if(unit.type !== UnitType.PET) return;
 
-        if(!connectedUnit) return;
+        unit.location.removeStatus(UnitStatusType.JUMP);
 
-        if(connectedUnit.type !== UnitType.PET) return;
-
-        connectedUnit.location.removeStatus(UnitStatusType.JUMP);
-
-        unit.room.unitManager.processOutgoing(new UnitStatusComposer(connectedUnit));
+        unit.updateNow();
     }
 
     public onLeave(unit: Unit, item: Item, positionNext: Position): void
     {
         super.onLeave(unit, item, positionNext);
 
-        if(!unit) return;
+        if(unit.type !== UnitType.PET) return;
 
-        const connectedUnit = unit.connectedUnit;
-
-        if(!connectedUnit) return;
-
-        if(connectedUnit.type !== UnitType.PET) return;
-
-        connectedUnit.location.removeStatus(UnitStatusType.JUMP);
+        unit.location.removeStatus(UnitStatusType.JUMP);
     }
 }

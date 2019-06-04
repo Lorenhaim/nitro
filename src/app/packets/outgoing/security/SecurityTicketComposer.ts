@@ -17,20 +17,10 @@ export class SecurityTicketComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this.packet.writeBoolean(this._success);
+        this.packet.writeBoolean(this._success);
             
-            if(this._ticket) this.packet.writeString(this._ticket);
+        if(this._ticket) this.packet.writeString(this._ticket);
 
-            this.packet.prepare();
-
-            return this.packet;
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.prepare();
     }
 }

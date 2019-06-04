@@ -1,5 +1,5 @@
 import { UnitStatusComposer } from '../../../packets';
-import { Unit, UnitStatus, UnitStatusType, UnitType } from '../../unit';
+import { Unit, UnitStatus, UnitStatusType } from '../../unit';
 import { Room } from '../Room';
 import { Task } from './Task';
 
@@ -16,7 +16,7 @@ export class UnitActionTask extends Task
         this._room = room;
     }
 
-    protected async onRun(): Promise<void>
+    protected onRun(): void
     {
         const updatedUnits: Unit[] = [];
 
@@ -56,116 +56,82 @@ export class UnitActionTask extends Task
         if(updatedUnits.length) this._room.unitManager.processOutgoing(new UnitStatusComposer(...updatedUnits));
     }
 
-    private processUnit(unit: Unit): Promise<void>
+    private processUnit(unit: Unit): void
     {
-        if(unit)
-        {
-            if(unit.location.rolling) return;
+        if(!unit) return;
+        
+        if(unit.location.rolling) return;
             
-            if(unit.location.isWalking)
+        if(!unit.location.isWalking) return;
+
+        unit.location.processNextPosition();
+
+        if(!unit.canLocate && unit.location.isWalkingSelf) return unit.location.stopWalking();
+
+        else if(unit.location.currentPath.length)
+        {
+            const nextPosition = unit.location.currentPath.shift();
+
+            if(!nextPosition) return unit.location.stopWalking();
+
+            const nextTile = unit.room.map.getValidTile(unit, nextPosition, unit.location.currentPath.length === 0);
+
+            if(!nextTile) return this.retryPath(unit);
+            
+            const nextItem      = nextTile.highestItem;
+            const currentItem   = unit.location.getCurrentItem();
+
+            if(currentItem)
             {
-                if(unit.location.positionNext)
+                if(currentItem !== nextItem)
                 {
-                    const positionPrevious  = unit.location.position.copy();
+                    const interaction: any = currentItem.baseItem.interaction;
 
-                    unit.location.position.x = unit.location.positionNext.x;
-                    unit.location.position.y = unit.location.positionNext.y;
-                    unit.location.updateHeight(unit.location.position);
-
-                    const currentItem = unit.location.getCurrentItem();
-
-                    if(currentItem)
-                    {
-                        const interaction: any = currentItem.baseItem.interaction;
-
-                        if(interaction)
-                        {
-                            if(interaction.onStep && unit.type !== UnitType.PET) interaction.onStep(unit, currentItem);
-                        }
-                    }
-
-                    if(unit.location.clickGoal && unit.location.clickGoal.position && unit.location.clickGoal.item)
-                    {
-                        if(unit.location.clickGoal.position.compare(unit.location.position))
-                        {
-                            const interaction: any = unit.location.clickGoal.item.baseItem.interaction;
-
-                            if(interaction) if(interaction.onClick && unit.type !== UnitType.PET) interaction.onClick(unit, unit.location.clickGoal.item);
-
-                            unit.location.setClickGoal(null, null);
-                        }
-                    }
+                    if(interaction && interaction.onLeave) interaction.onLeave(unit, currentItem, nextPosition);
                 }
-
-                if(!unit.canLocate && unit.location.isWalkingSelf)
-                {
-                    unit.location.stopWalking();
-                }
-
-                else if(unit.location.currentPath.length)
-                {
-                    const nextPosition  = unit.location.currentPath.shift();
-                    const nextTile      = unit.room.map.getValidTile(unit, nextPosition);
-
-                    if(nextTile)
-                    {
-                        const nextItem = nextTile.highestItem;
-
-                        const currentItem = unit.location.getCurrentItem();
-
-                        if(currentItem)
-                        {
-                            if(currentItem !== nextItem)
-                            {
-                                const interaction: any = currentItem.baseItem.interaction;
-
-                                if(interaction)
-                                {
-                                    if(interaction.onLeave && unit.type !== UnitType.PET) interaction.onLeave(unit, currentItem, nextPosition);
-                                }
-                            }
-                        }
-
-                        const currentTile = unit.location.getCurrentTile();
-
-                        if(currentTile) currentTile.removeUnit(unit);
-
-                        nextTile.addUnit(unit);
-
-                        unit.location.removeStatus(UnitStatusType.LAY, UnitStatusType.SIT);
-                        unit.location.position.setDirection(unit.location.position.calculateWalkDirection(nextPosition));
-                        unit.location.addStatus(new UnitStatus(UnitStatusType.MOVE, `${ nextTile.position.x },${ nextTile.position.y },${ nextTile.walkingHeight + unit.location.additionalHeight }`));
-                        unit.location.positionNext = nextPosition;
-
-                        if(nextItem)
-                        {
-                            const interaction: any = nextItem.baseItem.interaction;
-
-                            if(interaction)
-                            {
-                                if(nextItem !== currentItem)
-                                {
-                                    const interaction: any = nextItem.baseItem.interaction;
-
-                                    if(interaction.onEnter && unit.type !== UnitType.PET) interaction.onEnter(unit, nextItem);
-                                }
-
-                                if(interaction.beforeStep) interaction.beforeStep(unit, nextItem);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        unit.location.clearPath();
-                        unit.location.walkTo(unit.location.positionGoal);
-
-                        return this.processUnit(unit);
-                    }
-                }
-                else unit.location.stopWalking();
-
-                unit.needsUpdate = true;
             }
+
+            const currentTile = unit.location.getCurrentTile();
+
+            if(currentTile) currentTile.removeUnit(unit);
+
+            nextTile.addUnit(unit);
+
+            unit.location.removeStatus(UnitStatusType.LAY, UnitStatusType.SIT);
+            unit.location.addStatus(new UnitStatus(UnitStatusType.MOVE, `${ nextTile.position.x },${ nextTile.position.y },${ nextTile.walkingHeight + unit.location.additionalHeight }`));
+
+            unit.location.position.setDirection(unit.location.position.calculateWalkDirection(nextPosition));
+            
+            unit.location.positionNext = nextPosition;
+
+            if(nextItem)
+            {
+                const interaction: any = nextItem.baseItem.interaction;
+
+                if(interaction)
+                {
+                    if(interaction.beforeStep) interaction.beforeStep(unit, nextItem);
+
+                    if(nextItem !== currentItem)
+                    {
+                        if(interaction.onEnter) interaction.onEnter(unit, nextItem);
+                    }
+                }
+            }
+
+            unit.needsUpdate = true;
         }
+
+        else return unit.location.stopWalking();
+    }
+
+    private retryPath(unit: Unit): void
+    {
+        if(!unit) return;
+
+        unit.location.clearPath();
+        unit.location.walkTo(unit.location.positionGoal);
+
+        return this.processUnit(unit);
     }
 }

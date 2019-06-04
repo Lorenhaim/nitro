@@ -18,18 +18,8 @@ export class ItemExtraDataComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            this.packet.writeString(this._item.id.toString());
+        this.packet.writeString(this._item.id.toString());
 
-            this._item.parseExtraData(this.packet);
-
-            return this.packet.prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this._item.parseExtraData(this.packet).prepare();
     }
 }

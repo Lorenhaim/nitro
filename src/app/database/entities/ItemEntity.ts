@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Direction } from '../../game';
+import { Direction, DirectionSimple } from '../../game';
 import { CatalogItemLimitedEntity } from './CatalogItemLimitedEntity';
 import { ItemBaseEntity } from './ItemBaseEntity';
 import { RoomEntity } from './RoomEntity';
@@ -29,7 +29,7 @@ export class ItemEntity
     @Column({ name: 'z', type: 'decimal', precision: 10, scale: 6, default: '0' })
     public z: string;
 
-    @Column({ name: 'direction', type: 'enum', enum: ['0', '2', '4', '6'], default: '0' })
+    @Column({ name: 'direction', type: 'enum', enum: DirectionSimple, default: DirectionSimple.NORTH })
     public direction: Direction;
 
     @Column({ name: 'wall_position', nullable: true })

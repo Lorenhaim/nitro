@@ -1,8 +1,8 @@
 import { NumberHelper } from '../../../common';
 import { RoomStackHeightComposer } from '../../../packets';
 import { BaseItemType } from '../../item';
-import { AffectedPositions, Position } from '../../pathfinder';
-import { Unit } from '../../unit';
+import { AffectedPositions, Direction, Position } from '../../pathfinder';
+import { Unit, UnitType } from '../../unit';
 import { Room } from '../Room';
 import { RoomTile } from './RoomTile';
 import { RoomTileState } from './RoomTileState';
@@ -130,49 +130,37 @@ export class RoomMap
             if(!item) continue;
 
             if(item.baseItem.type !== BaseItemType.FLOOR) continue;
-            
-            const tile = item.getTile();
 
-            if(!tile) continue;
-            
-            tile.addItem(item);
+            const affectedPositions = AffectedPositions.getPositions(item);
 
-            if(tile.tileHeight < item.height)
+            if(!affectedPositions) continue;
+
+            const totalAffectedPositions = affectedPositions.length;
+
+            if(!totalAffectedPositions) continue;
+
+            for(let j = 0; j < totalAffectedPositions; j++)
             {
-                item.itemBelow      = tile.highestItem;
-                tile.tileHeight     = item.height;
-                tile.highestItem    = item;
+                const position = affectedPositions[j];
 
-                const affectedPositions = AffectedPositions.getPositions(item);
+                if(!position) continue;
 
-                if(!affectedPositions) continue;
+                const tile = this.getTile(position);
 
-                const totalPositions = affectedPositions.length;
+                if(!tile) continue;
 
-                if(!totalPositions) continue;
+                tile.addItem(item);
 
-                for(let j = 0; j < totalPositions; j++)
+                if(tile.tileHeight < item.height)
                 {
-                    const position = affectedPositions[j];
-
-                    if(!position) continue;
-
-                    if(position.compare(item.position)) continue;
-
-                    const affectedTile = this.getTile(position);
-
-                    if(!affectedTile) continue;
-
-                    if(affectedTile.highestItem)
-                    {
-                        if(affectedTile.highestItem.position.z > item.position.z) continue;
-                    }
-
-                    affectedTile.tileHeight     = item.height;
-                    affectedTile.highestItem    = item;
+                    item.itemBelow      = tile.highestItem;
+                    tile.tileHeight     = item.height;
+                    tile.highestItem    = item;
                 }
             }
         }
+
+        this._room.itemManager.setDimmer();
     }
 
     public getTile(position: Position): RoomTile
@@ -182,140 +170,146 @@ export class RoomMap
         return null;
     }
 
-    public getValidTile(unit: Unit, position: Position): RoomTile
+    public getBlockedPositions(): Position[]
     {
-        if(position)
+        const results: Position[] = [];
+
+        const totalTiles = this._tiles.length;
+
+        if(!totalTiles) return null;
+
+        for(let i = 0; i < totalTiles; i++)
         {
-            const tile = this.getTile(position);
+            const tile = this._tiles[i];
 
-            if(tile)
-            {
-                if(tile.isDoor) return tile;
+            if(!tile) continue;
 
-                if(this._room.model.getTileState(tile.position.x, tile.position.y) === RoomTileState.OPEN)
-                {
-                    const totalUnits = tile.units.length;
+            const highestItem = tile.highestItem;
 
-                    if(totalUnits)
-                    {
-                        for(let i = 0; i < totalUnits; i++)
-                        {
-                            const existingUnit = tile.units[i];
+            if(!highestItem) continue;
 
-                            if(existingUnit)
-                            {
-                                if(unit)
-                                {
-                                    if(existingUnit.id === unit.id) return tile;
-
-                                    if(existingUnit === unit.connectedUnit) return tile;
-                                }
-                            }
-                        }
-
-                        return null;
-                    }
-
-                    const highestItem = tile.highestItem;
-
-                    if(!tile.canWalk)
-                    {
-                        if(highestItem)
-                        {
-                            if(unit)
-                            {
-                                if(highestItem.isItemOpen) return tile;
-
-                                if(!highestItem.position.compare(unit.location.position)) return null;
-                            }
-
-                            if(highestItem.isItemOpen) return tile;
-                            
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        if(highestItem)
-                        {
-                            if(!highestItem.isItemOpen) return null;
-                            
-                            const height = highestItem.height;
-
-                            const totalItems = tile.items.length;
-
-                            if(totalItems > 1)
-                            {
-                                for(let i = 0; i < totalItems; i++)
-                                {
-                                    const item = tile.items[i];
-
-                                    if(item.height === height)
-                                    {
-                                        if(!item.baseItem.canWalk) return null;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    return tile;
-                }
-            }
+            results.push(...AffectedPositions.getPositions(highestItem))
         }
 
-        return null;
+        if(!results.length) return null;
+
+        return results;
+    }
+
+    public getValidTile(unit: Unit, position: Position, isGoal: boolean = true): RoomTile
+    {
+        if(!position) return null;
+        
+        const tile = this.getTile(position);
+
+        if(!tile) return null;
+        
+        if(tile.isDoor) return tile;
+        
+        if(this._room.model.getTileState(tile.position.x, tile.position.y) === RoomTileState.CLOSED) return null;
+        
+        const totalUnits = tile.units.length;
+
+        if(totalUnits)
+        {
+            for(let i = 0; i < totalUnits; i++)
+            {
+                const existingUnit = tile.units[i];
+
+                if(!existingUnit) continue;
+
+                if(!unit) break;
+
+                if(existingUnit.id === unit.id) return tile;
+
+                if(existingUnit === unit.connectedUnit) return tile; // horse
+            }
+
+            if(this._room.details.allowWalkThrough)
+            {
+                if(isGoal) return null;
+            }
+            else return null;
+        }
+
+        const highestItem = tile.highestItem;
+
+        if(!tile.canWalk)
+        {
+            if(highestItem)
+            {
+                if(unit)
+                {
+                    if(highestItem.isItemOpen) return tile;
+
+                    if(!highestItem.position.compare(unit.location.position)) return null;
+                }
+
+                if(highestItem.isItemOpen) return tile;
+                
+                return null;
+            }
+        }
+        else
+        {
+            if(highestItem)
+            {
+                if(highestItem.isItemClosed) return null;
+
+                if(unit.type === UnitType.USER && unit.connectedUnit || unit.type === UnitType.PET)
+                {
+                    if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
+                }
+
+                if(!highestItem.baseItem.canWalk) return null;
+            }
+        }
+                    
+        return tile;
     }
 
     public getValidDiagonalTile(unit: Unit, position: Position): RoomTile
     {
-        if(unit && position)
+        if(!unit || !position) return null;
+        
+        const tile = this.getTile(position);
+
+        if(!tile) return null;
+        
+        if(tile.isDoor) return tile;
+        
+        if(this._room.model.getTileState(tile.position.x, tile.position.y) === RoomTileState.CLOSED) return null;
+        
+        const totalUnits = tile.units.length;
+        
+        if(totalUnits)
         {
-            const tile = this.getTile(position);
-
-            if(tile)
+            for(let i = 0; i < totalUnits; i++)
             {
-                if(tile.isDoor) return tile;
+                const existingUnit = tile.units[i];
 
-                if(this._room.model.getTileState(tile.position.x, tile.position.y) === RoomTileState.OPEN)
-                {
-                    const totalUnits = tile.units.length;
+                if(!existingUnit) continue;
 
-                    if(totalUnits)
-                    {
-                        for(let i = 0; i < totalUnits; i++)
-                        {
-                            const existingUnit = tile.units[i];
+                if(!unit) break;
 
-                            if(existingUnit)
-                            {
-                                if(unit)
-                                {
-                                    if(existingUnit.id === unit.id) return tile;
+                if(existingUnit.id === unit.id) return tile;
 
-                                    if(existingUnit === unit.connectedUnit) return tile;
-                                }
-                            }
-                        }
-
-                        return null;
-                    }
-
-                    const item = tile.highestItem;
-
-                    if(item)
-                    {
-                        if(item.baseItem.canSit || item.baseItem.canLay) return null;
-
-                        if(!item.isItemOpen) return null;
-                    }
-
-                    return tile;
-                }
+                if(existingUnit === unit.connectedUnit) return tile;
             }
+
+            if(!this._room.details.allowWalkThrough) return null;
         }
 
-        return null;
+        const item = tile.highestItem;
+
+        if(item)
+        {
+            if(item.baseItem.canSit || item.baseItem.canLay) return null;
+
+            if(!item.isItemOpen) return null;
+        }
+
+        return tile;
     }
 
     public getValidRandomTile(unit: Unit): RoomTile
@@ -338,41 +332,51 @@ export class RoomMap
 
     public getClosestValidPillow(unit: Unit, position: Position): Position
     {
-        if(unit && position)
+        if(!unit || !position) return null;
+        
+        const tile = this.getTile(position);
+
+        if(!tile) return null;
+        
+        const item = tile.highestItem;
+
+        if(!item) return null;
+        
+        const pillowPositions = AffectedPositions.getPillowPositions(item);
+
+        if(!pillowPositions) return null;
+        
+        const totalPositions = pillowPositions.length;
+
+        if(!totalPositions) return null;
+
+        let timesChecked = 0;
+
+        for(let i = 0; i < totalPositions; i++)
         {
-            const tile = this.getTile(position);
+            const pillowPosition = pillowPositions[i];
 
-            if(tile)
+            if(!pillowPosition) continue;
+            
+            if(item.position.direction === Direction.NORTH)
             {
-                const item = tile.highestItem;
-
-                if(item)
+                if(position.x === pillowPosition.x)
                 {
-                    const pillowPositions = AffectedPositions.getPillowPositions(item);
-
-                    if(pillowPositions)
-                    {
-                        const totalPositions = pillowPositions.length;
-
-                        if(totalPositions)
-                        {
-                            for(let i = 0; i < totalPositions; i++)
-                            {
-                                const pillowPosition = pillowPositions[i];
-
-                                if(pillowPosition.compare(position) && this.getValidTile(unit, pillowPosition)) return pillowPosition;
-                            }
-
-                            for(let i = 0; i < totalPositions; i++)
-                            {
-                                const pillowPosition = pillowPositions[i];
-
-                                if(pillowPosition.x === position.x || pillowPosition.y === position.y && this.getValidTile(unit, pillowPosition)) return pillowPosition;
-                            }
-                        }
-                    }
+                    if(this.getValidTile(unit, pillowPosition)) return pillowPosition;
                 }
             }
+
+            else if(item.position.direction === Direction.EAST)
+            {
+                if(position.y === pillowPosition.y)
+                {
+                    if(this.getValidTile(unit, pillowPosition)) return pillowPosition;
+                }
+            }
+
+            if(timesChecked === 1) return pillowPosition;
+
+            timesChecked++;
         }
 
         return null;

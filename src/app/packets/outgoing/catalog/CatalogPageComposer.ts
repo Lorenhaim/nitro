@@ -20,40 +20,32 @@ export class CatalogPageComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
+        this.packet
+            .writeInt(this._page.id)
+            .writeString(this._mode);
+
+        this._page.parsePage(this.packet);
+
+        const items = this._page.getItems();
+
+        if(items)
         {
-            this.packet
-                .writeInt(this._page.id)
-                .writeString(this._mode);
+            const totalItems = items.length;
 
-            this._page.parsePage(this.packet);
-
-            const items = this._page.getItems();
-
-            if(items)
+            if(totalItems)
             {
-                const totalItems = items.length;
+                this.packet.writeInt(totalItems);
 
-                if(totalItems)
-                {
-                    this.packet.writeInt(totalItems);
-
-                    for(let i = 0; i < totalItems; i++) items[i].parseItem(this.packet);
-                }
-                else this.packet.writeInt(0);
+                for(let i = 0; i < totalItems; i++) items[i].parseItem(this.packet);
             }
             else this.packet.writeInt(0);
-
-            this.packet.writeInt(0).writeBoolean(false);
-
-            if(this._page.layout.name === CatalogLayouts.FRONTPAGE_FEATURED || this._page.layout.name === CatalogLayouts.FRONTPAGE) this.packet.writeInt(0);
-
-            return this.packet.prepare();
         }
+        else this.packet.writeInt(0);
 
-        catch(err)
-        {
-            this.error(err);
-        }
+        this.packet.writeInt(0).writeBoolean(false);
+
+        if(this._page.layout.name === CatalogLayouts.FRONTPAGE_FEATURED || this._page.layout.name === CatalogLayouts.FRONTPAGE) this.packet.writeInt(0);
+
+        return this.packet.prepare();
     }
 }

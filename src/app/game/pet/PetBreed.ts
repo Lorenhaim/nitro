@@ -1,4 +1,4 @@
-export const enum PetBreed
+export enum PetBreed
 {
     DOG     = 0,
     CAT     = 1,

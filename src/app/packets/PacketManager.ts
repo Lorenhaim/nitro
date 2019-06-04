@@ -5,6 +5,7 @@ import * as IncomingCamera from './incoming/camera';
 import * as IncomingCatalog from './incoming/catalog';
 import * as IncomingClient from './incoming/client';
 import * as IncomingGames from './incoming/games';
+import * as IncomingGroup from './incoming/group';
 import * as IncomingHotelView from './incoming/hotelview';
 import * as IncomingModeration from './incoming/moderation';
 import * as IncomingNavigator from './incoming/navigator';
@@ -28,6 +29,7 @@ export class PacketManager
         this.registerCatalog();
         this.registerClient();
         this.registerGames();
+        this.registerGroup();
         this.registerSecurity();
         this.registerHotelView();
         this.registerNavigator();
@@ -96,7 +98,8 @@ export class PacketManager
     private registerCamera(): void
     {
         this.addHandler(IncomingHeader.CAMERA_CONFIGURATION, IncomingCamera.CameraConfigurationEvent);
-        this.addHandler(IncomingHeader.CAMERA_PREVIEW, IncomingCamera.CameraSaveEvent);
+        this.addHandler(IncomingHeader.CAMERA_SAVE, IncomingCamera.CameraSaveEvent);
+        this.addHandler(IncomingHeader.CAMERA_THUMBNAIL, IncomingCamera.CameraThumbnailEvent);
     }
 
     private registerCatalog(): void
@@ -124,6 +127,22 @@ export class PacketManager
     {
         this.addHandler(IncomingHeader.GAMES_INIT, IncomingGames.GamesInitEvent);
         this.addHandler(IncomingHeader.GAMES_LIST, IncomingGames.GamesListEvent);
+    }
+
+    private registerGroup(): void
+    {
+        this.addHandler(IncomingHeader.GROUP_INFO, IncomingGroup.GroupInfoEvent);
+        this.addHandler(IncomingHeader.GROUP_MEMBERS, IncomingGroup.GroupMembersEvent);
+        this.addHandler(IncomingHeader.GROUP_SETTINGS, IncomingGroup.GroupSettingsEvent);
+        this.addHandler(IncomingHeader.GROUP_ADMIN_ADD, IncomingGroup.GroupAdminAddEvent);
+        this.addHandler(IncomingHeader.GROUP_ADMIN_REMOVE, IncomingGroup.GroupAdminRemoveEvent);
+        this.addHandler(IncomingHeader.GROUP_MEMBER_REMOVE, IncomingGroup.GroupMemberRemoveEvent);
+        this.addHandler(IncomingHeader.GROUP_REQUEST_ACCEPT, IncomingGroup.GroupRequestAcceptEvent);
+        this.addHandler(IncomingHeader.GROUP_REQUEST_DECLINE, IncomingGroup.GroupRequestDeclineEvent);
+        this.addHandler(IncomingHeader.GROUP_REQUEST, IncomingGroup.GroupRequestEvent);
+        this.addHandler(IncomingHeader.GROUP_FORUM_INFO, IncomingGroup.GroupForumInfoEvent);
+        this.addHandler(IncomingHeader.GROUP_FORUM_LIST, IncomingGroup.GroupForumListEvent);
+        this.addHandler(IncomingHeader.GROUP_FORUM_THREADS, IncomingGroup.GroupForumThreadsEvent);
     }
 
     private registerSecurity(): void
@@ -185,6 +204,7 @@ export class PacketManager
         this.addHandler(IncomingHeader.UNIT_DANCE, IncomingRoom.UnitDanceEvent);
         this.addHandler(IncomingHeader.UNIT_CHAT_SHOUT, IncomingRoom.UnitChatShoutEvent);
         this.addHandler(IncomingHeader.UNIT_CHAT_WHISPER, IncomingRoom.UnitChatWhisperEvent);
+        this.addHandler(IncomingHeader.UNIT_KICK, IncomingRoom.RoomKickEvent);
         this.addHandler(IncomingHeader.ITEM_FLOOR_UPDATE, IncomingRoom.ItemFloorUpdateEvent);
         this.addHandler(IncomingHeader.ROOM_SETTINGS, IncomingRoom.RoomSettingsEvent);
         this.addHandler(IncomingHeader.ROOM_DOORBELL, IncomingRoom.RoomDoorbellEvent);
@@ -199,13 +219,22 @@ export class PacketManager
         this.addHandler(IncomingHeader.ITEM_WALL_UPDATE, IncomingRoom.ItemWallUpdateEvent);
         this.addHandler(IncomingHeader.ITEM_PAINT, IncomingRoom.ItemPaintEvent);
         this.addHandler(IncomingHeader.ITEM_WALL_CLICK, IncomingRoom.ItemWallClickEvent);
-        this.addHandler(IncomingHeader.ITEM_REDEEM, IncomingRoom.ItemRedeemEvent);
+        this.addHandler(IncomingHeader.ITEM_CLOTHING_REDEEM, IncomingRoom.ItemClothingRedeemEvent);
+        this.addHandler(IncomingHeader.ITEM_EXCHANGE_REDEEM, IncomingRoom.ItemExchangeRedeemEvent);
         this.addHandler(IncomingHeader.ITEM_DICE_CLICK, IncomingRoom.ItemDiceClickEvent);
         this.addHandler(IncomingHeader.ITEM_DICE_CLOSE, IncomingRoom.ItemDiceCloseEvent);
         this.addHandler(IncomingHeader.UNIT_GIVE_HANDITEM, IncomingRoom.UnitGiveHandItemEvent);
         this.addHandler(IncomingHeader.UNIT_DROP_HAND_ITEM, IncomingRoom.UnitDropHandItemEvent);
         this.addHandler(IncomingHeader.ROOM_SETTINGS_SAVE, IncomingRoom.RoomSettingsSaveEvent);
         this.addHandler(IncomingHeader.ITEM_STACK_HELPER, IncomingRoom.ItemStackHelperEvent);
+        this.addHandler(IncomingHeader.ROOM_DELETE, IncomingRoom.RoomDeleteEvent);
+        this.addHandler(IncomingHeader.ITEM_DIMMER_SETTINGS, IncomingRoom.ItemDimmerClickEvent);
+        this.addHandler(IncomingHeader.ITEM_DIMMER_TOGGLE, IncomingRoom.ItemDimmerToggleEvent);
+        this.addHandler(IncomingHeader.ITEM_DIMMER_SAVE, IncomingRoom.ItemDimmerSaveEvent);
+        this.addHandler(IncomingHeader.ITEM_COLOR_WHEEL_CLICK, IncomingRoom.ItemColorWheelClickEvent);
+        this.addHandler(IncomingHeader.ROOM_MODEL_BLOCKED_TILES, IncomingRoom.RoomModelBlockedTilesEvent);
+        this.addHandler(IncomingHeader.ROOM_MODEL_DOOR, IncomingRoom.RoomModelDoorEvent);
+        this.addHandler(IncomingHeader.ROOM_MODEL_SAVE, IncomingRoom.RoomModelSaveEvent);
     }
 
     private registerMessenger(): void
@@ -222,11 +251,13 @@ export class PacketManager
         this.addHandler(IncomingHeader.MESSENGER_SEARCH, IncomingUser.MessengerSearchEvent);
         this.addHandler(IncomingHeader.MESSENGER_RELATIONSHIPS_UPDATE, IncomingUser.MessengerRelationshipUpdateEvent);
         this.addHandler(IncomingHeader.MESSENGER_UPDATES, IncomingUser.MessengerUpdatesEvent);
+        this.addHandler(IncomingHeader.MESSENGER_ROOM_INVITE, IncomingUser.MessengerRoomInviteEvent);
     }
 
     private registerModeration(): void
     {
         this.addHandler(IncomingHeader.MOD_TOOL_USER_INFO, IncomingModeration.ModerationUserInfoEvent);
+        this.addHandler(IncomingHeader.REPORT, IncomingModeration.ModerationReportEvent);
     }
 
     private registerUser(): void

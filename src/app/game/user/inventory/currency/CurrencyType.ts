@@ -1,4 +1,4 @@
-export const enum CurrencyType
+export enum CurrencyType
 {
     CREDITS     = -1,
     DUCKETS     = 0,

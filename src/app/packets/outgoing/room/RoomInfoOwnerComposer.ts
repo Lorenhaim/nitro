@@ -18,14 +18,6 @@ export class RoomInfoOwnerComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._room.id).writeBoolean(this.client.user.unit.isOwner()).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._room.id).writeBoolean(this.client.user.unit.isOwner()).prepare();
     }
 }

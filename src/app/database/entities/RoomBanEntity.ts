@@ -18,6 +18,9 @@ export class RoomBanEntity
     @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })
     public timestampCreated: Date;
 
+    @Column({ name: 'timestamp_expires', default: () => 'CURRENT_TIMESTAMP' })
+    public timestampExpires: Date;
+
     @ManyToOne(type => RoomEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'room_id' })
     public room: RoomEntity;

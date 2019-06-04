@@ -14,4 +14,9 @@ export class UpdateItemsCommand extends Command
     {
         await Emulator.gameManager.itemManager.reload();
     }
+
+    public get description(): string
+    {
+        return 'Reloads base items & interactions';
+    }
 }

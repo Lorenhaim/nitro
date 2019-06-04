@@ -18,14 +18,6 @@ export class UnitDanceComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        try
-        {
-            return this.packet.writeInt(this._unit.id, this._unit.location.danceType).prepare();
-        }
-
-        catch(err)
-        {
-            this.error(err);
-        }
+        return this.packet.writeInt(this._unit.id, this._unit.location.danceType).prepare();
     }
 }
