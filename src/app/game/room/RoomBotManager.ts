@@ -125,6 +125,24 @@ export class RoomBotManager extends Manager
         bot.save();
     }
 
+    public pickupAllBots(user: User): void
+    {
+        if(!user) return;
+
+        const totalBots = this._bots.length;
+
+        if(!totalBots) return;
+
+        for(let i = 0; i < totalBots; i++)
+        {
+            const bot = this._bots[i];
+
+            if(!bot) continue;
+
+            this.pickupBot(user, bot.id);
+        }
+    }
+
     public pickupBot(user: User, botId: number): Promise<void>
     {
         if(!user || !botId) return;

@@ -118,6 +118,24 @@ export class RoomPetManager extends Manager
         return pet;
     }
 
+    public pickupAllPets(user: User): void
+    {
+        if(!user) return;
+
+        const totalPets = this._pets.length;
+
+        if(!totalPets) return;
+
+        for(let i = 0; i < totalPets; i++)
+        {
+            const pet = this._pets[i];
+
+            if(!pet) continue;
+
+            this.pickupPet(user, pet.id);
+        }
+    }
+
     public pickupPet(user: User, petId: number): Promise<void>
     {
         if(!user || !petId) return;

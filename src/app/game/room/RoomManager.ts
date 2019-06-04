@@ -145,6 +145,10 @@ export class RoomManager extends Manager
         
         if(!room.securityManager.isOwner(user)) return;
 
+        room.botManager.pickupAllBots(user);
+
+        room.petManager.pickupAllPets(user);
+
         room.itemManager.removeAllItems(user);
 
         await this.removeRoom(room);
