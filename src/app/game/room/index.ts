@@ -1,4 +1,3 @@
-export * from './events';
 export * from './interfaces';
 export * from './mapping';
 export * from './models';
@@ -11,3 +10,4 @@ export * from './RoomPetManager';
 export * from './RoomSecurityManager';
 export * from './RoomWiredManager';
 export * from './tasks';
+

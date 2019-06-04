@@ -25,7 +25,6 @@ export * from './RoomRightsEntity';
 export * from './SecurityPermissionEntity';
 export * from './SecurityRankEntity';
 export * from './SecurityTicketEntity';
-export * from './ServerConfigEntity';
 export * from './UserBadgeEntity';
 export * from './UserClothingEntity';
 export * from './UserCurrencyEntity';
