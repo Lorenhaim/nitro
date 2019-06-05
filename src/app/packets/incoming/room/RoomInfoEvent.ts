@@ -16,8 +16,10 @@ export class RoomInfoEvent extends Incoming
             if(!room) return;
 
             await room.init();
+
+            if(!room.isLoaded) return;
             
-            this.client.processOutgoing(new RoomInfoComposer(room, true, someBoolean));
+            return this.client.processOutgoing(new RoomInfoComposer(room, true, someBoolean));
         }
 
         catch(err)

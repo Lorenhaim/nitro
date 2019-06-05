@@ -7,14 +7,13 @@ import { Incoming, IncomingPacket, Outgoing, OutgoingPacket } from '../packets';
 export abstract class Client<T>
 {
     private _uniqueId: string;
-    protected _socket: T;
-    protected _ip: string;
+    private _socket: T;
+    private _ip: string;
 
-    protected _logger: Logger;
+    private _logger: Logger;
 
-    protected _user: User;
-    protected _willDestoryUser: boolean;
-    protected _pingCount: number;
+    private _user: User;
+    private _willDestoryUser: boolean;
 
     private _isDisposed: boolean;
     private _isDisposing: boolean;
@@ -29,7 +28,6 @@ export abstract class Client<T>
 
         this._user              = null;
         this._willDestoryUser   = true;
-        this._pingCount         = 0;
     }
 
     public async dispose(): Promise<void>
@@ -197,15 +195,5 @@ export abstract class Client<T>
     public get isAuthenticated(): boolean
     {
         return this._user !== null;
-    }
-
-    public get pingCount(): number
-    {
-        return this._pingCount;
-    }
-
-    public set pingCount(count: number)
-    {
-        this._pingCount = count;
     }
 }

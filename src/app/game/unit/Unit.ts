@@ -184,6 +184,8 @@ export class Unit
 
         await room.init();
 
+        if(!room.isLoaded) return this._user.connections.processOutgoing(new RoomEnterErrorComposer(RoomEnterError.NO_ENTRY));
+
         this._roomLoading = room;
 
         if(this._location.teleporting && this._location.teleporting.teleportGoal.room.id === id) skipStateCheck = true;
@@ -262,6 +264,8 @@ export class Unit
         const room = await Emulator.gameManager.roomManager.getRoom(this._roomLoading.id);
 
         await room.init();
+
+        if(!room.isLoaded) return this._user.connections.processOutgoing(new RoomEnterErrorComposer(RoomEnterError.NO_ENTRY));
 
         let position: Position = null;
 

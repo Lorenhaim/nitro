@@ -24,17 +24,25 @@ export class RoomModel
         if(!(entity instanceof RoomModelEntity)) throw new Error('invalid_entity');
 
         this._entity        = entity;
-        this._model         = this._entity.model.replace(/\r\n|\r|\n/g, '\r') || null;
+        this._model         = this.cleanModel(this._entity.model);
+        this._doorPosition  = null;
 
-        if(this._model.endsWith('\r')) this._model = this._model.slice(0, -1);
-        
-        this._doorPosition  = new Position(this._entity.doorX, this._entity.doorY, 0, parseInt(<any> this._entity.doorDirection), parseInt(<any> this._entity.doorDirection));
+        if(!this._model) throw new Error('invalid_model');
 
         this.resetModel();
     }
 
+    private cleanModel(model: string): string
+    {
+        if(!model) return null;
+
+        return model.trim().replace(/\r\n|\r|\n/g, '\r');
+    }
+
     public resetModel(generate: boolean = true): void
     {
+        this._doorPosition  = null;
+
         this._totalX        = 0;
         this._totalY        = 0;
         this._totalSize     = 0;
@@ -53,7 +61,7 @@ export class RoomModel
         const totalX    = parts[0].length;
         const totalY    = parts.length;
 
-        if(!parts|| !totalX || !totalY) return this.resetModel(false);
+        if(!parts || !totalX || !totalY) return this.resetModel(false);
 
         for(let y = 0; y < totalY; y++)
         {
@@ -111,14 +119,12 @@ export class RoomModel
         this._totalX    = totalX;
         this._totalY    = totalY;
 
-        const doorTileHeight = this.getTileHeight(this._entity.doorX, this._entity.doorY);
+        const doorTileState     = this.getTileState(this._entity.doorX, this._entity.doorY);
+        const doorTileHeight    = this.getTileHeight(this._entity.doorX, this._entity.doorY);
 
-        if(doorTileHeight !== null)
-        {
-            this._doorPosition.z = doorTileHeight;
+        if(doorTileState === RoomTileState.CLOSED) return this.resetModel(false);
 
-            this._tileStates[this._entity.doorX][this._entity.doorY] = RoomTileState.OPEN;
-        }
+        this._doorPosition  = new Position(this._entity.doorX, this._entity.doorY, doorTileHeight, parseInt(<any> this._entity.doorDirection), parseInt(<any> this._entity.doorDirection));
 
         this._didGenerate = true;
     }
@@ -196,11 +202,6 @@ export class RoomModel
     public get isCustom(): boolean
     {
         return this._entity.custom === '1';
-    }
-
-    public get rawModel(): string
-    {
-        return this._entity.model;
     }
 
     public get totalX(): number

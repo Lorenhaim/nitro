@@ -43,7 +43,12 @@ export class BaseItem
 
         const interaction = Emulator.gameManager.itemManager.getInteraction(this._entity.interaction || InteractionType.DEFAULT);
 
-        if(!interaction) return;
+        if(!interaction)
+        {
+            Emulator.gameManager.itemManager.logger.warn(`Base Item: ${ this._entity.id }:${ this._entity.publicName } has an invalid interaction`);
+
+            return;
+        }
         
         this._interaction = interaction;
     }

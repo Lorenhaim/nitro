@@ -6,7 +6,7 @@ export class ClientLatencyMeasureEvent extends Incoming
     {
         try
         {
-            console.log(`Latency Measure ${ this.packet.readInt() }`);
+            const latency = this.packet.readInt();
         }
 
         catch(err)

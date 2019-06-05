@@ -244,7 +244,26 @@ export class RoomManager extends Manager
         
         const totalResults = results.length;
 
-        if(totalResults) for(let i = 0; i < totalResults; i++) this._roomModels.push(new RoomModel(results[i]));
+        if(totalResults)
+        {
+            for(let i = 0; i < totalResults; i++)
+            {
+                const result = results[i];
+
+                if(!result) continue;
+
+                const model = new RoomModel(result);
+
+                if(!model.didGenerate)
+                {
+                    this.logger.warn(`Model: ${ result.id }:${ result.name } could not be generated`);
+
+                    continue;
+                }
+
+                this._roomModels.push(model);
+            }
+        }
 
         this.logger.log(`Loaded ${ this._roomModels.length } models`);
     }

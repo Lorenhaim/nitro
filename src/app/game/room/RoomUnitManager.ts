@@ -105,6 +105,7 @@ export class RoomUnitManager
         unit.roomLoading        = null;
         unit.location.position  = position ? position : this._room.model.doorPosition.copy();
         unit.canLocate          = false;
+        unit.needsInvoke        = true;
 
         this.processOutgoing(new UnitComposer(unit), new UnitStatusComposer(unit));
 

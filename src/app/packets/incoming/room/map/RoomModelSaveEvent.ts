@@ -34,6 +34,8 @@ export class RoomModelSaveEvent extends Incoming
 
             const model = new RoomModel(entity);
 
+            entity.model = model.model;
+
             if(!model.didGenerate) return;
 
             if(!model.validateModel(currentRoom)) return;
