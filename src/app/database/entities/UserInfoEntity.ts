@@ -50,8 +50,8 @@ export class UserInfoEntity
     @Column({ name: 'navigator_search_open', type: 'enum', enum: ['0', '1'], default: '0' })
     public navigatorSearchOpen: '0' | '1';
 
-    @Column({ name: 'toolbar_show_friends', type: 'enum', enum: ['0', '1'], default: '1' })
-    public toolbarShowFriends: '0' | '1';
+    @Column({ name: 'toolbar_toggles', type: 'enum', enum: ['0', '1'], default: '1' })
+    public toolbarToggles: '0' | '1';
 
     @OneToOne(type => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })

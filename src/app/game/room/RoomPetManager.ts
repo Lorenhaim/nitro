@@ -40,9 +40,9 @@ export class RoomPetManager extends Manager
 
             if(!pet) continue;
 
-            this._room.unitManager.removeUnit(pet.unit);
-
             await pet.saveNow();
+
+            this._room.unitManager.removeUnit(pet.unit);
 
             this._pets.splice(i, 1);
         }

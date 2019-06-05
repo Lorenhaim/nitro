@@ -40,9 +40,9 @@ export class RoomBotManager extends Manager
 
             if(!bot) continue;
 
-            this._room.unitManager.removeUnit(bot.unit);
-
             await bot.saveNow();
+
+            this._room.unitManager.removeUnit(bot.unit);
 
             this._bots.splice(i, 1);
         }

@@ -121,6 +121,7 @@ export class PacketManager
         this.addHandler(IncomingHeader.CLIENT_VARIABLES, IncomingClient.ClientVariablesEvent);
         this.addHandler(IncomingHeader.CROSS_DOMAIN, IncomingClient.ClientPolicyEvent);
         this.addHandler(IncomingHeader.EVENT_TRACKER, IncomingClient.ClientEventTrackerEvent);
+        this.addHandler(IncomingHeader.CLIENT_TOOLBAR_TOGGLE, IncomingClient.ClientToolbarToggleEvent);
     }
 
     private registerGames(): void
@@ -255,7 +256,6 @@ export class PacketManager
         this.addHandler(IncomingHeader.MESSENGER_RELATIONSHIPS_UPDATE, IncomingUser.MessengerRelationshipUpdateEvent);
         this.addHandler(IncomingHeader.MESSENGER_UPDATES, IncomingUser.MessengerUpdatesEvent);
         this.addHandler(IncomingHeader.MESSENGER_ROOM_INVITE, IncomingUser.MessengerRoomInviteEvent);
-        this.addHandler(IncomingHeader.MESSENGER_TOGGLE_TOOLBAR, IncomingUser.MessengerToggleToolbarEvent);
     }
 
     private registerModeration(): void

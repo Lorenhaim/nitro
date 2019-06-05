@@ -18,7 +18,7 @@ export class UserSettingsComposer extends Outgoing
             .writeBoolean(false) // old chat
             .writeBoolean(false) // block room invites
             .writeBoolean(false) // block (camera) follow
-            .writeInt(this.client.user.details.toolbarShowFriends ? 1 : 0)
+            .writeInt(this.client.user.details.toolbarToggles ? 1 : 0)
             .writeInt(0) // chat style
             .prepare();
     }

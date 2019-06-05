@@ -164,10 +164,10 @@ export class UserDetails
         if(this._user.unit.room) this._user.unit.room.unitManager.processOutgoing(new UserRespectComposer(this._user));
     }
 
-    public toggleFriendToolbar(): void
+    public toggleClientToolbar(): void
     {
-        if(this.toolbarShowFriends) this._entity.info.toolbarShowFriends = '0';
-        else this._entity.info.toolbarShowFriends = '1';
+        if(this.toolbarToggles) this._entity.info.toolbarToggles = '0';
+        else this._entity.info.toolbarToggles = '1';
 
         this.save();
     }
@@ -302,9 +302,9 @@ export class UserDetails
         return this._entity.info.navigatorSearchOpen === '1';
     }
 
-    public get toolbarShowFriends(): boolean
+    public get toolbarToggles(): boolean
     {
-        return this._entity.info.toolbarShowFriends === '1';
+        return this._entity.info.toolbarToggles === '1';
     }
 
     public get navigatorSettings(): NavigatorSettings

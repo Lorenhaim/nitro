@@ -1,12 +1,12 @@
-import { Incoming } from '../../Incoming';
+import { Incoming } from '../Incoming';
 
-export class MessengerToggleToolbarEvent extends Incoming
+export class ClientToolbarToggleEvent extends Incoming
 {
     public async process(): Promise<void>
     {
         try
         {
-            this.client.user.details.toggleFriendToolbar();
+            this.client.user.details.toggleClientToolbar();
         }
 
         catch(err)
