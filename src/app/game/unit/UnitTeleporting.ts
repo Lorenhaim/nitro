@@ -1,7 +1,6 @@
 import { ItemDao } from '../../database';
 import { Emulator } from '../../Emulator';
 import { Item } from '../item';
-import { Position } from '../pathfinder';
 import { Unit } from './Unit';
 
 export class UnitTeleporting
@@ -10,9 +9,6 @@ export class UnitTeleporting
 
     private _teleport: Item;
     private _teleportGoal: Item;
-
-    private _teleportPosition: Position;
-    private _teleportGoalPosition: Position;
 
     private _isInvalid: boolean;
     private _isInvalidGoal: boolean;
@@ -140,8 +136,8 @@ export class UnitTeleporting
     {
         this.resetSteps();
 
-        if(this._teleport && this._unit.room !== this._teleport.room) this._isInvalid = true;
-        if(this._teleportGoal && this._unit.room !== this._teleportGoal.room) this._isInvalid = true;
+        //if(this._teleport && this._unit.room !== this._teleport.room) this._isInvalid = true;
+        //if(this._teleportGoal && this._unit.room !== this._teleportGoal.room) this._isInvalid = true;
 
         if(this._isInvalid)
         {
@@ -200,7 +196,7 @@ export class UnitTeleporting
         this.setInvalid();
     }
 
-    private setInvalid(): void
+    public setInvalid(): void
     {
         this._isInvalid = true;
     }

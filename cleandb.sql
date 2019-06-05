@@ -9883,7 +9883,7 @@ CREATE TABLE IF NOT EXISTS `catalog_pages` (
   `name` varchar(255) NOT NULL,
   `caption` varchar(255) DEFAULT NULL,
   `icon_image` int(11) NOT NULL DEFAULT 0,
-  `layout` enum('default_3x3','frontpage4','frontpage_featured','spaces_new') NOT NULL DEFAULT 'default_3x3',
+  `layout` enum('default_3x3','frontpage4','frontpage_featured','spaces_new','club_buy','guild_frontpage','info_pets') NOT NULL DEFAULT 'default_3x3',
   `image_header` varchar(255) DEFAULT NULL,
   `image_teaser` varchar(255) DEFAULT NULL,
   `image_special` varchar(255) DEFAULT NULL,

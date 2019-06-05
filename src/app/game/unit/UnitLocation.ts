@@ -54,8 +54,6 @@ export class UnitLocation
 
         this._rolling           = null;
 
-        if(this._teleporting) this._teleporting.stopTeleporting();
-
         this._currentPath       = [];
         this._isWalking         = false;
         this._isWalkingSelf     = true;
@@ -387,10 +385,6 @@ export class UnitLocation
 
     public invokeCurrentItem(): void
     {
-        const tile = this.getCurrentTile();
-
-        //if(tile && tile.isDoor) return this._unit.reset(); disable on entry
-
         this.updateHeight(this._position);
 
         const currentItem = this.getCurrentItem();
@@ -438,6 +432,12 @@ export class UnitLocation
         this._position.y    = this._positionNext.y;
 
         this.updateHeight(this._position);
+
+        const currentTile = this.getCurrentTile();
+
+        if(!currentTile) return;
+
+        if(currentTile.isDoor) return this._unit.reset();
 
         const currentItem = this.getCurrentItem();
 

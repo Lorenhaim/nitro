@@ -188,7 +188,15 @@ export class Unit
 
         this._roomLoading = room;
 
-        if(this._location.teleporting && this._location.teleporting.teleportGoal.room.id === id) skipStateCheck = true;
+        if(this._location.teleporting)
+        {
+            if(this._location.teleporting.teleportGoal.room.id === id) skipStateCheck = true;
+            else
+            {
+                this._location.teleporting.setInvalid();
+                this._location.teleporting.stopTeleporting();
+            }
+        }
 
         if(!room.securityManager.hasRights(this._user))
         {
@@ -277,7 +285,11 @@ export class Unit
 
                 position.setDirection(this._location.teleporting.teleportGoal.position.direction);
             }
-            else this._location.teleporting.stopTeleporting();
+            else
+            {
+                this._location.teleporting.setInvalid();
+                this._location.teleporting.stopTeleporting();
+            }
         }
 
         room.unitManager.addUnit(this, position);
