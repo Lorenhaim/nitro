@@ -54,6 +54,8 @@ export class UnitLocation
 
         this._rolling           = null;
 
+        if(this._teleporting) this._teleporting.stopTeleporting();
+
         this._currentPath       = [];
         this._isWalking         = false;
         this._isWalkingSelf     = true;
@@ -385,6 +387,10 @@ export class UnitLocation
 
     public invokeCurrentItem(): void
     {
+        const tile = this.getCurrentTile();
+
+        //if(tile && tile.isDoor) return this._unit.reset(); disable on entry
+
         this.updateHeight(this._position);
 
         const currentItem = this.getCurrentItem();
@@ -521,36 +527,32 @@ export class UnitLocation
 
     public lookAtPosition(position: Position, headOnly: boolean = false, selfActivated: boolean = false): void
     {
-        if(this._unit && this._unit.room)
+        if(!position || !this._unit.room) return;
+
+        if(!selfActivated && this._unit.isIdle) return;
+
+        if(this._position.compare(position)) return;
+
+        if(this.hasStatus(UnitStatusType.LAY)) return;
+
+        if(this.hasStatus(UnitStatusType.SIT)) headOnly = true;
+
+        if(!selfActivated && this._unit.isIdle) return;
+
+        if(selfActivated) this._unit.timer.resetIdleTimer();
+
+        if(headOnly)
         {
-            if(selfActivated) this._unit.timer.resetIdleTimer();
+            this._position.headDirection = this._position.calculateHeadDirection(position);
 
-            if(!selfActivated && this._unit.isIdle) return;
-            
-            if(this.hasStatus(UnitStatusType.LAY)) return;
-            
-            if(!this._position.compare(position))
-            {
-                if(this.hasStatus(UnitStatusType.SIT))
-                {
-                    this._position.headDirection = this._position.calculateHeadDirection(position);
-
-                    this._unit.timer.startLookTimer();
-                }
-                else
-                {
-                    if(headOnly)
-                    {
-                        this._position.headDirection = this._position.calculateHeadDirection(position);
-
-                        this._unit.timer.startLookTimer();
-                    }
-                    else this._position.setDirection(this._position.calculateHumanDirection(position));
-                }
-
-                this._unit.updateNow();
-            }
+            this._unit.timer.startLookTimer();
         }
+        else
+        {
+            this._position.setDirection(this._position.calculateHumanDirection(position));
+        }
+
+        this._unit.updateNow();
     }
 
     public get unit(): Unit

@@ -1,3 +1,4 @@
+export * from './CatalogClubEvent';
 export * from './CatalogModeEvent';
 export * from './CatalogPageEvent';
 export * from './CatalogPurchaseEvent';

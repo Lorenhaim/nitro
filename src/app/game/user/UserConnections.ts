@@ -21,7 +21,7 @@ export class UserConnections extends Manager
 
         this._gameClient    = null;
         this._socketClient  = null;
-        this._socketHeaders = [ OutgoingHeader.SECURITY_LOGOUT, OutgoingHeader.SYSTEM_CONFIG, OutgoingHeader.VALIDATOR, OutgoingHeader.SECURITY_REGISTER, OutgoingHeader.SECURITY_PING, OutgoingHeader.SECURITY_TICKET ];
+        this._socketHeaders = [ OutgoingHeader.SECURITY_LOGOUT, OutgoingHeader.SYSTEM_CONFIG, OutgoingHeader.VALIDATOR, OutgoingHeader.SECURITY_REGISTER, OutgoingHeader.CLIENT_PING, OutgoingHeader.SECURITY_TICKET ];
     }
 
     protected async onInit(): Promise<void> {}

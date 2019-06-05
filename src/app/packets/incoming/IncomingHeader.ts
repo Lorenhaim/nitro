@@ -17,6 +17,7 @@ export enum IncomingHeader
     CAMERA_CONFIGURATION           = 796,
     CAMERA_SAVE                    = 3226,
     CAMERA_THUMBNAIL               = 1982,
+    CATALOG_CLUB                   = 3285,
     CATALOG_MODE                   = 1195,
     CATALOG_PAGE                   = 412,
     CATALOG_PURCHASE               = 3492,

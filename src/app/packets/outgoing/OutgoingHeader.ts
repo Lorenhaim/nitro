@@ -12,6 +12,7 @@ export enum OutgoingHeader
     CAMERA_PRICE                 = 3878,
     CAMERA_THUMBNAIL_SAVED       = 3595,
     CAMERA_URL                   = 3696,
+    CATALOG_CLUB                 = 2405,
     CATALOG_MODE                 = 3828,
     CATALOG_PAGE                 = 804,
     CATALOG_PAGES                = 1032,

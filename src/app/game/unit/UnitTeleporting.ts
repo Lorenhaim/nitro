@@ -140,6 +140,9 @@ export class UnitTeleporting
     {
         this.resetSteps();
 
+        if(this._teleport && this._unit.room !== this._teleport.room) this._isInvalid = true;
+        if(this._teleportGoal && this._unit.room !== this._teleportGoal.room) this._isInvalid = true;
+
         if(this._isInvalid)
         {
             if(this._teleport) this._teleport.setExtraData(0);

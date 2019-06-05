@@ -7,13 +7,13 @@ import { Incoming, IncomingPacket, Outgoing, OutgoingPacket } from '../packets';
 export abstract class Client<T>
 {
     private _uniqueId: string;
-    private _socket: T;
-    private _ip: string;
+    protected _socket: T;
+    protected _ip: string;
 
-    private _logger: Logger;
+    protected _logger: Logger;
 
-    private _user: User;
-    private _willDestoryUser: boolean;
+    protected _user: User;
+    protected _willDestoryUser: boolean;
 
     private _isDisposed: boolean;
     private _isDisposing: boolean;
@@ -195,5 +195,15 @@ export abstract class Client<T>
     public get isAuthenticated(): boolean
     {
         return this._user !== null;
+    }
+
+    public get isDisposed(): boolean
+    {
+        return this._isDisposed;
+    }
+
+    public get isDisposing(): boolean
+    {
+        return this._isDisposing;
     }
 }

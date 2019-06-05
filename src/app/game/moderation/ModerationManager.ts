@@ -84,7 +84,7 @@ export class ModerationManager extends Manager
 
     private async loadCategories(): Promise<void>
     {
-        if(this._isLoaded);
+        if(this._isLoaded) return;
         
         this._categories = [];
 

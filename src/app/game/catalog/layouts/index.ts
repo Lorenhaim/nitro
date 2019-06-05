@@ -4,4 +4,6 @@ export * from './ClubBuyLayout';
 export * from './DefaultLayout';
 export * from './FrontPageFeaturedLayout';
 export * from './FrontPageLayout';
+export * from './GroupFrontpageLayout';
+export * from './PetInfoLayout';
 export * from './SpacesNewLayout';

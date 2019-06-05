@@ -1,3 +1,4 @@
+export * from './CatalogClubComposer';
 export * from './CatalogModeComposer';
 export * from './CatalogPageComposer';
 export * from './CatalogPagesComposer';

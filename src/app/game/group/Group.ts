@@ -385,8 +385,6 @@ export class Group
 
             if(!member || !member.unit.room) continue;
 
-            if(member.unit.room.id !== this.roomId) continue;
-
             if(!this.isAdmin(member)) continue;
             
             member.connections.processOutgoing(...outgoing);

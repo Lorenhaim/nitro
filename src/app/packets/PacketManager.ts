@@ -111,6 +111,7 @@ export class PacketManager
         this.addHandler(IncomingHeader.MARKETPLACE_CONFIG, IncomingCatalog.MarketplaceConfigEvent);
         this.addHandler(IncomingHeader.GIFT_CONFIG, IncomingCatalog.GiftConfigEvent);
         this.addHandler(IncomingHeader.DISCOUNT_CONFIG, IncomingCatalog.DiscountConfigEvent);
+        this.addHandler(IncomingHeader.CATALOG_CLUB, IncomingCatalog.CatalogClubEvent);
     }
 
     private registerClient(): void
