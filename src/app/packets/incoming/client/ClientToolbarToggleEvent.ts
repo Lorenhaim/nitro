@@ -6,7 +6,7 @@ export class ClientToolbarToggleEvent extends Incoming
     {
         try
         {
-            this.client.user.details.toggleClientToolbar();
+            return this.client.user.details.toggleClientToolbar(this.packet.readInt());
         }
 
         catch(err)

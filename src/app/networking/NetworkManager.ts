@@ -21,14 +21,14 @@ export class NetworkManager extends Manager
 
     public async onInit(): Promise<void>
     {
-        if(this._gameServer)    await this._gameServer.init();
-        if(this._socketServer)  await this._socketServer.init();
+        if(this._gameServer)    this._gameServer.init();
+        if(this._socketServer)  this._socketServer.init();
     }
 
-    public async listen()
+    public listen(): void
     {
-        if(this._gameServer)    await this._gameServer.listen(Emulator.config.game.ip, Emulator.config.game.port);
-        if(this._socketServer)  await this._socketServer.listen(Emulator.config.web.ip, Emulator.config.web.port)
+        if(this._gameServer)    this._gameServer.listen(Emulator.config.game.ip, Emulator.config.game.port);
+        if(this._socketServer)  this._socketServer.listen(Emulator.config.web.ip, Emulator.config.web.port)
     }
 
     public async onDispose(): Promise<void>

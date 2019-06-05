@@ -75,8 +75,8 @@ export class Room extends Manager
 
         this._taskManager.init();
 
-        await this._botManager.init();
         await this._itemManager.init();
+        await this._botManager.init();
         await this._petManager.init();
         await this._securityManager.init();
 

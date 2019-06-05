@@ -116,7 +116,8 @@ export class PacketManager
     private registerClient(): void
     {
         this.addHandler(IncomingHeader.CLIENT_LATENCY, IncomingClient.ClientLatencyEvent);
-        this.addHandler(IncomingHeader.CLIENT_PING, IncomingClient.ClientPingEvent);
+        this.addHandler(IncomingHeader.CLIENT_LATENCY_MEASURE, IncomingClient.ClientLatencyMeasureEvent);
+        this.addHandler(IncomingHeader.CLIENT_PONG, IncomingClient.ClientPongEvent);
         this.addHandler(IncomingHeader.RELEASE_VERSION, IncomingClient.ClientReleaseVersionEvent);
         this.addHandler(IncomingHeader.CLIENT_VARIABLES, IncomingClient.ClientVariablesEvent);
         this.addHandler(IncomingHeader.CROSS_DOMAIN, IncomingClient.ClientPolicyEvent);
@@ -150,7 +151,6 @@ export class PacketManager
     {
         this.addHandler(IncomingHeader.SECURITY_MACHINE, IncomingSecurity.SecurityMachineEvent);
         this.addHandler(IncomingHeader.SECURITY_TICKET, IncomingSecurity.SecurityTicketEvent);
-
         this.addHandler(IncomingHeader.SECURITY_LOGIN, IncomingSecurity.SecurityLoginEvent);
         this.addHandler(IncomingHeader.SECURITY_LOGOUT, IncomingSecurity.SecurityLogoutEvent);
         this.addHandler(IncomingHeader.SECURITY_REQUEST, IncomingSecurity.SecurityRequestEvent);

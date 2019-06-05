@@ -6,6 +6,7 @@ import { NetworkManager } from './networking';
 
 export class Emulator
 {
+    private static _timestampStarted: number;
     private static _database: Connection;
 
     private static _logger: Logger = new Logger('Emulator');
@@ -18,7 +19,7 @@ export class Emulator
     {
         try
         {
-            const timeStarted = Date.now();
+            Emulator._timestampStarted = Date.now();
 
             Emulator._logger.log(`Starting Nitro`);
 
@@ -28,19 +29,19 @@ export class Emulator
 
             await Emulator._gameManager.cleanup();
             await Emulator._gameManager.init();
-            Emulator._gameScheduler.init();
+            await Emulator._gameScheduler.init();
             
             Emulator._networkManager = new NetworkManager();
 
             await Emulator._networkManager.init();
-            await Emulator._networkManager.listen();
+            Emulator._networkManager.listen();
 
-            Emulator.logger().log(`Started in ${ Date.now() - timeStarted }ms`);
+            Emulator.logger.log(`Started in ${ Date.now() - Emulator._timestampStarted }ms`);
         }
 
         catch(err)
         {
-            Emulator._logger.error(err.message || err, err.stack);
+            Emulator.logger.error(err.message || err, err.stack);
 
             await Emulator.dispose();
         }
@@ -77,12 +78,17 @@ export class Emulator
         }
     }
 
-    public static database(): Connection
+    public static get timestampStarted(): number
+    {
+        return Emulator._timestampStarted;
+    }
+
+    public static get database(): Connection
     {
         return Emulator._database;
     }
 
-    public static logger(): Logger
+    public static get logger(): Logger
     {
         return Emulator._logger;
     }

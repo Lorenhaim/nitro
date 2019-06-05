@@ -5,7 +5,6 @@ const OrmConfig = {
     username: 'root',
     password: '',
     database: 'emulator',
-    acquireTimeout: 10000,
     entities: [ 'src/app/common/entities/*.ts' ], // development
     // entities: [ 'dist/app/common/entities/*.js' ], // production
     synchronize: false,

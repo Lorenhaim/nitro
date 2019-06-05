@@ -1,7 +1,7 @@
 import { Emulator } from '../../../Emulator';
 import { PermissionList } from '../../../game';
 import { GameClient, SocketClient } from '../../../networking';
-import { GameCenterGameListComposer, GameCenterStatusComposer, ModerationToolComposer, ModerationTopicsComposer, Outgoing, SecurityPingComposer, SecurityTicketComposer, SecurityUnknown2Composer, SecurtiyDebugComposer, UserAchievementScoreComposer, UserBuildersClubComposer, UserClothingComposer, UserClubComposer, UserEffectsComposer, UserFavoriteRoomCountComposer, UserFirstLoginOfDayComposer, UserHomeRoomComposer, UserItemsRefreshComposer, UserPermissionsComposer, UserRightsComposer } from '../../outgoing';
+import { ClientPingComposer, GameCenterGameListComposer, GameCenterStatusComposer, ModerationToolComposer, ModerationTopicsComposer, Outgoing, SecurityTicketComposer, SecurityUnknown2Composer, SecurtiyDebugComposer, UserAchievementScoreComposer, UserBuildersClubComposer, UserClothingComposer, UserClubComposer, UserEffectsComposer, UserFavoriteRoomCountComposer, UserFirstLoginOfDayComposer, UserHomeRoomComposer, UserItemsRefreshComposer, UserPermissionsComposer, UserRightsComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
 export class SecurityTicketEvent extends Incoming
@@ -50,7 +50,7 @@ export class SecurityTicketEvent extends Incoming
                         new UserItemsRefreshComposer(),
                         new UserEffectsComposer(),
                         new UserClothingComposer(),
-                        new SecurityPingComposer(),
+                        new ClientPingComposer(),
                         new SecurityUnknown2Composer(),
                         new UserClubComposer(),
                         new ModerationTopicsComposer(),

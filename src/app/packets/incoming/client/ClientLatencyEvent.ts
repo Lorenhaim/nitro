@@ -1,3 +1,4 @@
+import { ClientLatencyComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
 export class ClientLatencyEvent extends Incoming
@@ -6,7 +7,7 @@ export class ClientLatencyEvent extends Incoming
     {
         try
         {
-            const latency = this.packet.readInt();
+            return this.client.processOutgoing(new ClientLatencyComposer(this.packet.readInt()));
         }
 
         catch(err)

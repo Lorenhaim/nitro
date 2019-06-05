@@ -36,7 +36,8 @@ export class RoomItemManager extends Manager
     
     protected async onDispose(): Promise<void>
     {
-        this._items = [];
+        this._items     = [];
+        this._dimmer    = null;
     }
 
     public getItem(id: number): Item

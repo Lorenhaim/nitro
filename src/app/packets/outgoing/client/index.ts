@@ -1,1 +1,2 @@
-export * from './ClientPongComposer';
+export * from './ClientLatencyComposer';
+export * from './ClientPingComposer';

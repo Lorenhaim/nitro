@@ -164,10 +164,9 @@ export class UserDetails
         if(this._user.unit.room) this._user.unit.room.unitManager.processOutgoing(new UserRespectComposer(this._user));
     }
 
-    public toggleClientToolbar(): void
+    public toggleClientToolbar(toggled: number): void
     {
-        if(this.toolbarToggles) this._entity.info.toolbarToggles = '0';
-        else this._entity.info.toolbarToggles = '1';
+        this._entity.info.toolbarToggles = toggled === 1 ? '1' : '0';
 
         this.save();
     }

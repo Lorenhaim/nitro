@@ -11,6 +11,7 @@ import { HotelAlertCommand } from './HotelAlertCommand';
 import { PickupAllCommand } from './PickupAllCommand';
 import { PullCommand } from './PullCommand';
 import { RebootCommand } from './RebootCommand';
+import { ReloadRoomCommand } from './ReloadRoomCommand';
 import { RollDiceCommand } from './RollDiceCommand';
 import { RoomSpectateCommand } from './RoomSpectateCommand';
 import { ShutdownCommand } from './ShutdownCommand';
@@ -137,6 +138,7 @@ export class CommandManager extends Manager
         this.registerCommand(new PickupAllCommand());
         this.registerCommand(new PullCommand());
         this.registerCommand(new RebootCommand());
+        this.registerCommand(new ReloadRoomCommand());
         this.registerCommand(new RollDiceCommand());
         this.registerCommand(new RoomSpectateCommand());
         this.registerCommand(new ShutdownCommand());

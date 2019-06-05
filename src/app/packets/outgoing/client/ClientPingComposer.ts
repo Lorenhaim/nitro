@@ -2,15 +2,15 @@ import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
 
-export class ClientPongComposer extends Outgoing
+export class ClientPingComposer extends Outgoing
 {
     constructor()
     {
-        super(OutgoingHeader.CLIENT_PONG);
+        super(OutgoingHeader.CLIENT_PING);
     }
 
     public compose(): OutgoingPacket
     {
-        return this.packet.writeInt(this.client.pingCount || 0).prepare();
+        return this.packet.prepare();
     }
 }

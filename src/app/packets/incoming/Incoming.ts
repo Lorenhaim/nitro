@@ -1,7 +1,6 @@
 import { GameClient, SocketClient } from '../../networking';
 import { IncomingPacket } from './IncomingPacket';
 
-
 export abstract class Incoming
 {
     private _client: GameClient | SocketClient;

@@ -10,6 +10,7 @@ export * from './HotelAlertCommand';
 export * from './PickupAllCommand';
 export * from './PullCommand';
 export * from './RebootCommand';
+export * from './ReloadRoomCommand';
 export * from './RollDiceCommand';
 export * from './RoomSpectateCommand';
 export * from './ShutdownCommand';

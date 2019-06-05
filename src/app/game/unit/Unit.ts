@@ -311,6 +311,46 @@ export class Unit
         }));
     }
 
+    // public chat(type: ChatType, message: string): void
+    // {
+    //     if(type === null || !message || !this._room) return;
+
+    //     this._timer.resetIdleTimer();
+
+    //     const emotion = determineEmotion(message);
+
+    //     if(type === ChatType.WHISPER)
+    //     {
+    //         const username = message.substr(0, message.indexOf(' '));
+            
+    //         message = message.substr(message.indexOf(' '));
+
+    //         if(!username || !message) return;
+
+    //         const activeUser = Emulator.gameManager.userManager.getUserByUsername(username);
+
+    //         if(!activeUser) return;
+
+    //         if(activeUser.unit.room !== this._room) return;
+
+    //         activeUser.unit.receiveChat(ChatType.WHISPER, this, message);
+    //     }
+    // }
+
+    // public receiveChat(type: ChatType, unit: Unit, message: string): void
+    // {
+    //     if(type === null || !unit || !message || !this._room || this._type !== UnitType.USER) return;
+
+    //     if(unit.room !== this._room) return;
+
+    //     if(message.endsWith('o/'))
+    //     {
+    //         this._user.connections.processOutgoing(new UnitActionComposer(unit, UnitAction.WAVE));
+
+    //         if(unit.type === UnitType.USER) unit.user.connections.processOutgoing(new UnitActionComposer(unit, UnitAction.WAVE));
+    //     }
+    // }
+
     public chat(type: ChatType, message: string): void
     {
         if(!message || !this._room) return;
