@@ -1,10 +1,11 @@
 export enum CatalogLayouts
 {
-    DEFAULT             = 'default',
-    FRONTPAGE           = 'default',
-    FRONTPAGE_FEATURED  = 'frontpage4',
-    SPACES_NEW          = 'spaces_new',
     CLUB_BUY            = 'club_buy',
+    DEFAULT             = 'default_3x3',
+    FRONTPAGE           = 'frontpage4',
+    FRONTPAGE_FEATURED  = 'frontpage_featured',
     GROUP_FRONTPAGE     = 'guild_frontpage',
-    PET_INFO            = 'info_pets'
+    GROUP_FURNI         = 'guild_custom_furni',
+    PET_INFO            = 'info_pets',
+    SPACES_NEW          = 'spaces_new'
 }

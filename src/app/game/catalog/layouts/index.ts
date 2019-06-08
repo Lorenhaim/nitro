@@ -5,5 +5,6 @@ export * from './DefaultLayout';
 export * from './FrontPageFeaturedLayout';
 export * from './FrontPageLayout';
 export * from './GroupFrontpageLayout';
+export * from './GroupFurniLayout';
 export * from './PetInfoLayout';
 export * from './SpacesNewLayout';

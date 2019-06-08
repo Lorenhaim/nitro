@@ -2,7 +2,7 @@ import { getManager } from 'typeorm';
 import { Manager } from '../../common';
 import { ItemBaseDao, ItemEntity } from '../../database';
 import { BaseItem } from './base';
-import { Interaction, InteractionClothing, InteractionDefault, InteractionDice, InteractionDimmer, InteractionExchange, InteractionGate, InteractionMultiHeight, InteractionPetJump, InteractionRoller, InteractionStackHelper, InteractionTeleport, InteractionVendingMachine, WiredEffectUnitTeleport, WiredTriggerEnterRoom, WiredTriggerSaysSomething, WiredTriggerStateChanged, WiredTriggerWalkOnFurni } from './interaction';
+import { Interaction, InteractionClothing, InteractionDefault, InteractionDice, InteractionDimmer, InteractionExchange, InteractionGate, InteractionGroupFurni, InteractionGroupGate, InteractionMultiHeight, InteractionPetJump, InteractionRoller, InteractionStackHelper, InteractionTeleport, InteractionVendingMachine, WiredEffectUnitTeleport, WiredTriggerEnterRoom, WiredTriggerSaysSomething, WiredTriggerStateChanged, WiredTriggerWalkOnFurni } from './interaction';
 import { Item } from './Item';
 
 export class ItemManager extends Manager
@@ -84,6 +84,8 @@ export class ItemManager extends Manager
         this._interactions.push(new InteractionStackHelper());
         this._interactions.push(new InteractionDimmer());
         this._interactions.push(new InteractionClothing());
+        this._interactions.push(new InteractionGroupFurni());
+        this._interactions.push(new InteractionGroupGate());
 
         // WIRED
 

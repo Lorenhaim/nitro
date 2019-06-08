@@ -26,7 +26,7 @@ export class UnitStatusComposer extends Outgoing
         {
             const unit = this._units[i];
 
-            if(!unit) continue;
+            if(!unit || !unit.location.position) continue;
             
             this.packet
                 .writeInt(unit.id)

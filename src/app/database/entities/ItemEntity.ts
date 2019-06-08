@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Direction, DirectionSimple } from '../../game';
 import { CatalogItemLimitedEntity } from './CatalogItemLimitedEntity';
+import { GroupEntity } from './GroupEntity';
 import { ItemBaseEntity } from './ItemBaseEntity';
 import { RoomEntity } from './RoomEntity';
 import { UserEntity } from './UserEntity';
@@ -44,6 +45,9 @@ export class ItemEntity
     @Column({ name: 'extra_data', nullable: true })
     public extraData: string;
 
+    @Column({ name: 'group_id', nullable: true })
+    public groupId: number;
+
     @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })
     public timestampCreated: Date;
 
@@ -58,6 +62,10 @@ export class ItemEntity
     @ManyToOne(type => RoomEntity, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'room_id' })
     public room: RoomEntity;
+
+    @ManyToOne(type => GroupEntity, { onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'group_id' })
+    public group: GroupEntity;
 
     @OneToOne(type => CatalogItemLimitedEntity, item => item.itemId)
     public limitedSell: CatalogItemLimitedEntity;

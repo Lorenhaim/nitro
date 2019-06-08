@@ -1,9 +1,9 @@
-import { TimeHelper } from '../../../common';
-import { GroupMemberEntity } from '../../../database/entities/GroupMemberEntity';
-import { Group } from '../../../game';
-import { Outgoing } from '../Outgoing';
-import { OutgoingHeader } from '../OutgoingHeader';
-import { OutgoingPacket } from '../OutgoingPacket';
+import { TimeHelper } from '../../../../common';
+import { GroupMemberEntity } from '../../../../database';
+import { Group } from '../../../../game';
+import { Outgoing } from '../../Outgoing';
+import { OutgoingHeader } from '../../OutgoingHeader';
+import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class GroupMembersComposer extends Outgoing
 {

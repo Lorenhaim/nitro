@@ -146,6 +146,8 @@ export class PacketManager
         this.addHandler(IncomingHeader.GROUP_FORUM_INFO, IncomingGroup.GroupForumInfoEvent);
         this.addHandler(IncomingHeader.GROUP_FORUM_LIST, IncomingGroup.GroupForumListEvent);
         this.addHandler(IncomingHeader.GROUP_FORUM_THREADS, IncomingGroup.GroupForumThreadsEvent);
+        this.addHandler(IncomingHeader.GROUP_CREATE_OPTIONS, IncomingGroup.GroupCreateOptionsEvent);
+        this.addHandler(IncomingHeader.GROUP_MEMBERSHIPS, IncomingGroup.GroupMembershipsEvent);
     }
 
     private registerSecurity(): void

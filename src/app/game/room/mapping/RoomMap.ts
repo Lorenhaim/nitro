@@ -234,36 +234,72 @@ export class RoomMap
 
         const highestItem = tile.highestItem;
 
-        if(!tile.canWalk)
+        if(highestItem)
         {
-            if(highestItem)
+            if(highestItem.groupId)
+            {
+                if(!highestItem.isGroupItemOpen(unit)) return null;
+            }
+
+            if(!tile.canWalk)
             {
                 if(unit)
                 {
                     if(highestItem.isItemOpen) return tile;
-
+    
                     if(!highestItem.position.compare(unit.location.position)) return null;
                 }
-
+    
                 if(highestItem.isItemOpen) return tile;
-                
+                    
                 return null;
             }
-        }
-        else
-        {
-            if(highestItem)
+            else
             {
                 if(highestItem.isItemClosed) return null;
 
-                if(unit.type === UnitType.USER && unit.connectedUnit || unit.type === UnitType.PET)
+                if(unit)
                 {
-                    if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
+                    if(unit.type === UnitType.USER && unit.connectedUnit || unit.type === UnitType.PET)
+                    {
+                        if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
+                    }
                 }
 
                 if(!highestItem.baseItem.canWalk) return null;
             }
         }
+
+        // if(!tile.canWalk)
+        // {
+        //     if(highestItem)
+        //     {
+        //         if(unit)
+        //         {
+        //             if(highestItem.isItemOpen) return tile;
+
+        //             if(!highestItem.position.compare(unit.location.position)) return null;
+        //         }
+
+        //         if(highestItem.isItemOpen) return tile;
+                
+        //         return null;
+        //     }
+        // }
+        // else
+        // {
+        //     if(highestItem)
+        //     {
+        //         if(highestItem.isItemClosed) return null;
+
+        //         if(unit.type === UnitType.USER && unit.connectedUnit || unit.type === UnitType.PET)
+        //         {
+        //             if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
+        //         }
+
+        //         if(!highestItem.baseItem.canWalk) return null;
+        //     }
+        // }
                     
         return tile;
     }
@@ -300,13 +336,18 @@ export class RoomMap
             if(!this._room.details.allowWalkThrough) return null;
         }
 
-        const item = tile.highestItem;
+        const highestItem = tile.highestItem;
 
-        if(item)
+        if(highestItem)
         {
-            if(item.baseItem.canSit || item.baseItem.canLay) return null;
+            if(highestItem.groupId)
+            {
+                if(!highestItem.isGroupItemOpen(unit)) return null;
+            }
 
-            if(!item.isItemOpen) return null;
+            if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
+
+            if(!highestItem.isItemOpen) return null;
         }
 
         return tile;
@@ -314,17 +355,16 @@ export class RoomMap
 
     public getValidRandomTile(unit: Unit): RoomTile
     {
-        if(unit)
+        if(!unit) return null;
+        
+        for(let i = 0; i < 10; i++)
         {
-            for(let i = 0; i < 10; i++)
-            {
-                const x = NumberHelper.randomNumber(1, this._room.model.totalX);
-                const y = NumberHelper.randomNumber(1, this._room.model.totalY);
+            const x = NumberHelper.randomNumber(1, this._room.model.totalX);
+            const y = NumberHelper.randomNumber(1, this._room.model.totalY);
 
-                const tile = this.getValidTile(unit, new Position(x, y));
+            const tile = this.getValidTile(unit, new Position(x, y));
 
-                if(tile) return tile;
-            }
+            if(tile) return tile;
         }
 
         return null;

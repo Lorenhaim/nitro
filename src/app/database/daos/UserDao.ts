@@ -1,6 +1,6 @@
 import { getManager, Like } from 'typeorm';
 import { UserEntity } from '../../database';
-import { UserFavoriteRoomEntity, UserLikedRoomEntity } from '../entities';
+import { RoomEntity, UserFavoriteRoomEntity, UserLikedRoomEntity } from '../entities';
 
 export class UserDao
 {
@@ -58,6 +58,23 @@ export class UserDao
             .createQueryBuilder(UserFavoriteRoomEntity, 'favorite')
             .select(['favorite.id', 'favorite.roomId'])
             .where('favorite.userId = :id', { id })
+            .getMany();
+
+        if(!results.length) return null;
+
+        return results;
+    }
+
+    public static async getOwnedRoomsWithoutGroups(ownerId: number): Promise<RoomEntity[]>
+    {
+        if(!ownerId) return null;
+
+        const results = await getManager()
+            .createQueryBuilder(RoomEntity, 'room')
+            .select(['room.id', 'room.name', 'group.id' ])
+            .where('room.ownerId = :ownerId', { ownerId })
+            .andWhere('group.roomId IS NULL')
+            .leftJoin('room.group', 'group')
             .getMany();
 
         if(!results.length) return null;

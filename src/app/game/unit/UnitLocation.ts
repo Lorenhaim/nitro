@@ -245,7 +245,7 @@ export class UnitLocation
 
     public roam(): void
     {
-        if(!this._unit.room || !this._unit.room.map) return;
+        if(!this._unit || !this._unit.room || !this._unit.room.map) return;
 
         const randomTile = this._unit.room.map.getValidRandomTile(this._unit);
 
@@ -385,6 +385,8 @@ export class UnitLocation
 
     public invokeCurrentItem(): void
     {
+        if(!this._unit || !this._unit.room) return;
+
         this.updateHeight(this._position);
 
         const currentItem = this.getCurrentItem();
@@ -426,18 +428,19 @@ export class UnitLocation
 
     public processNextPosition(): void
     {
+        if(!this._unit || !this._unit.room || !this._unit.room.model) return;
+
         if(!this._positionNext) return;
+
+        if(this._unit.type === UnitType.USER)
+        {
+            if(this._positionNext.compare(this._unit.room.model.doorPosition)) return this._unit.reset();
+        }
         
         this._position.x    = this._positionNext.x;
         this._position.y    = this._positionNext.y;
 
         this.updateHeight(this._position);
-
-        const currentTile = this.getCurrentTile();
-
-        if(!currentTile) return;
-
-        if(currentTile.isDoor) return this._unit.reset();
 
         const currentItem = this.getCurrentItem();
 

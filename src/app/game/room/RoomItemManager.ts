@@ -324,14 +324,14 @@ export class RoomItemManager extends Manager
                 return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.NO_RIGHTS)));
             }
 
-            const oldPosition = item.position.copy();
-
             if(!item.isValidPlacement(position))
             {
                 user.connections.processOutgoing(new ItemFloorUpdateComposer(item));
 
                 return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.INVALID_PLACEMENT)));
             }
+
+            const oldPosition = item.position.copy();
             
             item.position.setDirection(position.direction);
             

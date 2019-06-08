@@ -77,20 +77,11 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
         }
     }
 
-    public onMove(user: User, item: Item): void
-    {
-        //console.log('moved');
-    }
+    public onMove(user: User, item: Item): void {}
 
-    public onStep(unit: Unit, item: Item): void
-    {
-        //console.log('stepped');
-    }
+    public onStep(unit: Unit, item: Item): void {}
 
-    public beforeStep(unit: Unit, item: Item): void
-    {
-        //console.log('before step');
-    }
+    public beforeStep(unit: Unit, item: Item): void {}
 
     public onStop(unit: Unit, item: Item): void
     {
@@ -139,15 +130,12 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
 
     public parseExtraData(item: Item, packet: OutgoingPacket): OutgoingPacket
     {
-        if(item && packet)
-        {
-            packet.writeInt(item.limitedData !== '0:0' ? 256 : 0);
-            packet.writeString(item.extraData);
+        if(!item || !packet) return null;
+        
+        packet.writeInt(item.limitedData !== '0:0' ? 256 : 0);
+        packet.writeString(item.extraData);
             
-            return packet;
-        }
-
-        return null;
+        return packet;
     }
 
     private toggleState(unit: Unit, item: Item): void

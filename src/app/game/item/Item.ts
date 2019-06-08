@@ -5,9 +5,10 @@ import { Emulator } from '../../Emulator';
 import { ItemExtraDataComposer, ItemStateComposer, ItemWallUpdateComposer, OutgoingPacket } from '../../packets';
 import { AffectedPositions, Direction, Position } from '../pathfinder';
 import { Room, RoomTile, RoomTileState } from '../room';
+import { Unit, UnitType } from '../unit';
 import { User } from '../user';
 import { BaseItem, BaseItemType } from './base';
-import { InteractionGate, InteractionRoller, InteractionTeleport } from './interaction';
+import { InteractionGate, InteractionGroupGate, InteractionRoller, InteractionTeleport } from './interaction';
 import { ItemRolling } from './ItemRolling';
 
 export class Item
@@ -261,6 +262,22 @@ export class Item
         
     }
 
+    public isGroupItemOpen(unit: Unit): boolean
+    {
+        if(!unit || unit.type !== UnitType.USER) return false;
+
+        if(!this._entity.groupId) return true;
+        
+        if(this._baseItem.hasInteraction(InteractionGroupGate))
+        {
+            if(unit.user.inventory.groups.hasValidMembership(this._entity.groupId)) return true;
+
+            return false;
+        }
+
+        return true;
+    }
+
     public setUser(user: User): void
     {
         if(!user) return;
@@ -508,6 +525,11 @@ export class Item
     public get extraData(): string
     {
         return this._entity.extraData || '0';
+    }
+
+    public get groupId(): number
+    {
+        return this._entity.groupId;
     }
 
     public get isItemOpen(): boolean

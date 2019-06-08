@@ -2,8 +2,7 @@ import { getManager } from 'typeorm';
 import { TimeHelper } from '../../common';
 import { GroupDao, GroupEntity, GroupMemberEntity } from '../../database';
 import { Emulator } from '../../Emulator';
-import { GroupInfoComposer, GroupMembersRefreshComposer, Outgoing, OutgoingPacket } from '../../packets';
-import { GroupMemberComposer } from '../../packets/outgoing/group/GroupMemberComposer';
+import { GroupInfoComposer, GroupMemberComposer, GroupMembersRefreshComposer, Outgoing, OutgoingPacket } from '../../packets';
 import { Room } from '../room';
 import { PermissionList } from '../security';
 import { User } from '../user';
@@ -516,6 +515,16 @@ export class Group
     public get badge(): string
     {
         return this._entity.badge;
+    }
+
+    public get colorOne(): number
+    {
+        return this._entity.colorOne;
+    }
+
+    public get colorTwo(): number
+    {
+        return this._entity.colorTwo;
     }
 
     public get state(): GroupState

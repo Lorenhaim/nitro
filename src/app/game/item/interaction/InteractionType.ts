@@ -6,6 +6,8 @@ export enum InteractionType
     DIMMER                          = 'dimmer',
     EXCHANGE                        = 'exchange',
     GATE                            = 'gate',
+    GROUP_FURNI                     = 'group_furni',
+    GROUP_GATE                      = 'group_gate',
     MULTI_HEIGHT                    = 'multi_height',
     PET_JUMP                        = 'pet_jump',
     ROLLER                          = 'roller',

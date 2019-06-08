@@ -32,13 +32,13 @@ export class CatalogPageEntity
     @Column({ name: 'image_special', nullable: true })
     public imageSpecial: string;
 
-    @Column({ name: 'text_header', nullable: true })
+    @Column({ name: 'text_header', type: 'text', nullable: true })
     public textHeader: string;
 
-    @Column({ name: 'text_details', nullable: true })
+    @Column({ name: 'text_details', type: 'text', nullable: true })
     public textDetails: string;
 
-    @Column({ name: 'text_teaser', nullable: true })
+    @Column({ name: 'text_teaser', type: 'text', nullable: true })
     public textTeaser: string;
 
     @Column({ name: 'min_rank', nullable: true })

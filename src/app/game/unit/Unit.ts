@@ -190,7 +190,15 @@ export class Unit
 
         if(this._location.teleporting)
         {
-            if(this._location.teleporting.teleportGoal.room.id === id) skipStateCheck = true;
+            if(this._location.teleporting.teleportGoal)
+            {
+                if(this._location.teleporting.teleportGoal.room === room) skipStateCheck = true;
+                else
+                {
+                    this._location.teleporting.setInvalid();
+                    this._location.teleporting.stopTeleporting();
+                }
+            }
             else
             {
                 this._location.teleporting.setInvalid();

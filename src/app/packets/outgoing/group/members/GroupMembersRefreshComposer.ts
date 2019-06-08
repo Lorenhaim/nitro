@@ -1,6 +1,6 @@
-import { Outgoing } from '../Outgoing';
-import { OutgoingHeader } from '../OutgoingHeader';
-import { OutgoingPacket } from '../OutgoingPacket';
+import { Outgoing } from '../../Outgoing';
+import { OutgoingHeader } from '../../OutgoingHeader';
+import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class GroupMembersRefreshComposer extends Outgoing
 {

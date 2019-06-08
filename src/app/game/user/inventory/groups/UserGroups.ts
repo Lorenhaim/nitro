@@ -78,6 +78,15 @@ export class UserGroups extends Manager
         return this.getMembership(groupId) !== null;
     }
 
+    public hasValidMembership(groupId: number): boolean
+    {
+        const rank = this.getMembershipRank(groupId);
+
+        if(rank === null || rank === GroupRank.REQUESTED) return false;
+
+        return true;
+    }
+
     public getGroups(): Group[]
     {
         const totalMemberships = this._memberships.length;

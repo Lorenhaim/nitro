@@ -4,7 +4,7 @@ import { Emulator } from '../../Emulator';
 import { CatalogModeComposer, CatalogUpdatedComposer, DiscountConfigComposer, GiftConfigComposer, MarketplaceConfigComposer, RecyclerPrizesComposer } from '../../packets';
 import { CatalogItem } from './CatalogItem';
 import { CatalogPage } from './CatalogPage';
-import { CatalogLayout, CatalogLayouts, ClubBuyLayout, DefaultLayout, FrontPageFeaturedLayout, FrontPageLayout, GroupFrontpageLayout, SpacesNewLayout } from './layouts';
+import { CatalogLayout, CatalogLayouts, ClubBuyLayout, DefaultLayout, FrontPageFeaturedLayout, FrontPageLayout, GroupFrontpageLayout, GroupFurniLayout, SpacesNewLayout } from './layouts';
 import { PetInfoLayout } from './layouts/PetInfoLayout';
 
 export class CatalogManager extends Manager
@@ -176,6 +176,7 @@ export class CatalogManager extends Manager
         this._layouts.push(new ClubBuyLayout());
         this._layouts.push(new GroupFrontpageLayout());
         this._layouts.push(new PetInfoLayout());
+        this._layouts.push(new GroupFurniLayout());
 
         this.logger.log(`Loaded ${ this._layouts.length } layouts`);
     }

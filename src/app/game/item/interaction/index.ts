@@ -6,6 +6,8 @@ export * from './InteractionDice';
 export * from './InteractionDimmer';
 export * from './InteractionExchange';
 export * from './InteractionGate';
+export * from './InteractionGroupFurni';
+export * from './InteractionGroupGate';
 export * from './InteractionMultiHeight';
 export * from './InteractionPetJump';
 export * from './InteractionRoller';

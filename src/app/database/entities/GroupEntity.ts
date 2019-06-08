@@ -26,6 +26,12 @@ export class GroupEntity
     @Column({ name: 'badge' })
     public badge: string;
 
+    @Column({ name: 'color_one', default: 0 })
+    public colorOne: number;
+
+    @Column({ name: 'color_two', default: 0 })
+    public colorTwo: number;
+
     @Column({ name: 'state', type: 'enum', enum: GroupState, default: GroupState.OPEN })
     public state: GroupState;
 

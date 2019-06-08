@@ -50,7 +50,7 @@ export class PathFinder
             {
                 if(toItem.baseItem.canSit || toItem.baseItem.canLay) return false;
 
-                return toItem.baseItem.canWalk || toItem.isItemOpen && !toItem.baseItem.canSit && !toItem.baseItem.canLay;
+                return toItem.baseItem.canWalk || toItem.isItemOpen;
             }
         }
 

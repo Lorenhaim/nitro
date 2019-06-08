@@ -1,7 +1,7 @@
 import { Emulator } from '../../Emulator';
 import { GroupBadgesComposer, ItemFloorComposer, ItemWallComposer, Outgoing, RoomDoorbellCloseComposer, RoomInfoComposer, RoomInfoOwnerComposer, RoomPaintComposer, RoomPromotionComposer, RoomScoreComposer, RoomThicknessComposer, UnitComposer, UnitDanceComposer, UnitEffectComposer, UnitHandItemComposer, UnitIdleComposer, UnitRemoveComposer, UnitStatusComposer, UserFowardRoomComposer } from '../../packets';
 import { Group } from '../group';
-import { WiredTriggerEnterRoom } from '../item';
+import { InteractionTeleport, WiredTriggerEnterRoom } from '../item';
 import { Position } from '../pathfinder';
 import { Room } from '../room';
 import { Unit, UnitType } from '../unit';
@@ -105,7 +105,6 @@ export class RoomUnitManager
         unit.roomLoading        = null;
         unit.location.position  = position ? position : this._room.model.doorPosition.copy();
         unit.canLocate          = false;
-        unit.needsInvoke        = true;
 
         this.processOutgoing(new UnitComposer(unit), new UnitStatusComposer(unit));
 
@@ -115,7 +114,12 @@ export class RoomUnitManager
 
         const enterTile = unit.location.getCurrentTile();
 
-        if(enterTile) enterTile.addUnit(unit);
+        if(enterTile)
+        {
+            enterTile.addUnit(unit);
+
+            if(!enterTile.hasInteraction(InteractionTeleport)) unit.needsInvoke = true;
+        }
 
         if(unit.type === UnitType.USER)
         {

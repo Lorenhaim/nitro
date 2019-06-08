@@ -1,8 +1,8 @@
-import { TimeHelper } from '../../../common';
-import { GroupMember } from '../../../game';
-import { Outgoing } from '../Outgoing';
-import { OutgoingHeader } from '../OutgoingHeader';
-import { OutgoingPacket } from '../OutgoingPacket';
+import { TimeHelper } from '../../../../common';
+import { GroupMember } from '../../../../game';
+import { Outgoing } from '../../Outgoing';
+import { OutgoingHeader } from '../../OutgoingHeader';
+import { OutgoingPacket } from '../../OutgoingPacket';
 
 export class GroupMemberComposer extends Outgoing
 {
