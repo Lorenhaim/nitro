@@ -46,6 +46,8 @@ export class PacketManager
     {
         const totalHandlers = this._handlers.length;
 
+        header = <any> header.toString();
+
         for(let i = 0; i < totalHandlers; i++)
         {
             const existing = this._handlers[i];
@@ -58,7 +60,7 @@ export class PacketManager
             }
         }
 
-        this._handlers.push({ header: header.toString(), handler });
+        this._handlers.push({ header, handler });
     }
 
     public getHandler(header: IncomingHeader): typeof Incoming

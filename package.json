@@ -24,7 +24,6 @@
   },
   "scripts": {
     "start": "node index.js",
-    "watch": "nodemon",
     "dev": "ts-node-dev --respawn --transpileOnly ./src/main.ts"
   },
   "author": "Billsonnn",

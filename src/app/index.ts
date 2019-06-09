@@ -5,3 +5,4 @@ export * from './Emulator';
 export * from './game';
 export * from './networking';
 export * from './packets';
+export * from './plugin';

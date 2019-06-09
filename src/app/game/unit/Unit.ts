@@ -30,6 +30,7 @@ export class Unit
 
     private _room: Room;
     private _roomLoading: Room;
+    private _isRoomLoading: boolean;
     private _roomQueue: Room;
     private _location: UnitLocation;
     private _timer: UnitTimer;
@@ -79,6 +80,7 @@ export class Unit
 
         this._room          = null;
         this._roomLoading   = null;
+        this._isRoomLoading = false;
         this._roomQueue     = null;
         this._location      = new UnitLocation(this);
         this._timer         = new UnitTimer(this);
@@ -175,6 +177,10 @@ export class Unit
     public async enterRoomPartOne(id: number, password: string, skipStateCheck: boolean = false)
     {
         if(!id) return;
+
+        if(this._isRoomLoading) return;
+
+        this._isRoomLoading = true;
 
         this.reset(false);
 
@@ -301,6 +307,8 @@ export class Unit
         }
 
         room.unitManager.addUnit(this, position);
+
+        this._isRoomLoading = false;
     }
 
     public spectate(status: boolean = false): void

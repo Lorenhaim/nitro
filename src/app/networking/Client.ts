@@ -64,7 +64,7 @@ export abstract class Client<T>
 
             if(!packet) continue;
 
-            const handler: any = Emulator.networkManager.packetManager().getHandler(packet.header);
+            const handler: any = Emulator.packetManager.getHandler(packet.header);
 
             if(!handler)
             {

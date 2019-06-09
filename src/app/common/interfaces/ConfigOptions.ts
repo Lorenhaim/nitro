@@ -66,6 +66,10 @@ export interface ConfigOptions
             savePath: string,
             saveUrl: string
         },
+        plugins: {
+            enabled: boolean,
+            path: string
+        },
         catalog: {
             maxPurchaseStack: number
         }
