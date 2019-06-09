@@ -38,8 +38,6 @@ export class InteractionPetJump extends InteractionDefault implements OnStop, On
         {
             if(unit.location.hasStatus(UnitStatusType.JUMP)) unit.location.removeStatus(UnitStatusType.JUMP);
             else unit.location.addStatus(new UnitStatus(UnitStatusType.JUMP, '0'));
-
-            unit.updateNow();
         }
 
         if(unit.type === UnitType.USER)
@@ -76,8 +74,6 @@ export class InteractionPetJump extends InteractionDefault implements OnStop, On
         if(unit.type !== UnitType.PET) return;
 
         unit.location.removeStatus(UnitStatusType.JUMP);
-
-        unit.updateNow();
     }
 
     public onLeave(unit: Unit, item: Item, positionNext: Position): void

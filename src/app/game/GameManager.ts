@@ -1,5 +1,5 @@
 import { getManager } from 'typeorm';
-import { Manager } from '../common/interfaces/Manager';
+import { Manager } from '../common';
 import { CatalogManager } from './catalog';
 import { CommandManager } from './command';
 import { GroupManager } from './group';

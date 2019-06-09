@@ -536,7 +536,7 @@ export class UnitLocation
 
         if(this._position.compare(position)) return;
 
-        if(this.hasStatus(UnitStatusType.LAY)) return;
+        if(this._isWalking || this.hasStatus(UnitStatusType.LAY)) return;
 
         if(this.hasStatus(UnitStatusType.SIT)) headOnly = true;
 
@@ -555,7 +555,7 @@ export class UnitLocation
             this._position.setDirection(this._position.calculateHumanDirection(position));
         }
 
-        this._unit.updateNow();
+        this._unit.needsUpdate = true;
     }
 
     public get unit(): Unit

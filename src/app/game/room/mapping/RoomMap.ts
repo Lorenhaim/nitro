@@ -165,7 +165,20 @@ export class RoomMap
 
     public getTile(position: Position): RoomTile
     {
-        if(position && this._map[position.x] !== undefined && this._map[position.x][position.y] !== undefined) return this._map[position.x][position.y];
+        if(position && this._map[position.x] !== undefined && this._map[position.x][position.y] !== undefined)
+        {
+            const tile = this._map[position.x][position.y];
+
+            if(!tile) return null;
+
+            const state = this._room.model.getTileState(tile.position.x, tile.position.y);
+
+            if(!state) return null;
+
+            if(state === RoomTileState.CLOSED) return null;
+
+            return tile;
+        }
 
         return null;
     }

@@ -79,7 +79,7 @@ export class UnitTeleporting
 
                 this._unit.location.getCurrentTile().addUnit(this._unit);
 
-                this._unit.updateNow();
+                this._unit.needsUpdate = true;
             }
             else
             {

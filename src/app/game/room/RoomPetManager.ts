@@ -97,7 +97,7 @@ export class RoomPetManager extends Manager
 
         const tile = this._room.map.getTile(position);
 
-        //if(!tile) return;
+        if(!tile) return;
 
         position.z = tile.walkingHeight;
 

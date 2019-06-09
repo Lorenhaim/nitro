@@ -128,8 +128,9 @@ export class Unit
                 if(sendHotelView && this._user) this._user.connections.processOutgoing(new RoomAccessDeniedComposer());
             }
 
-            this._room      = null;
-            this._roomQueue = null;
+            this._room          = null;
+            this._roomQueue     = null;
+            this._isRoomLoading = false;
 
             if(this._location) this._location.reset();
 
