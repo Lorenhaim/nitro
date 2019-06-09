@@ -13,7 +13,6 @@ ormlogs.log
 .DS_Store
 Thumbs.db
 swf
-src/ssl
 *.zip
 sqls
 camera
@@ -21,3 +20,5 @@ dist
 errors.txt
 docs
 src/app/Config.ts
+src/plugins
+src/ssl
