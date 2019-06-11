@@ -1,12 +1,10 @@
 import { Logger } from '../common';
-import { Interaction } from '../game';
 import { Nitro } from '../Nitro';
 import { Incoming, IncomingHeader } from '../packets';
 
-export abstract class Plugin
+export abstract class NitroPlugin
 {
     private _name: string;
-
     private _logger: Logger;
 
     protected _isLoaded: boolean;
@@ -17,15 +15,14 @@ export abstract class Plugin
 
     constructor(name: string)
     {
-        this._name = name;
+        this._name          = name;
+        this._logger        = new Logger('NitroPlugin', name);
 
-        this._logger        = new Logger(name)
+        this._isLoaded      = false;
+        this._isLoading     = false;
 
-        this._isLoaded       = false;
-        this._isLoading      = false;
-
-        this._isDisposed     = false;
-        this._isDisposing    = false;
+        this._isDisposed    = false;
+        this._isDisposing   = false;
     }
 
     public async init(): Promise<void>
@@ -71,9 +68,11 @@ export abstract class Plugin
         this._logger.log(`Registered IncomingEvent [${ header }]`);
     }
 
-    protected registerInteraction(interaction: Interaction): void
+    protected registerEvent<T>(event: T, handler: Function): void
     {
-        // /
+        Nitro.pluginManager.registerEvent(<any> event, handler);
+
+        this.logger.log(`Registered event: ${ handler.name }`);
     }
 
     public get name(): string

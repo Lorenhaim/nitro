@@ -1,6 +1,7 @@
 import { PermissionList } from '../../../game';
 import { GameClient, SocketClient } from '../../../networking';
 import { Nitro } from '../../../Nitro';
+import { UserLoginEvent } from '../../../plugin';
 import { ClientPingComposer, GameCenterGameListComposer, GameCenterStatusComposer, ModerationToolComposer, ModerationTopicsComposer, Outgoing, SecurityTicketComposer, SecurityUnknown2Composer, SecurtiyDebugComposer, UserAchievementScoreComposer, UserBuildersClubComposer, UserClothingComposer, UserClubComposer, UserEffectsComposer, UserFavoriteRoomCountComposer, UserFirstLoginOfDayComposer, UserHomeRoomComposer, UserItemsRefreshComposer, UserPermissionsComposer, UserRightsComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -32,6 +33,10 @@ export class SecurityTicketEvent extends Incoming
 
                     await Nitro.gameManager.userManager.addUser(user);
                 }
+
+                const event = await Nitro.pluginManager.processEvent(new UserLoginEvent(user));
+
+                if(event && event.isCancelled) return await this.client.dispose();
                 
                 if(this.client.user)
                 {

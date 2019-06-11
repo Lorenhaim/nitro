@@ -2,18 +2,25 @@ import { existsSync, lstatSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { Manager } from '../common';
 import { Nitro } from '../Nitro';
-import { Plugin } from './Plugin';
+import { PluginEvent } from './events';
+import { NitroPlugin } from './NitroPlugin';
+import { PluginConfig } from './PluginConfig';
 
 export class PluginManager extends Manager
 {
-    private _plugins: Plugin[];
+    private _plugins: NitroPlugin[];
+
+    private _events: { event: typeof PluginEvent, handler: Function }[];
 
     constructor()
     {
         super('PluginManager');
+
+        this._plugins   = [];
+        this._events    = [];
     }
 
-    public getPlugin(name: string): Plugin
+    public getPlugin(name: string): NitroPlugin
     {
         if(!name) return null;
 
@@ -31,6 +38,8 @@ export class PluginManager extends Manager
 
             return plugin;
         }
+
+        return null;
     }
 
     public hasPlugin(name: string): boolean
@@ -38,9 +47,9 @@ export class PluginManager extends Manager
         return this.getPlugin(name) !== null;
     }
 
-    public addPlugin(plugin: Plugin): Plugin
+    public addPlugin(plugin: NitroPlugin): NitroPlugin
     {
-        if(!(plugin instanceof Plugin)) return;
+        if(!(plugin instanceof NitroPlugin)) return;
 
         if(this.hasPlugin(plugin.name)) return;
 
@@ -57,6 +66,35 @@ export class PluginManager extends Manager
     protected async onDispose(): Promise<void>
     {
 
+    }
+
+    public registerEvent(event: typeof PluginEvent, handler: Function): void
+    {
+        this._events.push({ event, handler });
+    }
+
+    public async processEvent(event: PluginEvent): Promise<PluginEvent>
+    {
+        const totalEvents = this._events.length;
+
+        if(!totalEvents) return null;
+
+        for(let i = 0; i < totalEvents; i++)
+        {
+            const activeEvent = this._events[i];
+
+            if(!activeEvent) continue;
+
+            if(!(event instanceof activeEvent.event)) continue;
+
+            await activeEvent.handler(event);
+
+            if(!event.isCancelled) continue;
+
+            return event;
+        }
+
+        return event;
     }
 
     private async loadPlugins(): Promise<void>
@@ -91,20 +129,26 @@ export class PluginManager extends Manager
             const stat = lstatSync(path);
 
             if(!stat.isDirectory()) continue;
-            
-            const pluginName = fileName.charAt(0).toUpperCase() + fileName.slice(1) + 'Plugin';
 
-            const mainClass = join(path, `${ pluginName }.ts`);
+            const pluginConfigPath = join(path, 'NitroConfig.ts');
 
-            if(!existsSync(mainClass)) continue;
+            if(!existsSync(pluginConfigPath)) continue;
 
-            const plugin = require(mainClass).default;
+            const pluginConfig: PluginConfig = require(pluginConfigPath).default;
 
-            if(!plugin) continue;
+            if(!pluginConfig) continue;
 
-            const instance = new plugin();
+            const mainClass: any = pluginConfig.mainClass;
+
+            if(!mainClass) continue;
+
+            const instance: NitroPlugin = new mainClass();
+
+            if(!instance) continue;
 
             await instance.init();
+
+            if(instance.isLoaded) this._plugins.push(instance);
         }
     }
 }
