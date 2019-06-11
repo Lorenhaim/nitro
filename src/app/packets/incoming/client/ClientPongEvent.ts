@@ -6,7 +6,7 @@ export class ClientPongEvent extends Incoming
     {
         try
         {
-            // received pong
+            this.client.receivePong();
         }
 
         catch(err)

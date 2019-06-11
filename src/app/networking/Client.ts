@@ -1,19 +1,23 @@
 import { randomBytes } from 'crypto';
-import { Logger } from '../common';
+import { Logger, TimeHelper } from '../common';
 import { User } from '../game';
 import { Nitro } from '../Nitro';
-import { Incoming, IncomingPacket, Outgoing, OutgoingPacket } from '../packets';
+import { ClientPingComposer, Incoming, IncomingPacket, Outgoing, OutgoingPacket } from '../packets';
 
 export abstract class Client<T>
 {
     private _uniqueId: string;
+
     protected _socket: T;
     protected _ip: string;
-
     protected _logger: Logger;
 
     protected _user: User;
     protected _willDestoryUser: boolean;
+
+    private _pingLast: number;
+    private _pingInterval: NodeJS.Timeout;
+    private _pongReceived: boolean;
 
     private _isDisposed: boolean;
     private _isDisposing: boolean;
@@ -21,26 +25,49 @@ export abstract class Client<T>
     constructor(socket: T, ip: string)
     {
         this._uniqueId          = randomBytes(16).toString('hex');
+
         this._socket            = socket;
         this._ip                = ip;
-
         this._logger            = new Logger(this._uniqueId);
 
         this._user              = null;
         this._willDestoryUser   = true;
+
+        this._pingLast          = null;
+        this._pingInterval      = setInterval(async () => await this.requestPong(), 20000);
+        this._pongReceived      = false;
+
+        this._isDisposed        = false;
+        this._isDisposing       = false;
+    }
+
+    private async requestPong(): Promise<void>
+    {
+        if(this._pingLast && !this._pongReceived) return await this.dispose();
+
+        this._pingLast      = TimeHelper.currentTimestamp;
+        this._pongReceived  = false;
+
+        this.processOutgoing(new ClientPingComposer());
+    }
+
+    public receivePong(): void
+    {
+        this._pongReceived = true;
     }
 
     public async dispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing)
-        {
-            this._isDisposing = true;
+        if(this._isDisposed || this._isDisposing) return;
 
-            await this.onDispose();
+        if(this._pingInterval) clearInterval(this._pingInterval);
+        
+        this._isDisposing = true;
 
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-        }
+        await this.onDispose();
+
+        this._isDisposed    = true;
+        this._isDisposing   = false;
     }
 
     public setUser(user: User): void
