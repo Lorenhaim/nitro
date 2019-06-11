@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { GroupBadgesComposer, ItemFloorComposer, ItemWallComposer, Outgoing, RoomDoorbellCloseComposer, RoomInfoComposer, RoomInfoOwnerComposer, RoomPaintComposer, RoomPromotionComposer, RoomScoreComposer, RoomThicknessComposer, UnitComposer, UnitDanceComposer, UnitEffectComposer, UnitHandItemComposer, UnitIdleComposer, UnitRemoveComposer, UnitStatusComposer, UserFowardRoomComposer } from '../../packets';
 import { Group } from '../group';
 import { InteractionTeleport, WiredTriggerEnterRoom } from '../item';
@@ -156,7 +156,7 @@ export class RoomUnitManager
 
                         if(favoriteGroupId)
                         {
-                            const group = Emulator.gameManager.groupManager.getActiveGroup(favoriteGroupId);
+                            const group = Nitro.gameManager.groupManager.getActiveGroup(favoriteGroupId);
 
                             if(group) groups.push(group);
                         }

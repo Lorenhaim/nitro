@@ -1,5 +1,5 @@
-import { Emulator } from '../../../Emulator';
 import { CatalogPage } from '../../../game';
+import { Nitro } from '../../../Nitro';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
@@ -23,7 +23,7 @@ export class CatalogPagesComposer extends Outgoing
             .writeString('root', '')
             .writeInt(0);
         
-        const pages = Emulator.gameManager.catalogManager.getPages(0, this.client.user.details.rankId);
+        const pages = Nitro.gameManager.catalogManager.getPages(0, this.client.user.details.rankId);
 
         if(pages)
         {
@@ -69,7 +69,7 @@ export class CatalogPagesComposer extends Outgoing
         }
         else this.packet.writeInt(0);
 
-        const children = Emulator.gameManager.catalogManager.getPages(page.id, this.client.user.details.rankId);
+        const children = Nitro.gameManager.catalogManager.getPages(page.id, this.client.user.details.rankId);
 
         if(children)
         {

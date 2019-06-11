@@ -1,5 +1,5 @@
 import * as WebSocket from 'ws';
-import { Emulator } from '../Emulator';
+import { Nitro } from '../Nitro';
 import { Incoming, Outgoing } from '../packets';
 import { Client } from './Client';
 
@@ -35,7 +35,7 @@ export class SocketClient extends Client<WebSocket>
         {
             await this._user.connections.disposeSocketClient(false);
 
-            if(this._willDestoryUser) await Emulator.gameManager.userManager.removeUser(this._user.id);
+            if(this._willDestoryUser) await Nitro.gameManager.userManager.removeUser(this._user.id);
         }
     }
 

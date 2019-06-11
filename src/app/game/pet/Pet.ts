@@ -1,6 +1,6 @@
 import { getManager } from 'typeorm';
 import { PetEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { OutgoingPacket } from '../../packets';
 import { Room } from '../room';
 import { Unit, UnitEffect, UnitType } from '../unit';
@@ -34,12 +34,12 @@ export class Pet
             this._entity.direction  = position.direction || 0;
         }
 
-        Emulator.gameScheduler.savePet(this);
+        Nitro.gameScheduler.savePet(this);
     }
 
     public async saveNow(): Promise<void>
     {
-        Emulator.gameScheduler.removePet(this);
+        Nitro.gameScheduler.removePet(this);
 
         if(this._unit && this._unit.location.position)
         {

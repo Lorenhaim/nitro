@@ -1,4 +1,4 @@
-import { Emulator } from '../../../../Emulator';
+import { Nitro } from '../../../../Nitro';
 import { Incoming } from '../../Incoming';
 
 export class RoomRightsRemoveOwnEvent extends Incoming
@@ -11,7 +11,7 @@ export class RoomRightsRemoveOwnEvent extends Incoming
 
             if(!roomId) return;
 
-            const room = await Emulator.gameManager.roomManager.getRoom(roomId);
+            const room = await Nitro.gameManager.roomManager.getRoom(roomId);
 
             if(!room) return;
 

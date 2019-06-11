@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Incoming } from '../Incoming';
 
 export class UserRespectEvent extends Incoming
@@ -11,7 +11,7 @@ export class UserRespectEvent extends Incoming
 
             if(!currentRoom) return;
 
-            const user = Emulator.gameManager.userManager.getUserById(this.packet.readInt());
+            const user = Nitro.gameManager.userManager.getUserById(this.packet.readInt());
 
             if(!user) return;
 

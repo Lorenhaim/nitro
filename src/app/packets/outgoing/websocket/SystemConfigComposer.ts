@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
@@ -16,13 +16,13 @@ export class SystemConfigComposer extends Outgoing
 
         const publicKeys = ['general', 'client'];
 
-        for(let parentKey in Emulator.config)
+        for(let parentKey in Nitro.config)
         {
             if(!parentKey) continue;
 
             if(publicKeys.indexOf(parentKey) === -1) continue;
 
-            const items = Emulator.config[parentKey];
+            const items = Nitro.config[parentKey];
 
             if(!items) continue;
 
@@ -36,7 +36,7 @@ export class SystemConfigComposer extends Outgoing
 
                 if(typeof value === 'object')
                 {
-                    const items = Emulator.config[parentKey][childKey];
+                    const items = Nitro.config[parentKey][childKey];
 
                     if(!items) continue;
 

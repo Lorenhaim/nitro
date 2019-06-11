@@ -1,5 +1,5 @@
 import { shuffleArray } from '../../../../../common';
-import { Emulator } from '../../../../../Emulator';
+import { Nitro } from '../../../../../Nitro';
 import { IncomingPacket, OutgoingPacket } from '../../../../../packets';
 import { UnitEffect } from '../../../../unit';
 import { User } from '../../../../user';
@@ -161,7 +161,7 @@ export class WiredEffectUnitTeleport extends WiredEffect implements ParseWiredDa
             }
         }
 
-        packet.writeBoolean(false).writeInt(Emulator.config.game.furni.wired.maxItems)
+        packet.writeBoolean(false).writeInt(Nitro.config.game.furni.wired.maxItems)
 
         const totalItems = validatedIds.length;
 

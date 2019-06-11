@@ -1,4 +1,4 @@
-import { Emulator } from '../../../../Emulator';
+import { Nitro } from '../../../../Nitro';
 import { Incoming } from '../../Incoming';
 
 export class RoomDoorbellEvent extends Incoming
@@ -16,7 +16,7 @@ export class RoomDoorbellEvent extends Incoming
 
             if(!this.client.user.unit.hasRights()) return;
 
-            const user = Emulator.gameManager.userManager.getUserByUsername(username);
+            const user = Nitro.gameManager.userManager.getUserByUsername(username);
 
             if(!user) return;
 

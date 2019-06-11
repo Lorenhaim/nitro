@@ -1,5 +1,5 @@
-import { Emulator } from '../../../../Emulator';
 import { Group, Unit, UnitType } from '../../../../game';
+import { Nitro } from '../../../../Nitro';
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
@@ -33,7 +33,7 @@ export class UnitComposer extends Outgoing
 
                 let group: Group = null;
 
-                if(favoriteGroupId) group = Emulator.gameManager.groupManager.getActiveGroup(favoriteGroupId);
+                if(favoriteGroupId) group = Nitro.gameManager.groupManager.getActiveGroup(favoriteGroupId);
 
                 this.packet
                     .writeInt(unit.user.id)

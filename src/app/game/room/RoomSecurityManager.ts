@@ -1,6 +1,6 @@
 import { Manager } from '../../common';
 import { RoomRightsDao } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { Outgoing, RoomRightsListAddComposer, RoomRightsListRemoveComposer } from '../../packets';
 import { GroupRank } from '../group';
 import { PermissionList } from '../security';
@@ -93,7 +93,7 @@ export class RoomSecurityManager extends Manager
 
         if(!user.unit.isOwner()) return;
 
-        const offlineUser = await Emulator.gameManager.userManager.getOfflineUserById(userId);
+        const offlineUser = await Nitro.gameManager.userManager.getOfflineUserById(userId);
 
         if(!offlineUser) return;
 
@@ -128,7 +128,7 @@ export class RoomSecurityManager extends Manager
 
             this.ownersOutgoing(new RoomRightsListRemoveComposer(this._room, right.id));
 
-            const user = Emulator.gameManager.userManager.getUserById(right.id);
+            const user = Nitro.gameManager.userManager.getUserById(right.id);
 
             if(!user) continue;
 
@@ -178,7 +178,7 @@ export class RoomSecurityManager extends Manager
 
                 this.ownersOutgoing(new RoomRightsListRemoveComposer(this._room, userId));
 
-                const user = Emulator.gameManager.userManager.getUserById(userId);
+                const user = Nitro.gameManager.userManager.getUserById(userId);
 
                 if(!user) continue;
 

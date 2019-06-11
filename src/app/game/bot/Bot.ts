@@ -1,6 +1,6 @@
 import { getManager } from 'typeorm';
 import { BotEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { OutgoingPacket, UnitChangeNameComposer, UnitInfoComposer } from '../../packets';
 import { Room } from '../room';
 import { PermissionList } from '../security';
@@ -32,12 +32,12 @@ export class Bot
             this._entity.direction  = this._unit.location.position.direction;
         }
 
-        Emulator.gameScheduler.saveBot(this);
+        Nitro.gameScheduler.saveBot(this);
     }
 
     public async saveNow(): Promise<void>
     {
-        Emulator.gameScheduler.removeBot(this);
+        Nitro.gameScheduler.removeBot(this);
 
         if(this._unit && this._unit.location.position)
         {

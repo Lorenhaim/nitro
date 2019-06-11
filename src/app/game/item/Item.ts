@@ -1,7 +1,7 @@
 import { getManager } from 'typeorm';
 import { NumberHelper } from '../../common';
 import { ItemEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { ItemExtraDataComposer, ItemStateComposer, ItemWallUpdateComposer, OutgoingPacket } from '../../packets';
 import { AffectedPositions, Direction, Position } from '../pathfinder';
 import { Room, RoomTile, RoomTileState } from '../room';
@@ -45,7 +45,7 @@ export class Item
 
         if(entity.baseId)
         {
-            const baseItem = Emulator.gameManager.itemManager.getBaseItem(this._entity.baseId);
+            const baseItem = Nitro.gameManager.itemManager.getBaseItem(this._entity.baseId);
 
             if(baseItem) this._baseItem = baseItem;
             else throw new Error('invalid_base_id');
@@ -69,12 +69,12 @@ export class Item
             }
         }
         
-        Emulator.gameScheduler.saveItem(this);
+        Nitro.gameScheduler.saveItem(this);
     }
 
     public async saveNow(): Promise<void>
     {
-        Emulator.gameScheduler.removeItem(this);
+        Nitro.gameScheduler.removeItem(this);
 
         if(this._baseItem.type === BaseItemType.FLOOR)
         {

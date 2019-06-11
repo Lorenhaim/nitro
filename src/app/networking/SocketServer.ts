@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { IncomingMessage } from 'http';
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https';
 import * as ws from 'ws';
-import { Emulator } from '../Emulator';
+import { Nitro } from '../Nitro';
 import { IncomingPacket } from '../packets';
 import { Server } from './Server';
 import { SocketClient } from './SocketClient';
@@ -68,7 +68,7 @@ export class SocketServer extends Server<ws.Server>
             {
                 const client = new SocketClient(socket, ip);
 
-                if(Emulator.config.logging.enabled && Emulator.config.logging.connections.web) this.logger().log(`New Connection => ${ client.uniqueId }`);
+                if(Nitro.config.logging.enabled && Nitro.config.logging.connections.web) this.logger().log(`New Connection => ${ client.uniqueId }`);
 
                 socket.on('message', async data => await this.onSocketData(client, data));
                 socket.on('close', async code => await this.onSocketClose(client, code));
@@ -126,7 +126,7 @@ export class SocketServer extends Server<ws.Server>
         {
             await client.dispose();
 
-            if(Emulator.config.logging.enabled && Emulator.config.logging.connections.web) this.logger().log(`Closed Connection => ${ client.uniqueId }`);
+            if(Nitro.config.logging.enabled && Nitro.config.logging.connections.web) this.logger().log(`Closed Connection => ${ client.uniqueId }`);
         }
 
         catch(err)

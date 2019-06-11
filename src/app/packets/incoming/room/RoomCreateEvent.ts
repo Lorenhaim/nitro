@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { RoomCreatedComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -15,7 +15,7 @@ export class RoomCreateEvent extends Incoming
             const usersMax      = this.packet.readInt();
             const tradeType     = this.packet.readInt();
 
-            const roomId = await Emulator.gameManager.roomManager.createRoom(this.client.user, {
+            const roomId = await Nitro.gameManager.roomManager.createRoom(this.client.user, {
                 name,
                 description,
                 modelName,

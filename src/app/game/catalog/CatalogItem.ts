@@ -1,7 +1,7 @@
 import { getManager } from 'typeorm';
 import { shuffleArray } from '../../common';
 import { CatalogItemDao, CatalogItemEntity, ItemDao } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { CatalogPurchaseComposer, CatalogPurchaseFailedComposer, CatalogPurchaseUnavailableComposer, CatalogSoldOutComposer, OutgoingPacket } from '../../packets';
 import { BaseItem, BaseItemType, InteractionTeleport, Item } from '../item';
 import { PermissionList } from '../security';
@@ -41,7 +41,7 @@ export class CatalogItem
 
         if(!this.baseId) return;
 
-        const baseItem = Emulator.gameManager.itemManager.getBaseItem(this.baseId);
+        const baseItem = Nitro.gameManager.itemManager.getBaseItem(this.baseId);
 
         if(!baseItem) return;
 
@@ -148,8 +148,8 @@ export class CatalogItem
             {
                 if(baseItem.hasInteraction(InteractionTeleport))
                 {
-                    const teleportOne = await Emulator.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
-                    const teleportTwo = await Emulator.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
+                    const teleportOne = await Nitro.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
+                    const teleportTwo = await Nitro.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
 
                     if(!teleportOne || !teleportTwo) continue;
 
@@ -159,7 +159,7 @@ export class CatalogItem
                 }
                 else
                 {
-                    const item = await Emulator.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
+                    const item = await Nitro.gameManager.itemManager.createItem(baseItem.id, user.id, extraData);
 
                     if(!item) continue;
 
@@ -194,7 +194,7 @@ export class CatalogItem
         this._availableNumbers.splice(findPossibility, 1);
         this._soldNumbers.push(limitedNumber);
 
-        const newItem = await Emulator.gameManager.itemManager.createItem(this._entity.baseId, user.id, this._entity.extraData);
+        const newItem = await Nitro.gameManager.itemManager.createItem(this._entity.baseId, user.id, this._entity.extraData);
 
         if(!newItem)
         {

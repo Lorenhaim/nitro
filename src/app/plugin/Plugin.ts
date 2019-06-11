@@ -1,6 +1,6 @@
 import { Logger } from '../common';
-import { Emulator } from '../Emulator';
 import { Interaction } from '../game';
+import { Nitro } from '../Nitro';
 import { Incoming, IncomingHeader } from '../packets';
 
 export abstract class Plugin
@@ -66,7 +66,7 @@ export abstract class Plugin
 
     protected registerPacket(header: IncomingHeader, handler: typeof Incoming)
     {
-        Emulator.packetManager.addHandler(header, handler);
+        Nitro.packetManager.addHandler(header, handler);
 
         this._logger.log(`Registered IncomingEvent [${ header }]`);
     }

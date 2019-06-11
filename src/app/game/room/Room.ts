@@ -1,6 +1,6 @@
 import { Manager } from '../../common';
 import { RoomEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { OutgoingPacket } from '../../packets';
 import { Group } from '../group';
 import { NavigatorCategory } from '../navigator';
@@ -71,7 +71,7 @@ export class Room extends Manager
 
         if(!this._model || !this._map) throw new Error('invalid_mapping');
 
-        const group = await Emulator.gameManager.groupManager.getGroup(this._details.groupId);
+        const group = await Nitro.gameManager.groupManager.getGroup(this._details.groupId);
 
         if(group) this._group = group;
 
@@ -114,7 +114,7 @@ export class Room extends Manager
 
         if(this._details.usersNow) return;
 
-        setTimeout(async () => await Emulator.gameManager.roomManager.removeRoom(this), 60000);
+        setTimeout(async () => await Nitro.gameManager.roomManager.removeRoom(this), 60000);
     }
 
     public cancelDispose(): void
@@ -130,7 +130,7 @@ export class Room extends Manager
 
         if(!this._details || !this._details.categoryId) return;
         
-        const category = Emulator.gameManager.navigatorManager.getCategory(this._details.categoryId);
+        const category = Nitro.gameManager.navigatorManager.getCategory(this._details.categoryId);
 
         if(!category) return;
         
@@ -144,13 +144,13 @@ export class Room extends Manager
 
         if(!this._details || !this._details.modelId) return;
 
-        let model = Emulator.gameManager.roomManager.getModel(this._details.modelId);
+        let model = Nitro.gameManager.roomManager.getModel(this._details.modelId);
 
         if(!model)
         {
-            await Emulator.gameManager.roomManager.loadCustomModel(this._details.modelId);
+            await Nitro.gameManager.roomManager.loadCustomModel(this._details.modelId);
 
-            model = Emulator.gameManager.roomManager.getModel(this._details.modelId);
+            model = Nitro.gameManager.roomManager.getModel(this._details.modelId);
         }
 
         if(!model || !model.didGenerate) return;

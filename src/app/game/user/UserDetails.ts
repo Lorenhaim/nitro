@@ -1,7 +1,7 @@
 import { getManager } from 'typeorm';
 import { FigureHelper, TimeHelper } from '../../common';
 import { UserEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { UnitInfoComposer, UserFigureComposer, UserHomeRoomComposer, UserRespectComposer } from '../../packets';
 import { UnitAction, UnitGender } from '../unit';
 import { NavigatorSettings } from './interfaces';
@@ -28,12 +28,12 @@ export class UserDetails
 
     public save(): void
     {
-        Emulator.gameScheduler.saveUser(this._user);
+        Nitro.gameScheduler.saveUser(this._user);
     }
 
     public async saveNow(): Promise<void>
     {
-        Emulator.gameScheduler.removeUser(this._user);
+        Nitro.gameScheduler.removeUser(this._user);
 
         await getManager().save(this._entity);
     }
@@ -42,7 +42,7 @@ export class UserDetails
     {
         if(!figure || !gender) return;
 
-        if(!FigureHelper.validateFigure(figure, Emulator.gameManager.catalogManager.clothingIds, this._user.inventory.clothing.clothingIds)) return;
+        if(!FigureHelper.validateFigure(figure, Nitro.gameManager.catalogManager.clothingIds, this._user.inventory.clothing.clothingIds)) return;
         
         this._entity.figure = figure;
         this._entity.gender = gender === UnitGender.MALE ? UnitGender.MALE : UnitGender.FEMALE;

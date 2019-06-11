@@ -1,5 +1,5 @@
 import { Manager } from '../../../common';
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Room } from '../Room';
 import { RollerTask } from './RollerTask';
 import { UnitActionTask } from './UnitActionTask';
@@ -36,7 +36,7 @@ export class RoomTaskManager extends Manager
 
     protected onInit(): void
     {
-        this._rollerInterval    = setInterval(() => this._rollerTask.run(), Emulator.config.game.rollerTick);
+        this._rollerInterval    = setInterval(() => this._rollerTask.run(), Nitro.config.game.rollerTick);
         this._actionInterval    = setInterval(() => this._actionTask.run(), 500);
         this._statusInterval    = setInterval(() => this._statusTask.run(), 1000);
     }

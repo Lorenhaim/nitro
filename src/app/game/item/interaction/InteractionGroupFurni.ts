@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { OutgoingPacket } from '../../../packets';
 import { Item } from '../Item';
 import { ParseExtraData } from './actions';
@@ -17,7 +17,7 @@ export class InteractionGroupFurni extends InteractionDefault implements ParseEx
 
         if(item.groupId)
         {
-            const group = Emulator.gameManager.groupManager.getActiveGroup(item.groupId);
+            const group = Nitro.gameManager.groupManager.getActiveGroup(item.groupId);
 
             if(group) return packet
                 .writeInt(2 + (item.limitedData !== '0:0' ? 256 : 0))

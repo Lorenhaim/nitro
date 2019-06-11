@@ -1,5 +1,5 @@
 import { ItemDao } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { Item } from '../item';
 import { Unit } from './Unit';
 
@@ -237,7 +237,7 @@ export class UnitTeleporting
 
         if(!pairTeleportId || !pairRoomId) return this.setInvalidGoal();
 
-        const pairRoom = pairRoomId === this._teleport.roomId ? this._teleport.room : await Emulator.gameManager.roomManager.getRoom(pairRoomId);
+        const pairRoom = pairRoomId === this._teleport.roomId ? this._teleport.room : await Nitro.gameManager.roomManager.getRoom(pairRoomId);
 
         if(!pairRoom) return this.setInvalidGoal();
 

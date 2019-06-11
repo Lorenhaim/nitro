@@ -1,6 +1,6 @@
 import { Manager } from '../../common';
 import { ItemDao } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { GenericNotificationListComposer, ItemFloorAddComposer, ItemFloorRemoveComposer, ItemFloorUpdateComposer, ItemWallAddComposer, ItemWallRemoveComposer, ItemWallUpdateComposer, RoomPaintComposer } from '../../packets';
 import { BaseItemType, Interaction, InteractionDimmer } from '../item';
 import { Item } from '../item/Item';
@@ -403,7 +403,7 @@ export class RoomItemManager extends Manager
                     }
                     else
                     {
-                        const activeUser = Emulator.gameManager.userManager.getUserById(activeItem.userId);
+                        const activeUser = Nitro.gameManager.userManager.getUserById(activeItem.userId);
 
                         if(!item.willRemove && activeUser) activeUser.inventory.items.addItem(activeItem);
                         else activeItem.clearRoom();
@@ -426,7 +426,7 @@ export class RoomItemManager extends Manager
                     }
                     else
                     {
-                        const activeUser = Emulator.gameManager.userManager.getUserById(activeItem.userId);
+                        const activeUser = Nitro.gameManager.userManager.getUserById(activeItem.userId);
 
                         if(!item.willRemove && activeUser) activeUser.inventory.items.addItem(activeItem);
                         else activeItem.clearRoom();
@@ -474,7 +474,7 @@ export class RoomItemManager extends Manager
             }
             else
             {
-                const activeUser = Emulator.gameManager.userManager.getUserById(item.userId);
+                const activeUser = Nitro.gameManager.userManager.getUserById(item.userId);
 
                 if(activeUser) activeUser.inventory.items.addItem(item);
                 else item.clearRoom();

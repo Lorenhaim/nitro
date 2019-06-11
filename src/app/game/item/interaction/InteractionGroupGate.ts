@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { OutgoingPacket } from '../../../packets';
 import { Unit } from '../../unit';
 import { Item } from '../Item';
@@ -35,7 +35,7 @@ export class InteractionGroupGate extends InteractionDefault implements OnClick,
 
         if(item.groupId)
         {
-            const group = Emulator.gameManager.groupManager.getActiveGroup(item.groupId);
+            const group = Nitro.gameManager.groupManager.getActiveGroup(item.groupId);
 
             if(group) return packet
                 .writeInt(2 + (item.limitedData !== '0:0' ? 256 : 0))

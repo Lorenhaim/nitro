@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { Manager } from '../common';
-import { Emulator } from '../Emulator';
+import { Nitro } from '../Nitro';
 import { Plugin } from './Plugin';
 
 export class PluginManager extends Manager
@@ -63,14 +63,14 @@ export class PluginManager extends Manager
     {
         this._plugins = [];
 
-        if(!existsSync(Emulator.config.game.plugins.path))
+        if(!existsSync(Nitro.config.game.plugins.path))
         {
             this.logger.error('Invalid plugin directory');
 
             return;
         }
 
-        const files = readdirSync(Emulator.config.game.plugins.path);
+        const files = readdirSync(Nitro.config.game.plugins.path);
 
         if(!files) return;
 
@@ -84,7 +84,7 @@ export class PluginManager extends Manager
 
             if(!fileName) continue;
 
-            const path = join(Emulator.config.game.plugins.path, files[i]);
+            const path = join(Nitro.config.game.plugins.path, files[i]);
 
             if(!path) continue;
 

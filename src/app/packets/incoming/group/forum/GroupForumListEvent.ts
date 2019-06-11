@@ -1,5 +1,5 @@
-import { Emulator } from '../../../../Emulator';
 import { ForumMode, Group } from '../../../../game';
+import { Nitro } from '../../../../Nitro';
 import { GroupForumListComposer } from '../../../outgoing';
 import { Incoming } from '../../Incoming';
 
@@ -31,7 +31,7 @@ export class GroupForumListEvent extends Incoming
 
                     if(!membership) continue;
 
-                    const group = await Emulator.gameManager.groupManager.getGroup(membership.groupId);
+                    const group = await Nitro.gameManager.groupManager.getGroup(membership.groupId);
 
                     if(!group) continue;
 

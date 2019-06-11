@@ -1,5 +1,5 @@
-import { Emulator } from '../../../../../Emulator';
 import { ChatType } from '../../../../../game';
+import { Nitro } from '../../../../../Nitro';
 import { Incoming } from '../../../Incoming';
 
 export class UnitChatWhisperEvent extends Incoming
@@ -14,7 +14,7 @@ export class UnitChatWhisperEvent extends Incoming
 
             if(!message) return;
 
-            if(await Emulator.gameManager.commandManager.processMessageAsCommand(this.client.user, message)) return;
+            if(await Nitro.gameManager.commandManager.processMessageAsCommand(this.client.user, message)) return;
 
             this.client.user.unit.chat(ChatType.WHISPER, message);
         }

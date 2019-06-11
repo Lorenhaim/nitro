@@ -1,5 +1,5 @@
-import { Emulator } from '../../../Emulator';
 import { SocketClient } from '../../../networking';
+import { Nitro } from '../../../Nitro';
 import { SecurityTicketComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -16,11 +16,11 @@ export class SecurityLoginEvent extends Incoming
                 //     if(!Emulator.gameManager.securityManager.authenticationManager.validateCaptcha(this.packet.readString(), this.client.ip))
                 // }
 
-                const userId = await Emulator.gameManager.securityManager.authenticationManager.checkCredentials(this.packet.readString(), this.packet.readString());
+                const userId = await Nitro.gameManager.securityManager.authenticationManager.checkCredentials(this.packet.readString(), this.packet.readString());
 
                 if(!userId) return this.client.processOutgoing(new SecurityTicketComposer(false));
                 
-                const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
+                const user = await Nitro.gameManager.userManager.getOfflineUserById(userId);
 
                 if(!user) return this.client.processOutgoing(new SecurityTicketComposer(false));
 
@@ -34,7 +34,7 @@ export class SecurityLoginEvent extends Incoming
                 {
                     await user.init();
 
-                    await Emulator.gameManager.userManager.addUser(user);
+                    await Nitro.gameManager.userManager.addUser(user);
 
                     await user.connections.setSocketClient(this.client);
 
@@ -45,7 +45,7 @@ export class SecurityLoginEvent extends Incoming
                 {
                     if(!this.client.user.details.online) await this.client.user.details.updateOnline(true);
 
-                    const webTicket = await Emulator.gameManager.securityManager.ticketManager.generateWebTicket(this.client.user.id, this.client.ip);
+                    const webTicket = await Nitro.gameManager.securityManager.ticketManager.generateWebTicket(this.client.user.id, this.client.ip);
 
                     this.client.processOutgoing(new SecurityTicketComposer(true, webTicket));
 

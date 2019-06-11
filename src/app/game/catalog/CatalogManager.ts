@@ -1,6 +1,6 @@
 import { Manager } from '../../common';
 import { CatalogClothingDao, CatalogItemDao, CatalogPageDao } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { CatalogModeComposer, CatalogUpdatedComposer, DiscountConfigComposer, GiftConfigComposer, MarketplaceConfigComposer, RecyclerPrizesComposer } from '../../packets';
 import { CatalogItem } from './CatalogItem';
 import { CatalogPage } from './CatalogPage';
@@ -298,7 +298,7 @@ export class CatalogManager extends Manager
 
     public notifyReload(): void
     {
-        return Emulator.gameManager.userManager.processOutgoing(
+        return Nitro.gameManager.userManager.processOutgoing(
             new CatalogUpdatedComposer(),
             new CatalogModeComposer(0),
             new DiscountConfigComposer(),

@@ -1,5 +1,5 @@
 import { NumberHelper } from '../../common';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { Unit } from './Unit';
 import { UnitHandItem } from './UnitHandItem';
 
@@ -50,14 +50,14 @@ export class UnitTimer
             this._unit.location.position.headDirection = this._unit.location.position.direction;
             
             this._unit.needsUpdate = true;
-        }, Emulator.config.game.unit.lookTimerMs);
+        }, Nitro.config.game.unit.lookTimerMs);
     }
 
     public startHandTimer(): void
     {
         if(this._handTimer) clearTimeout(this._handTimer);
         
-        this._handTimer = setTimeout(() => this._unit.location.hand(UnitHandItem.NONE), Emulator.config.game.unit.handItemMs);
+        this._handTimer = setTimeout(() => this._unit.location.hand(UnitHandItem.NONE), Nitro.config.game.unit.handItemMs);
     }
 
     public startRoamTimer(): void
@@ -71,7 +71,7 @@ export class UnitTimer
             this._unit.location.roam();
 
             this.startRoamTimer();
-        }, NumberHelper.randomNumber(1, Emulator.config.game.unit.roamTimerMs));
+        }, NumberHelper.randomNumber(1, Nitro.config.game.unit.roamTimerMs));
     }
 
     public resetIdleTimer(): void
@@ -80,7 +80,7 @@ export class UnitTimer
 
         this._unit.idle(false);
         
-        this._idleTimer = setTimeout(() => this._unit.idle(true), Emulator.config.game.unit.idleTimerMs);
+        this._idleTimer = setTimeout(() => this._unit.idle(true), Nitro.config.game.unit.idleTimerMs);
     }
 
     public stopIdleTimer(): void

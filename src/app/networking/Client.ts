@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { Logger } from '../common';
-import { Emulator } from '../Emulator';
 import { User } from '../game';
+import { Nitro } from '../Nitro';
 import { Incoming, IncomingPacket, Outgoing, OutgoingPacket } from '../packets';
 
 export abstract class Client<T>
@@ -64,7 +64,7 @@ export abstract class Client<T>
 
             if(!packet) continue;
 
-            const handler: any = Emulator.packetManager.getHandler(packet.header);
+            const handler: any = Nitro.packetManager.getHandler(packet.header);
 
             if(!handler)
             {
@@ -88,7 +88,7 @@ export abstract class Client<T>
                 
             instance.setPacket(packet);
 
-            if(Emulator.config.logging.enabled && Emulator.config.logging.packets.incoming) this.logger.log(`IncomingEvent [${ packet.header }] => ${ instance.constructor.name }`);
+            if(Nitro.config.logging.enabled && Nitro.config.logging.packets.incoming) this.logger.log(`IncomingEvent [${ packet.header }] => ${ instance.constructor.name }`);
 
             try
             {
@@ -118,7 +118,7 @@ export abstract class Client<T>
 
             if(!composer || !(composer instanceof Outgoing))
             {
-                if(Emulator.config.logging.enabled && Emulator.config.logging.packets.invalid) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Invalid Composer`);
+                if(Nitro.config.logging.enabled && Nitro.config.logging.packets.invalid) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Invalid Composer`);
 
                 continue;
             }
@@ -129,7 +129,7 @@ export abstract class Client<T>
 
             if(!(packet instanceof OutgoingPacket))
             {
-                if(Emulator.config.logging.enabled && Emulator.config.logging.packets.invalid) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Invalid Packet`);
+                if(Nitro.config.logging.enabled && Nitro.config.logging.packets.invalid) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Invalid Packet`);
 
                 continue;
             }
@@ -138,14 +138,14 @@ export abstract class Client<T>
 
             if(!packet.isPrepared)
             {
-                if(Emulator.config.logging.enabled && Emulator.config.logging.packets.unprepared) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Packet unprepared`);
+                if(Nitro.config.logging.enabled && Nitro.config.logging.packets.unprepared) this.logger.warn(`OutgoingComposer => ${ composer.constructor.name } => Packet unprepared`);
 
                 continue;
             }
             
             this.write(packet.buffer);
 
-            if(Emulator.config.logging.enabled && Emulator.config.logging.packets.outgoing) this.logger.log(`OutgoingComposer => ${ composer.constructor.name }`);
+            if(Nitro.config.logging.enabled && Nitro.config.logging.packets.outgoing) this.logger.log(`OutgoingComposer => ${ composer.constructor.name }`);
         }
     }
 

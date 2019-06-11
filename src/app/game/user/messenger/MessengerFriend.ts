@@ -1,5 +1,5 @@
 import { MessengerFriendEntity } from '../../../database';
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { OutgoingPacket } from '../../../packets';
 import { UnitGender } from '../../unit';
 import { MessengerRelationshipType } from './interfaces';
@@ -31,7 +31,7 @@ export class MessengerFriend
 
         this._categoryId    = entity.categoryId || 0;
 
-        const user = Emulator.gameManager.userManager.getUserById(this._id);
+        const user = Nitro.gameManager.userManager.getUserById(this._id);
 
         this._inRoom = user && user.unit !== null && user.unit.room !== null;
     }

@@ -1,5 +1,5 @@
-import { Emulator } from '../../../Emulator';
 import { PermissionList } from '../../../game';
+import { Nitro } from '../../../Nitro';
 import { ModerationUserInfoComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -9,7 +9,7 @@ export class ModerationUserInfoEvent extends Incoming
     {
         try
         {
-            const user = await Emulator.gameManager.userManager.getOfflineUserById(this.packet.readInt());
+            const user = await Nitro.gameManager.userManager.getOfflineUserById(this.packet.readInt());
 
             if(!user) return;
 

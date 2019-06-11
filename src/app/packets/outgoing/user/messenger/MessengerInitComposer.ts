@@ -1,4 +1,4 @@
-import { Emulator } from '../../../../Emulator';
+import { Nitro } from '../../../../Nitro';
 import { Outgoing } from '../../Outgoing';
 import { OutgoingHeader } from '../../OutgoingHeader';
 import { OutgoingPacket } from '../../OutgoingPacket';
@@ -14,9 +14,9 @@ export class MessengerInitComposer extends Outgoing
     {
         try
         {
-            this.packet.writeInt(Emulator.config.game.messenger.maxFriends);
+            this.packet.writeInt(Nitro.config.game.messenger.maxFriends);
             this.packet.writeInt(0);
-            this.packet.writeInt(Emulator.config.game.messenger.maxFriendsHabboClub);
+            this.packet.writeInt(Nitro.config.game.messenger.maxFriendsHabboClub);
 
             const categories = this.client.user.messenger.categories;
 

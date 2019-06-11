@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { Command } from './Command';
@@ -12,9 +12,9 @@ export class UpdateCatalogCommand extends Command
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        await Emulator.gameManager.catalogManager.reload();
+        await Nitro.gameManager.catalogManager.reload();
 
-        Emulator.gameManager.catalogManager.notifyReload();
+        Nitro.gameManager.catalogManager.notifyReload();
     }
 
     public get description(): string

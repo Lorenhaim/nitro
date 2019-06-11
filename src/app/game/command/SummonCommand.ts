@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { Command } from './Command';
@@ -22,7 +22,7 @@ export class SummonCommand extends Command
 
         if(!username || username === user.details.username) return;
         
-        const onlineUser = Emulator.gameManager.userManager.getUserByUsername(username);
+        const onlineUser = Nitro.gameManager.userManager.getUserByUsername(username);
 
         if(!onlineUser || !onlineUser.unit) return;
 

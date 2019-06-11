@@ -1,7 +1,7 @@
 import { getManager } from 'typeorm';
 import { Manager } from '../../common';
 import { RoomDao, RoomEntity, RoomModelEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { User } from '../user';
 import { RoomCreate } from './interfaces';
 import { RoomModel } from './models';
@@ -166,7 +166,7 @@ export class RoomManager extends Manager
 
         if(!model) return null;
         
-        const category = Emulator.gameManager.navigatorManager.getCategory(data.categoryId);
+        const category = Nitro.gameManager.navigatorManager.getCategory(data.categoryId);
 
         if(!category) return null;
         

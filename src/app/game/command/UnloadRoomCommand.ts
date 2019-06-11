@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { Command } from './Command';
@@ -18,7 +18,7 @@ export class UnloadRoomCommand extends Command
 
         if(!currentRoom) return;
 
-        await Emulator.gameManager.roomManager.removeRoom(currentRoom);
+        await Nitro.gameManager.roomManager.removeRoom(currentRoom);
     }
 
     public get description(): string

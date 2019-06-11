@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { GenericAlertComposer } from '../../packets';
 import { PermissionList } from '../security';
 import { User } from '../user';
@@ -15,7 +15,7 @@ export class HotelAlertCommand extends Command
     {
         const message = parts[0];
 
-        if(message) Emulator.gameManager.userManager.processOutgoing(new GenericAlertComposer(message + `\r\r- <b> ${ user.details.username }</b>`));
+        if(message) Nitro.gameManager.userManager.processOutgoing(new GenericAlertComposer(message + `\r\r- <b> ${ user.details.username }</b>`));
     }
 
     public get description(): string

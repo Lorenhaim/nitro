@@ -1,5 +1,5 @@
-import { Emulator } from '../../../Emulator';
 import { RoomBanType, RoomChatMode, RoomChatSpeed, RoomChatWeight, RoomKickType, RoomMuteType, RoomSettingsSaveError, RoomState, RoomThickness, RoomTradeType } from '../../../game';
+import { Nitro } from '../../../Nitro';
 import { RoomSettingsChatComposer, RoomSettingsSaveComposer, RoomSettingsSaveErrorComposer, RoomSettingsUpdatedComposer, RoomThicknessComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -9,7 +9,7 @@ export class RoomSettingsSaveEvent extends Incoming
     {
         try
         {
-            const room = await Emulator.gameManager.roomManager.getRoom(this.packet.readInt());
+            const room = await Nitro.gameManager.roomManager.getRoom(this.packet.readInt());
 
             if(!room) return;
 

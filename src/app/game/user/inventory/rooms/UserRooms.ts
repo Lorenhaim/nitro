@@ -1,7 +1,7 @@
 import { getManager } from 'typeorm';
 import { Manager } from '../../../../common';
 import { UserDao, UserFavoriteRoomEntity, UserLikedRoomEntity } from '../../../../database';
-import { Emulator } from '../../../../Emulator';
+import { Nitro } from '../../../../Nitro';
 import { RoomScoreComposer, UserFavoriteRoomComposer } from '../../../../packets';
 import { User } from '../../User';
 
@@ -62,7 +62,7 @@ export class UserRooms extends Manager
 
         this._likedRoomIds.push(roomId);
 
-        const room = Emulator.gameManager.roomManager.getActiveRoom(roomId);
+        const room = Nitro.gameManager.roomManager.getActiveRoom(roomId);
 
         if(!room) return;
 

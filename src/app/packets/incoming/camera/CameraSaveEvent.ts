@@ -1,6 +1,6 @@
 import { existsSync, writeFile } from 'fs';
 import { TimeHelper } from '../../../common';
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { CameraUrlComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -16,7 +16,7 @@ export class CameraSaveEvent extends Incoming
 
             const pictureData = this.packet.readBuffer(pictureLength);
 
-            const savePath = Emulator.config.game.camera.savePath;
+            const savePath = Nitro.config.game.camera.savePath;
 
             if(!savePath) return;
 
@@ -30,7 +30,7 @@ export class CameraSaveEvent extends Incoming
                 {
                     if(err) throw err;
 
-                    return this.client.processOutgoing(new CameraUrlComposer(Emulator.config.game.camera.saveUrl + fileName));
+                    return this.client.processOutgoing(new CameraUrlComposer(Nitro.config.game.camera.saveUrl + fileName));
                 });
             }
             

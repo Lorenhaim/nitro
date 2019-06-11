@@ -1,7 +1,7 @@
 import { getManager } from 'typeorm';
 import { Manager, TimeHelper } from '../../../common';
 import { MessengerDao, MessengerFriendEntity, MessengerRequestEntity } from '../../../database';
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { MessengerChatComposer, MessengerRequestComposer, MessengerUpdateComposer } from '../../../packets';
 import { User } from '../User';
 import { MessengerRelationships, MessengerRelationshipType, MessengerUpdateType } from './interfaces';
@@ -196,7 +196,7 @@ export class UserMessenger extends Manager
 
             if(!friend.online) continue;
 
-            const user = Emulator.gameManager.userManager.getUserById(friend.id);
+            const user = Nitro.gameManager.userManager.getUserById(friend.id);
 
             if(!user) continue;
 
@@ -226,7 +226,7 @@ export class UserMessenger extends Manager
 
             await this.removeRequests(userId);
 
-            const friendInstance = await Emulator.gameManager.userManager.getOfflineUserById(userId);
+            const friendInstance = await Nitro.gameManager.userManager.getOfflineUserById(userId);
 
             if(!friendInstance) continue;
 
@@ -335,7 +335,7 @@ export class UserMessenger extends Manager
                 friendId: userId
             }));
 
-            const user = Emulator.gameManager.userManager.getUserById(userId);
+            const user = Nitro.gameManager.userManager.getUserById(userId);
 
             if(!user) continue;
 
@@ -357,8 +357,8 @@ export class UserMessenger extends Manager
 
         let user: User = null;
 
-        if(userId) user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
-        else user = await Emulator.gameManager.userManager.getOfflineUserByUsername(username);
+        if(userId) user = await Nitro.gameManager.userManager.getOfflineUserById(userId);
+        else user = await Nitro.gameManager.userManager.getOfflineUserByUsername(username);
 
         if(!user) return;
 
@@ -446,7 +446,7 @@ export class UserMessenger extends Manager
 
         if(!friend.online) return;
 
-        const user = Emulator.gameManager.userManager.getUserById(friend.id);
+        const user = Nitro.gameManager.userManager.getUserById(friend.id);
 
         if(!user) return;
 

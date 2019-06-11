@@ -1,4 +1,4 @@
-import { Emulator } from '../../../../../Emulator';
+import { Nitro } from '../../../../../Nitro';
 import { IncomingPacket, OutgoingPacket } from '../../../../../packets';
 import { User } from '../../../../user';
 import { Item } from '../../../Item';
@@ -40,7 +40,7 @@ export class WiredTriggerWalkOnFurni extends WiredTrigger
 
         return packet
             .writeBoolean(false)
-            .writeInt(Emulator.config.game.furni.wired.maxItems) // max items
+            .writeInt(Nitro.config.game.furni.wired.maxItems) // max items
             .writeInt(0)
             .writeInt(item.baseItem.spriteId, item.id)
             .writeString(item.wiredData)

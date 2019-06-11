@@ -1,6 +1,6 @@
 import { FindConditions, getManager, In, Like, MoreThan } from 'typeorm';
 import { RoomEntity, UserDao } from '../../../database';
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { OutgoingPacket } from '../../../packets';
 import { NavigatorListCollapsed, NavigatorListMode, NavigatorListOptions } from '../list';
 import { NavigatorTab } from '../NavigatorTab';
@@ -151,7 +151,7 @@ export class NavigatorSearchResult
     {
         if(!userId) return;
 
-        const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
+        const user = await Nitro.gameManager.userManager.getOfflineUserById(userId);
 
         if(!user) return;
 
@@ -312,7 +312,7 @@ export class NavigatorSearchResult
             for(let i = 0; i < totalRooms; i++)
             {
                 const room      = this._rooms[i];
-                const category  = Emulator.gameManager.navigatorManager.getCategory(room.categoryId);
+                const category  = Nitro.gameManager.navigatorManager.getCategory(room.categoryId);
 
                 packet.writeInt(room.id).writeString(room.name);
 

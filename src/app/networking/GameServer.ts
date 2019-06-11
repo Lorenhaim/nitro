@@ -1,5 +1,5 @@
 import * as net from 'net';
-import { Emulator } from '../Emulator';
+import { Nitro } from '../Nitro';
 import { IncomingPacket } from '../packets';
 import { GameClient } from './GameClient';
 import { Server } from './Server';
@@ -37,7 +37,7 @@ export class GameServer extends Server<net.Server>
         {
             const client = new GameClient(socket);
 
-            if(Emulator.config.logging.enabled && Emulator.config.logging.connections.game) this.logger().log(`New Connection => ${ client.uniqueId }`);
+            if(Nitro.config.logging.enabled && Nitro.config.logging.connections.game) this.logger().log(`New Connection => ${ client.uniqueId }`);
 
             socket.on('data', async data => await this.onSocketData(client, data));
             socket.on('close', async hadError => await this.onSocketClose(client, hadError));
@@ -99,7 +99,7 @@ export class GameServer extends Server<net.Server>
         {
             await client.dispose();
 
-            if(Emulator.config.logging.enabled && Emulator.config.logging.connections.game) this.logger().log(`Closed Connection => ${ client.uniqueId }`);
+            if(Nitro.config.logging.enabled && Nitro.config.logging.connections.game) this.logger().log(`Closed Connection => ${ client.uniqueId }`);
         }
 
         catch(err)

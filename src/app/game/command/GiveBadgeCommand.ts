@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { Command } from './Command';
@@ -19,7 +19,7 @@ export class GiveBadgeCommand extends Command
 
             if(username && badgeCode)
             {
-                const onlineUser = Emulator.gameManager.userManager.getUserByUsername(username);
+                const onlineUser = Nitro.gameManager.userManager.getUserByUsername(username);
 
                 if(onlineUser) await onlineUser.inventory.badges.giveBadge(badgeCode);
             }

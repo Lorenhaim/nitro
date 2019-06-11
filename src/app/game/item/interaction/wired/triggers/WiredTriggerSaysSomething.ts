@@ -1,4 +1,4 @@
-import { Emulator } from '../../../../../Emulator';
+import { Nitro } from '../../../../../Nitro';
 import { IncomingPacket, OutgoingPacket } from '../../../../../packets';
 import { User } from '../../../../user';
 import { Item } from '../../../Item';
@@ -81,7 +81,7 @@ export class WiredTriggerSaysSomething extends WiredTrigger
         
         return packet
             .writeBoolean(false)
-            .writeInt(Emulator.config.game.furni.wired.maxItems, 0, item.baseItem.spriteId, item.id)
+            .writeInt(Nitro.config.game.furni.wired.maxItems, 0, item.baseItem.spriteId, item.id)
             .writeString(message)
             .writeInt(ownerOnly, 1, this.triggerType, 0, 0);
     }

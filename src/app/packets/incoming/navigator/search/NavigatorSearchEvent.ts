@@ -1,5 +1,5 @@
-import { Emulator } from '../../../../Emulator';
 import { NavigatorListCollapsed, NavigatorListMode, NavigatorSearchAction, NavigatorSearchResult } from '../../../../game';
+import { Nitro } from '../../../../Nitro';
 import { NavigatorSearchComposer } from '../../../outgoing';
 import { Incoming } from '../../Incoming';
 
@@ -13,7 +13,7 @@ export class NavigatorSearchEvent extends Incoming
 
             if(tabName !== null)
             {
-                const tab = Emulator.gameManager.navigatorManager.getTab(0, tabName);
+                const tab = Nitro.gameManager.navigatorManager.getTab(0, tabName);
 
                 if(tab !== null)
                 {

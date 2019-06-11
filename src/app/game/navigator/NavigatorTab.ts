@@ -1,6 +1,6 @@
 import { TimeHelper } from '../../common';
 import { NavigatorTabEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { NavigatorListCollapsed, NavigatorListMode } from './list';
 import { NavigatorCategory } from './NavigatorCategory';
 import { NavigatorSearchAction, NavigatorSearchResult } from './search';
@@ -53,7 +53,7 @@ export class NavigatorTab
                 {
                     for(let i = 0; i < totalParts; i++)
                     {
-                        const category = Emulator.gameManager.navigatorManager.getCategory(parseInt(parts[i]));
+                        const category = Nitro.gameManager.navigatorManager.getCategory(parseInt(parts[i]));
 
                         if(category)
                         {

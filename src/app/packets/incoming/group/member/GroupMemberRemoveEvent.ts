@@ -1,4 +1,4 @@
-import { Emulator } from '../../../../Emulator';
+import { Nitro } from '../../../../Nitro';
 import { Incoming } from '../../Incoming';
 
 export class GroupMemberRemoveEvent extends Incoming
@@ -7,7 +7,7 @@ export class GroupMemberRemoveEvent extends Incoming
     {
         try
         {
-            const group = await Emulator.gameManager.groupManager.getGroup(this.packet.readInt());
+            const group = await Nitro.gameManager.groupManager.getGroup(this.packet.readInt());
 
             if(!group) return;
 

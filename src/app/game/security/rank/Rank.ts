@@ -1,5 +1,5 @@
 import { SecurityRankEntity } from '../../../database';
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Permission } from '../permission';
 
 export class Rank
@@ -16,7 +16,7 @@ export class Rank
 
         if(this._entity.permissionId)
         {
-            const permission = Emulator.gameManager.securityManager.permissionManager.getPermission(this._entity.permissionId);
+            const permission = Nitro.gameManager.securityManager.permissionManager.getPermission(this._entity.permissionId);
 
             if(permission) this._permission = permission;
         }

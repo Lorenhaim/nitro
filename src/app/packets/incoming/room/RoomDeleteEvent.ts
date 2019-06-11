@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Incoming } from '../Incoming';
 
 export class RoomDeleteEvent extends Incoming
@@ -7,13 +7,13 @@ export class RoomDeleteEvent extends Incoming
     {
         try
         {
-            const room = await Emulator.gameManager.roomManager.getRoom(this.packet.readInt());
+            const room = await Nitro.gameManager.roomManager.getRoom(this.packet.readInt());
 
             if(!room) return;
 
             await room.init();
 
-            await Emulator.gameManager.roomManager.deleteRoom(room, this.client.user);
+            await Nitro.gameManager.roomManager.deleteRoom(room, this.client.user);
         }
 
         catch(err)

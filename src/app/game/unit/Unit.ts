@@ -1,5 +1,5 @@
 import { NumberHelper, TimeHelper } from '../../common';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { HotelViewComposer, RoomAccessDeniedComposer, RoomDoorbellAddUserComposer, RoomDoorbellCloseComposer, RoomEnterComposer, RoomEnterErrorComposer, RoomModelNameComposer, RoomOwnerComposer, RoomRightsComposer, RoomRightsListComposer, RoomSpectatorComposer, UnitActionComposer, UnitChatComposer, UnitChatShoutComposer, UnitChatWhisperComposer, UnitIdleComposer, UnitStatusComposer, UserFowardRoomComposer } from '../../packets';
 import { Bot } from '../bot';
 import { GroupRank } from '../group';
@@ -185,7 +185,7 @@ export class Unit
 
         this.reset(false);
 
-        const room = await Emulator.gameManager.roomManager.getRoom(id);
+        const room = await Nitro.gameManager.roomManager.getRoom(id);
 
         if(!room) return this._user.connections.processOutgoing(new RoomEnterErrorComposer(RoomEnterError.NO_ENTRY));
 
@@ -284,7 +284,7 @@ export class Unit
     {
         if(!this._roomLoading) return this._user.connections.processOutgoing(new RoomEnterErrorComposer(RoomEnterError.NO_ENTRY));
 
-        const room = await Emulator.gameManager.roomManager.getRoom(this._roomLoading.id);
+        const room = await Nitro.gameManager.roomManager.getRoom(this._roomLoading.id);
 
         await room.init();
 
@@ -402,7 +402,7 @@ export class Unit
 
             if(!username || !message) return;
 
-            const activeUser = Emulator.gameManager.userManager.getUserByUsername(username);
+            const activeUser = Nitro.gameManager.userManager.getUserByUsername(username);
 
             if(!activeUser) return;
 

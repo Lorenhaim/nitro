@@ -1,7 +1,7 @@
 import { getManager } from 'typeorm';
 import { TimeHelper } from '../../common';
 import { RoomEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { RoomBanType, RoomChatMode, RoomChatProtection, RoomChatSpeed, RoomChatWeight, RoomKickType, RoomSettings, RoomState, RoomThickness, RoomTradeType } from './interfaces';
 import { RoomModel } from './models';
 import { Room } from './Room';
@@ -25,12 +25,12 @@ export class RoomDetails
 
     public save(): void
     {
-        Emulator.gameScheduler.saveRoom(this._room);
+        Nitro.gameScheduler.saveRoom(this._room);
     }
 
     public async saveNow(): Promise<void>
     {
-        Emulator.gameScheduler.removeRoom(this._room);
+        Nitro.gameScheduler.removeRoom(this._room);
 
         await getManager().save(this._entity);
     }
@@ -87,7 +87,7 @@ export class RoomDetails
 
         this._entity.state              = settings.state;
         this._entity.password           = settings.password;
-        this._entity.usersMax           = settings.usersMax > Emulator.config.game.rooms.maxUnitsPerRoom ? Emulator.config.game.rooms.maxUnitsPerRoom : settings.usersMax;
+        this._entity.usersMax           = settings.usersMax > Nitro.config.game.rooms.maxUnitsPerRoom ? Nitro.config.game.rooms.maxUnitsPerRoom : settings.usersMax;
         this._entity.categoryId         = settings.categoryId;
         this._entity.tradeType          = settings.tradeType;
         this._entity.allowPets          = settings.allowPets ? '1' : '0';

@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { CatalogPageComposer } from '../../outgoing/catalog/CatalogPageComposer';
 import { Incoming } from '../Incoming';
 
@@ -12,7 +12,7 @@ export class CatalogPageEvent extends Incoming
             const unknown   = this.packet.readInt();
             const mode      = this.packet.readString();
 
-            const page = Emulator.gameManager.catalogManager.getPage(pageId, this.client.user.details.rankId);
+            const page = Nitro.gameManager.catalogManager.getPage(pageId, this.client.user.details.rankId);
 
             if(!page) return;
 

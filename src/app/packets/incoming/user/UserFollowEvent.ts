@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Incoming } from '../Incoming';
 
 export class UserFollowEvent extends Incoming
@@ -11,7 +11,7 @@ export class UserFollowEvent extends Incoming
 
             if(!messengerFriend) return;
 
-            const friend = Emulator.gameManager.userManager.getUserById(messengerFriend.id);
+            const friend = Nitro.gameManager.userManager.getUserById(messengerFriend.id);
 
             if(!friend) return;
 

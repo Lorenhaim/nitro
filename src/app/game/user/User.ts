@@ -1,6 +1,6 @@
 import { Manager } from '../../common';
 import { UserEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { PermissionList, Rank } from '../security';
 import { Unit, UnitType } from '../unit';
 import { UserInventory } from './inventory';
@@ -63,7 +63,7 @@ export class User extends Manager
 
         if(!this._details || !this._details.rankId) return;
         
-        const rank = Emulator.gameManager.securityManager.rankManager.getRank(this._details.rankId);
+        const rank = Nitro.gameManager.securityManager.rankManager.getRank(this._details.rankId);
 
         if(!rank) return;
 

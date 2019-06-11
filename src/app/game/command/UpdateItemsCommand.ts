@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { Command } from './Command';
@@ -12,7 +12,7 @@ export class UpdateItemsCommand extends Command
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        await Emulator.gameManager.itemManager.reload();
+        await Nitro.gameManager.itemManager.reload();
     }
 
     public get description(): string

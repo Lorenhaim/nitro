@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { RoomInfoComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -11,7 +11,7 @@ export class RoomInfoEvent extends Incoming
             const roomId        = this.packet.readInt();
             const someBoolean   = this.packet.readInt() === 0 && this.packet.readInt() === 1 ? false : true;
 
-            const room = await Emulator.gameManager.roomManager.getRoom(roomId);
+            const room = await Nitro.gameManager.roomManager.getRoom(roomId);
 
             if(!room) return;
 

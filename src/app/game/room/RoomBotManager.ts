@@ -1,6 +1,6 @@
 import { Manager } from '../../common';
 import { BotDao } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { Bot } from '../bot';
 import { Position } from '../pathfinder';
 import { User } from '../user';
@@ -173,7 +173,7 @@ export class RoomBotManager extends Manager
             }
             else
             {
-                const activeUser = Emulator.gameManager.userManager.getUserById(bot.userId);
+                const activeUser = Nitro.gameManager.userManager.getUserById(bot.userId);
 
                 if(activeUser) activeUser.inventory.bots.addBot(bot);
             }

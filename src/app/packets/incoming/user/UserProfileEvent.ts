@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { UserProfileComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -8,7 +8,7 @@ export class UserProfileEvent extends Incoming
     {
         try
         {
-            const user = await Emulator.gameManager.userManager.getOfflineUserById(this.packet.readInt());
+            const user = await Nitro.gameManager.userManager.getOfflineUserById(this.packet.readInt());
 
             if(!user) return;
 

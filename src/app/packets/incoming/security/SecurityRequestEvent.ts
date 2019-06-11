@@ -1,5 +1,5 @@
-import { Emulator } from '../../../Emulator';
 import { SocketClient } from '../../../networking';
+import { Nitro } from '../../../Nitro';
 import { SecurityTicketComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -17,7 +17,7 @@ export class SecurityRequestEvent extends Incoming
                 {
                     if(ticketType === 'game')
                     {
-                        const ticket = await Emulator.gameManager.securityManager.ticketManager.generateGameTicket(this.client.user.id, this.client.ip);
+                        const ticket = await Nitro.gameManager.securityManager.ticketManager.generateGameTicket(this.client.user.id, this.client.ip);
 
                         if(ticket !== null) this.client.processOutgoing(new SecurityTicketComposer(true, ticket));
                     }

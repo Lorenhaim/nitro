@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { Unit } from '../unit';
 import { PathFinderNode } from './PathFinderNode';
 import { movePoints, Position, standardPoints } from './position';
@@ -19,7 +19,7 @@ export class PathFinder
 
         if(!currentTile || !nextTile) return false;
 
-        if(Emulator.config.game.pathfinder.steps.ignoreDoorTile && nextTile.isDoor && !isGoal) return false;
+        if(Nitro.config.game.pathfinder.steps.ignoreDoorTile && nextTile.isDoor && !isGoal) return false;
 
         const currentHeight = currentTile.walkingHeight;
         const nextHeight    = nextTile.walkingHeight;
@@ -27,9 +27,9 @@ export class PathFinder
         const fromItem  = currentTile.highestItem;
         const toItem    = nextTile.highestItem;
 
-        if(nextHeight > currentHeight + Emulator.config.game.pathfinder.steps.maxWalkingHeight) return false;
+        if(nextHeight > currentHeight + Nitro.config.game.pathfinder.steps.maxWalkingHeight) return false;
 
-        if(Emulator.config.game.pathfinder.steps.allowDiagonals && !position.compare(positionNext))
+        if(Nitro.config.game.pathfinder.steps.allowDiagonals && !position.compare(positionNext))
         {
             const firstCheck    = currentRoom.map.getValidDiagonalTile(unit, new Position(positionNext.x, position.y));
             const secondCheck   = currentRoom.map.getValidDiagonalTile(unit, new Position(position.x, positionNext.y));
@@ -105,7 +105,7 @@ export class PathFinder
 
         let walkingPoints: Position[] = [];
 
-        if(Emulator.config.game.pathfinder.steps.allowDiagonals) walkingPoints = movePoints;
+        if(Nitro.config.game.pathfinder.steps.allowDiagonals) walkingPoints = movePoints;
         else walkingPoints = standardPoints;
 
         const totalWalkingPoints = walkingPoints.length;

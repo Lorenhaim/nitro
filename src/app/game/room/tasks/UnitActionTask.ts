@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { UnitStatusComposer } from '../../../packets';
 import { Position } from '../../pathfinder';
 import { Unit, UnitStatus, UnitStatusType } from '../../unit';
@@ -84,7 +84,7 @@ export class UnitActionTask extends Task
 
             if(!nextTile) return this.retryPath(unit);
 
-            if(Emulator.config.game.pathfinder.steps.allowDiagonals)
+            if(Nitro.config.game.pathfinder.steps.allowDiagonals)
             {
                 const firstCheck    = unit.room.map.getValidDiagonalTile(unit, new Position(nextPosition.x, unit.location.position.y));
                 const secondCheck   = unit.room.map.getValidDiagonalTile(unit, new Position(unit.location.position.x, nextPosition.y));

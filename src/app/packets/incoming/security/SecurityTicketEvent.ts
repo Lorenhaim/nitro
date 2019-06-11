@@ -1,6 +1,6 @@
-import { Emulator } from '../../../Emulator';
 import { PermissionList } from '../../../game';
 import { GameClient, SocketClient } from '../../../networking';
+import { Nitro } from '../../../Nitro';
 import { ClientPingComposer, GameCenterGameListComposer, GameCenterStatusComposer, ModerationToolComposer, ModerationTopicsComposer, Outgoing, SecurityTicketComposer, SecurityUnknown2Composer, SecurtiyDebugComposer, UserAchievementScoreComposer, UserBuildersClubComposer, UserClothingComposer, UserClubComposer, UserEffectsComposer, UserFavoriteRoomCountComposer, UserFirstLoginOfDayComposer, UserHomeRoomComposer, UserItemsRefreshComposer, UserPermissionsComposer, UserRightsComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
@@ -12,11 +12,11 @@ export class SecurityTicketEvent extends Incoming
         {
             if(this.client instanceof GameClient)
             {
-                const userId = await Emulator.gameManager.securityManager.ticketManager.checkGameTicket(this.packet.readString(), this.client.ip);
+                const userId = await Nitro.gameManager.securityManager.ticketManager.checkGameTicket(this.packet.readString(), this.client.ip);
 
                 if(!userId) return await this.client.dispose();
                 
-                const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
+                const user = await Nitro.gameManager.userManager.getOfflineUserById(userId);
 
                 if(!user) return await this.client.dispose();
 
@@ -30,7 +30,7 @@ export class SecurityTicketEvent extends Incoming
 
                     await user.init();
 
-                    await Emulator.gameManager.userManager.addUser(user);
+                    await Nitro.gameManager.userManager.addUser(user);
                 }
                 
                 if(this.client.user)
@@ -75,13 +75,13 @@ export class SecurityTicketEvent extends Incoming
 
             else if(this.client instanceof SocketClient)
             {
-                if(Emulator.config.captcha.enabled) await Emulator.gameManager.securityManager.authenticationManager.validateCaptcha(this.packet.readString(), this.client.ip);
+                if(Nitro.config.captcha.enabled) await Nitro.gameManager.securityManager.authenticationManager.validateCaptcha(this.packet.readString(), this.client.ip);
                     
-                const userId = await Emulator.gameManager.securityManager.ticketManager.checkWebTicket(this.packet.readString(), this.client.ip);
+                const userId = await Nitro.gameManager.securityManager.ticketManager.checkWebTicket(this.packet.readString(), this.client.ip);
 
                 if(!userId) return this.client.processOutgoing(new SecurityTicketComposer(false));
                 
-                const user = await Emulator.gameManager.userManager.getOfflineUserById(userId);
+                const user = await Nitro.gameManager.userManager.getOfflineUserById(userId);
 
                 if(!user) return this.client.processOutgoing(new SecurityTicketComposer(false));
 
@@ -95,7 +95,7 @@ export class SecurityTicketEvent extends Incoming
                     
                     await user.init();
 
-                    await Emulator.gameManager.userManager.addUser(user);
+                    await Nitro.gameManager.userManager.addUser(user);
                 }
                 
                 if(this.client.user)

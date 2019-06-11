@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Incoming } from '../Incoming';
 
 export class ClientVariablesEvent extends Incoming
@@ -11,9 +11,9 @@ export class ClientVariablesEvent extends Incoming
             const clientBasePath        = this.packet.readString();
             const clientVariablesPath   = this.packet.readString();
 
-            if(Emulator.config.game.login.security.validateVariables)
+            if(Nitro.config.game.login.security.validateVariables)
             {
-                if(Emulator.config.client.url.swfBase !== clientBasePath || Emulator.config.client.url.variables !== clientVariablesPath) await this.client.dispose();
+                if(Nitro.config.client.url.swfBase !== clientBasePath || Nitro.config.client.url.variables !== clientVariablesPath) await this.client.dispose();
             }
         }
 

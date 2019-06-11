@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { ItemFloorRemoveComposer, ItemWallRemoveComposer, Outgoing } from '../../packets';
 import { BaseItemType, Item } from '../item';
 import { AffectedPositions, Position } from '../pathfinder';
@@ -44,7 +44,7 @@ export class PickupAllCommand extends Command
                             }
                             else
                             {
-                                const activeUser = Emulator.gameManager.userManager.getUserById(item.userId);
+                                const activeUser = Nitro.gameManager.userManager.getUserById(item.userId);
 
                                 if(activeUser) activeUser.inventory.items.addItem(item);
                             }

@@ -1,5 +1,5 @@
 import { ModerationCategoryEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { ModerationTopic } from './ModerationTopic';
 
 export class ModerationCategory
@@ -41,7 +41,7 @@ export class ModerationCategory
 
             if(!part) continue;
 
-            const topic = Emulator.gameManager.moderationManager.getTopic(part);
+            const topic = Nitro.gameManager.moderationManager.getTopic(part);
 
             if(!topic) continue;
 

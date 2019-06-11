@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { GenericAlertMessagesComposer } from '../../packets';
 import { PermissionList } from '../security';
 import { User } from '../user';
@@ -15,7 +15,7 @@ export class CommandsListCommand extends Command
     {
         if(!user) return;
 
-        const commands = Emulator.gameManager.commandManager.getCommandList(user);
+        const commands = Nitro.gameManager.commandManager.getCommandList(user);
 
         if(!commands) return;
 

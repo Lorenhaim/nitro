@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
@@ -12,7 +12,7 @@ export class NavigatorMetaDataComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        const tabs = Emulator.gameManager.navigatorManager.tabs;
+        const tabs = Nitro.gameManager.navigatorManager.tabs;
 
         if(!tabs) return this.packet.writeInt(0).prepare();
 

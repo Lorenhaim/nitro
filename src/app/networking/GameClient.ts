@@ -1,5 +1,5 @@
 import { Socket as NetSocket } from 'net';
-import { Emulator } from '../Emulator';
+import { Nitro } from '../Nitro';
 import { Incoming, Outgoing } from '../packets';
 import { Client } from './Client';
 
@@ -21,7 +21,7 @@ export class GameClient extends Client<NetSocket>
         {
             await this._user.connections.disposeGameClient(false);
 
-            if(this._willDestoryUser) await Emulator.gameManager.userManager.removeUser(this._user.id);
+            if(this._willDestoryUser) await Nitro.gameManager.userManager.removeUser(this._user.id);
         }
 
         if(!this._socket.destroyed) this._socket.destroy();

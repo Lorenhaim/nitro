@@ -1,6 +1,6 @@
 import { Manager } from '../../../../common';
 import { GroupDao } from '../../../../database';
-import { Emulator } from '../../../../Emulator';
+import { Nitro } from '../../../../Nitro';
 import { Group, GroupMember, GroupRank } from '../../../group';
 import { User } from '../../User';
 
@@ -36,7 +36,7 @@ export class UserGroups extends Manager
 
             if(!membership) continue;
 
-            const group = Emulator.gameManager.groupManager.getActiveGroup(membership.groupId);
+            const group = Nitro.gameManager.groupManager.getActiveGroup(membership.groupId);
 
             if(!group) continue;
 
@@ -101,7 +101,7 @@ export class UserGroups extends Manager
 
             if(!membership) continue;
 
-            const group = Emulator.gameManager.groupManager.getActiveGroup(membership.groupId);
+            const group = Nitro.gameManager.groupManager.getActiveGroup(membership.groupId);
 
             if(!group) continue;
 
@@ -129,7 +129,7 @@ export class UserGroups extends Manager
 
             if(this.hasMembership(membership.groupId)) continue;
 
-            const group = Emulator.gameManager.groupManager.getActiveGroup(membership.groupId);
+            const group = Nitro.gameManager.groupManager.getActiveGroup(membership.groupId);
 
             if(!group) continue;
 
@@ -171,7 +171,7 @@ export class UserGroups extends Manager
 
                 if(activeMembership !== membership) continue;
 
-                const group = Emulator.gameManager.groupManager.getActiveGroup(membership.groupId);
+                const group = Nitro.gameManager.groupManager.getActiveGroup(membership.groupId);
 
                 if(group && this._user.connections.isConnected) group.removeActiveMember(this._user);
 
@@ -202,7 +202,7 @@ export class UserGroups extends Manager
 
             if(!result) continue;
 
-            const group = await Emulator.gameManager.groupManager.getGroup(result.groupId);
+            const group = await Nitro.gameManager.groupManager.getGroup(result.groupId);
 
             if(!group) continue;
 

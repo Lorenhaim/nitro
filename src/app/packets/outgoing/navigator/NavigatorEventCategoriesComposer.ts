@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Outgoing } from '../Outgoing';
 import { OutgoingHeader } from '../OutgoingHeader';
 import { OutgoingPacket } from '../OutgoingPacket';
@@ -12,7 +12,7 @@ export class NavigatorEventCategoriesComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        const eventCategories = Emulator.gameManager.navigatorManager.eventCategories;
+        const eventCategories = Nitro.gameManager.navigatorManager.eventCategories;
 
         if(!eventCategories) return this.packet.writeInt(0).prepare();
         

@@ -1,8 +1,8 @@
 import { getManager } from 'typeorm';
 import { NumberHelper } from '../../../../common';
 import { RoomModelEntity } from '../../../../database';
-import { Emulator } from '../../../../Emulator';
 import { RoomModel } from '../../../../game';
+import { Nitro } from '../../../../Nitro';
 import { UserFowardRoomComposer } from '../../../outgoing';
 import { Incoming } from '../../Incoming';
 
@@ -42,9 +42,9 @@ export class RoomModelSaveEvent extends Incoming
 
             await getManager().save(entity);
 
-            if(!Emulator.gameManager.roomManager.hasModel(entity.id))
+            if(!Nitro.gameManager.roomManager.hasModel(entity.id))
             {
-                Emulator.gameManager.roomManager.models.push(model);
+                Nitro.gameManager.roomManager.models.push(model);
             }
 
             currentRoom.details.setModel(model);

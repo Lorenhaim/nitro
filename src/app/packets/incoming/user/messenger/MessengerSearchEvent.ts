@@ -1,5 +1,5 @@
 import { UserEntity } from '../../../../database';
-import { Emulator } from '../../../../Emulator';
+import { Nitro } from '../../../../Nitro';
 import { MessengerSearchComposer } from '../../../outgoing';
 import { Incoming } from '../../Incoming';
 
@@ -12,7 +12,7 @@ export class MessengerSearchEvent extends Incoming
             const friendResults: UserEntity[]   = [];
             const otherResults: UserEntity[]    = [];
 
-            const results = await Emulator.gameManager.userManager.searchUsersByUsername(this.packet.readString());
+            const results = await Nitro.gameManager.userManager.searchUsersByUsername(this.packet.readString());
 
             if(results)
             {

@@ -2,7 +2,7 @@ import { get as HttpsGet } from 'https';
 import { getManager } from 'typeorm';
 import { PasswordHelper } from '../../common';
 import { UserDao, UserEntity, UserInfoEntity, UserStatisticsEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 
 export class AuthenticationManager
 {
@@ -12,7 +12,7 @@ export class AuthenticationManager
     {
         if(username && password)
         {
-            if(Emulator.config.web.ticket.enabled)
+            if(Nitro.config.web.ticket.enabled)
             {
                 const result = await UserDao.getLoginByUsername(username);
         
@@ -25,9 +25,9 @@ export class AuthenticationManager
 
     public validateCaptcha(response: string, ip: string): boolean
     {
-        if(Emulator.config.captcha.enabled)
+        if(Nitro.config.captcha.enabled)
         {
-            const secretKey = Emulator.config.captcha.secretKey;
+            const secretKey = Nitro.config.captcha.secretKey;
 
             if(secretKey)
             {
@@ -93,7 +93,7 @@ export class AuthenticationManager
     {
         if(username && email && password)
         {
-            if(Emulator.config.captcha.enabled) await this.validateCaptcha(captcha, ip);
+            if(Nitro.config.captcha.enabled) await this.validateCaptcha(captcha, ip);
 
             await UserDao.validateUsername(username);
 

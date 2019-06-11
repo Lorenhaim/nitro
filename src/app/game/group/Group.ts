@@ -1,7 +1,7 @@
 import { getManager } from 'typeorm';
 import { TimeHelper } from '../../common';
 import { GroupDao, GroupEntity, GroupMemberEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { GroupInfoComposer, GroupMemberComposer, GroupMembersRefreshComposer, Outgoing, OutgoingPacket } from '../../packets';
 import { Room } from '../room';
 import { PermissionList } from '../security';
@@ -40,12 +40,12 @@ export class Group
 
     public save(): void
     {
-        Emulator.gameScheduler.saveGroup(this);
+        Nitro.gameScheduler.saveGroup(this);
     }
 
     public async saveNow(): Promise<void>
     {
-        Emulator.gameScheduler.removeGroup(this);
+        Nitro.gameScheduler.removeGroup(this);
         
         await getManager().save(this._entity);
     }
@@ -138,7 +138,7 @@ export class Group
 
         if(!this.isAdmin(user)) return;
 
-        const target = await Emulator.gameManager.userManager.getOfflineUserById(targetId);
+        const target = await Nitro.gameManager.userManager.getOfflineUserById(targetId);
 
         if(!target) return;
 
@@ -167,7 +167,7 @@ export class Group
             if(user.id !== targetId) return;
         }
 
-        const target = await Emulator.gameManager.userManager.getOfflineUserById(targetId);
+        const target = await Nitro.gameManager.userManager.getOfflineUserById(targetId);
 
         if(!target) return;
 
@@ -199,7 +199,7 @@ export class Group
 
         this.memberOutgoing(new GroupInfoComposer(this, false), new GroupMembersRefreshComposer(this.id));
 
-        const room = await Emulator.gameManager.roomManager.getRoom(this._entity.roomId);
+        const room = await Nitro.gameManager.roomManager.getRoom(this._entity.roomId);
 
         if(!room) return;
 
@@ -216,7 +216,7 @@ export class Group
 
         if(!this.isAdmin(user)) return;
 
-        const target = await Emulator.gameManager.userManager.getOfflineUserById(targetId);
+        const target = await Nitro.gameManager.userManager.getOfflineUserById(targetId);
 
         if(!target) return;
 
@@ -244,7 +244,7 @@ export class Group
 
         if(!this.isAdmin(user)) return;
 
-        const target = await Emulator.gameManager.userManager.getOfflineUserById(targetId);
+        const target = await Nitro.gameManager.userManager.getOfflineUserById(targetId);
 
         if(!target) return;
 

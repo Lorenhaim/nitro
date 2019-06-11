@@ -1,5 +1,5 @@
 import { Manager } from '../common/interfaces/Manager';
-import { Emulator } from '../Emulator';
+import { Nitro } from '../Nitro';
 import { GameServer } from './GameServer';
 import { SocketServer } from './SocketServer';
 
@@ -12,8 +12,8 @@ export class NetworkManager extends Manager
     {
         super('NetworkManager');
 
-        this._gameServer    = Emulator.config.game.enabled ? new GameServer() : null;
-        this._socketServer  = Emulator.config.web.enabled ? new SocketServer() : null;
+        this._gameServer    = Nitro.config.game.enabled ? new GameServer() : null;
+        this._socketServer  = Nitro.config.web.enabled ? new SocketServer() : null;
     }
 
     public async onInit(): Promise<void>
@@ -24,8 +24,8 @@ export class NetworkManager extends Manager
 
     public listen(): void
     {
-        if(this._gameServer)    this._gameServer.listen(Emulator.config.game.ip, Emulator.config.game.port);
-        if(this._socketServer)  this._socketServer.listen(Emulator.config.web.ip, Emulator.config.web.port)
+        if(this._gameServer)    this._gameServer.listen(Nitro.config.game.ip, Nitro.config.game.port);
+        if(this._socketServer)  this._socketServer.listen(Nitro.config.web.ip, Nitro.config.web.port)
     }
 
     public async onDispose(): Promise<void>

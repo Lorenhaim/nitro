@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { User } from '../../user';
 import { Item } from '../Item';
 import { OnRedeem } from './actions';
@@ -17,7 +17,7 @@ export class InteractionClothing extends InteractionDefault implements OnRedeem
 
         if(!item.room) return;
 
-        const clothingIds = Emulator.gameManager.catalogManager.getClothingIds(item.baseItem.productName);
+        const clothingIds = Nitro.gameManager.catalogManager.getClothingIds(item.baseItem.productName);
 
         if(!clothingIds)
         {

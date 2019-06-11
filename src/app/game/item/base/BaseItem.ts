@@ -1,6 +1,6 @@
 import { shuffleArray } from '../../../common';
 import { ItemBaseEntity } from '../../../database';
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { UnitEffect, UnitHandItem } from '../../unit';
 import { Interaction, InteractionMultiHeight, InteractionRoller, InteractionType, InteractionVendingMachine } from '../interaction';
 import { BaseItemType } from './BaseItemType';
@@ -41,11 +41,11 @@ export class BaseItem
     {
         this._interaction = null;
 
-        const interaction = Emulator.gameManager.itemManager.getInteraction(this._entity.interaction || InteractionType.DEFAULT);
+        const interaction = Nitro.gameManager.itemManager.getInteraction(this._entity.interaction || InteractionType.DEFAULT);
 
         if(!interaction)
         {
-            Emulator.gameManager.itemManager.logger.warn(`Base Item: ${ this._entity.id }:${ this._entity.publicName } has an invalid interaction`);
+            Nitro.gameManager.itemManager.logger.warn(`Base Item: ${ this._entity.id }:${ this._entity.publicName } has an invalid interaction`);
 
             return;
         }

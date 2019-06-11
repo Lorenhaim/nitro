@@ -1,6 +1,6 @@
 import { Manager } from '../../common';
 import { PetDao } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { Position } from '../pathfinder';
 import { Pet } from '../pet';
 import { User } from '../user';
@@ -166,7 +166,7 @@ export class RoomPetManager extends Manager
             }
             else
             {
-                const activeUser = Emulator.gameManager.userManager.getUserById(pet.userId);
+                const activeUser = Nitro.gameManager.userManager.getUserById(pet.userId);
 
                 if(activeUser) activeUser.inventory.pets.addPet(pet);
             }

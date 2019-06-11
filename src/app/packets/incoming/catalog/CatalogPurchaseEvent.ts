@@ -1,4 +1,4 @@
-import { Emulator } from '../../../Emulator';
+import { Nitro } from '../../../Nitro';
 import { Incoming } from '../Incoming';
 
 export class CatalogPurchaseEvent extends Incoming
@@ -12,7 +12,7 @@ export class CatalogPurchaseEvent extends Incoming
             const extraData = this.packet.readString();
             const amount    = this.packet.readInt();
 
-            const catalogItem = Emulator.gameManager.catalogManager.getItem(itemId);
+            const catalogItem = Nitro.gameManager.catalogManager.getItem(itemId);
 
             if(!catalogItem) return;
 

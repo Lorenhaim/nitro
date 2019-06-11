@@ -1,5 +1,5 @@
 import { CatalogPageEntity } from '../../database';
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { OutgoingPacket } from '../../packets';
 import { CatalogItem } from './CatalogItem';
 import { CatalogLayout } from './layouts';
@@ -20,7 +20,7 @@ export class CatalogPage
 
         if(!this._entity.layout) throw new Error('invalid_layout');
 
-        const layout = Emulator.gameManager.catalogManager.getLayout(this._entity.layout);
+        const layout = Nitro.gameManager.catalogManager.getLayout(this._entity.layout);
 
         if(!layout) throw new Error('invalid_layout');
 
@@ -29,7 +29,7 @@ export class CatalogPage
 
     public getItems(): CatalogItem[]
     {
-        return Emulator.gameManager.catalogManager.getItems(this._entity.id);
+        return Nitro.gameManager.catalogManager.getItems(this._entity.id);
     }
 
     public parsePage(packet: OutgoingPacket): OutgoingPacket

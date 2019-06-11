@@ -1,4 +1,4 @@
-import { Emulator } from '../../../../Emulator';
+import { Nitro } from '../../../../Nitro';
 import { MessengerRoomInviteComposer } from '../../../outgoing';
 import { Incoming } from '../../Incoming';
 
@@ -30,7 +30,7 @@ export class MessengerRoomInviteEvent extends Incoming
 
                 if(!this.client.user.messenger.hasFriend(userId)) continue;
 
-                const user = Emulator.gameManager.userManager.getUserById(userIds[i]);
+                const user = Nitro.gameManager.userManager.getUserById(userIds[i]);
 
                 if(!user) continue;
 

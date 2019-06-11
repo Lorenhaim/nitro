@@ -1,8 +1,8 @@
-import { Config, ConfigOptions, Emulator } from './app';
+import { Config, ConfigOptions, Nitro } from './app';
 
 async function start(config: ConfigOptions)
 {
-    await Emulator.bootstrap(config);
+    await Nitro.bootstrap(config);
 }
 
 start(Config);

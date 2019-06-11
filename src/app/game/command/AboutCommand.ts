@@ -1,4 +1,4 @@
-import { Emulator } from '../../Emulator';
+import { Nitro } from '../../Nitro';
 import { GenericAlertComposer } from '../../packets';
 import { PermissionList } from '../security';
 import { User } from '../user';
@@ -20,8 +20,8 @@ export class AboutCommand extends Command
             `v0.0.1 by Billsonnn\r\r` +
             `<b>Statistics</b>\r` +
             `Ram Usage: ${ (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2) } MB\r` +
-            `Users Online: ${ Emulator.gameManager.userManager.users.length }\r` +
-            `Rooms Loaded: ${ Emulator.gameManager.roomManager.rooms.length }\r\r` +
+            `Users Online: ${ Nitro.gameManager.userManager.users.length }\r` +
+            `Rooms Loaded: ${ Nitro.gameManager.roomManager.rooms.length }\r\r` +
             `<b>Credits</b>\r` +
             `Quackster - Kepler\r` +
             `TheGeneral - Arcturus`));

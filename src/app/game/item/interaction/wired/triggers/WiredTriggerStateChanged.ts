@@ -1,4 +1,4 @@
-import { Emulator } from '../../../../../Emulator';
+import { Nitro } from '../../../../../Nitro';
 import { IncomingPacket, OutgoingPacket } from '../../../../../packets';
 import { Item } from '../../../Item';
 import { WiredTrigger } from './WiredTrigger';
@@ -89,7 +89,7 @@ export class WiredTriggerStateChanged extends WiredTrigger
             }
         }
 
-        packet.writeBoolean(false).writeInt(Emulator.config.game.furni.wired.maxItems);
+        packet.writeBoolean(false).writeInt(Nitro.config.game.furni.wired.maxItems);
 
         const totalItems = validatedIds.length;
 
