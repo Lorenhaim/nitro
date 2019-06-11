@@ -36,6 +36,7 @@ export class Unit
     private _timer: UnitTimer;
 
     private _isIdle: boolean;
+    private _idleStart: number;
     private _lastChat: number;
     private _canLocate: boolean;
     private _isSpectating: boolean;
@@ -86,6 +87,7 @@ export class Unit
         this._timer         = new UnitTimer(this);
 
         this._isIdle        = false;
+        this._idleStart     = 0;
         this._lastChat      = 0;
         this._canLocate     = true;
         this._isSpectating  = false;
@@ -143,6 +145,9 @@ export class Unit
                 this._user.messenger.updateAllFriends();
             }
 
+            this._isIdle        = false;
+            this._idleStart     = 0;
+            this._lastChat      = 0;
             this._canLocate     = true;
             this._needsUpdate   = false;
             this._needsInvoke   = false;
@@ -526,12 +531,16 @@ export class Unit
 
             this._isIdle = true;
 
+            this._idleStart = TimeHelper.currentTimestamp;
+
             this._room.unitManager.processOutgoing(new UnitIdleComposer(this));
         }
         
         else if(!status && this._isIdle)
         {
             this._isIdle = false;
+
+            this._idleStart = 0;
 
             this._room.unitManager.processOutgoing(new UnitIdleComposer(this));
         }
@@ -622,9 +631,9 @@ export class Unit
         return this._isIdle;
     }
 
-    public set isIdle(flag: boolean)
+    public get idleStart(): number
     {
-        this._isIdle = flag;
+        return this._idleStart;
     }
 
     public get lastChat(): number

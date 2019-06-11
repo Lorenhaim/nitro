@@ -35,8 +35,6 @@ export class UnitTimer
         if(this._lookTimer) clearTimeout(this._lookTimer);
         if(this._handTimer) clearTimeout(this._handTimer);
         if(this._roamTimer) clearTimeout(this._roamTimer);
-
-        if(this._unit.isIdle) this._unit.idle(false);
     }
 
     public startLookTimer(): void

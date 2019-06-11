@@ -110,7 +110,7 @@ export class RoomManager extends Manager
     {
         if(!this._rooms.length) return;
         
-        for(let i = this._rooms.length - 1; i >= 0; i--) this.removeRoom(this._rooms[i]);
+        for(let i = this._rooms.length - 1; i >= 0; i--) await this.removeRoom(this._rooms[i]);
     }
 
     public async removeRoom(room: Room): Promise<void>

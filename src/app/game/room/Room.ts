@@ -35,7 +35,6 @@ export class Room extends Manager
 
     private _objectOwners: { id: number, username: string }[];
     private _disposeTimeout: NodeJS.Timeout;
-    private _disposeCancelled: boolean;
 
     constructor(entity: RoomEntity)
     {
@@ -62,7 +61,6 @@ export class Room extends Manager
 
         this._objectOwners      = [];
         this._disposeTimeout    = null;
-        this._disposeCancelled  = false;
     }
 
     protected async onInit(): Promise<void>
@@ -114,7 +112,7 @@ export class Room extends Manager
 
         if(this._details.usersNow) return;
 
-        setTimeout(async () => await Nitro.gameManager.roomManager.removeRoom(this), 60000);
+        this._disposeTimeout = setTimeout(async () => await Nitro.gameManager.roomManager.removeRoom(this), 60000);
     }
 
     public cancelDispose(): void

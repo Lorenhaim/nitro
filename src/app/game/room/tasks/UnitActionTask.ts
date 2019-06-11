@@ -1,3 +1,4 @@
+import { TimeHelper } from '../../../common';
 import { Nitro } from '../../../Nitro';
 import { UnitStatusComposer } from '../../../packets';
 import { Position } from '../../pathfinder';
@@ -35,6 +36,16 @@ export class UnitActionTask extends Task
             const unit = currentUnits[i];
 
             if(!unit) continue;
+
+            if(unit.isIdle)
+            {
+                if(unit.idleStart < (TimeHelper.currentTimestamp - Nitro.config.game.unit.idleKickMs))
+                {
+                    unit.reset();
+
+                    continue;
+                }
+            }
 
             if(unit.location.teleporting) unit.location.teleporting.processTeleport();
 

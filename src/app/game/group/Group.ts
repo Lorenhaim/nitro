@@ -1,5 +1,5 @@
 import { getManager } from 'typeorm';
-import { TimeHelper } from '../../common';
+import { Manager, TimeHelper } from '../../common';
 import { GroupDao, GroupEntity, GroupMemberEntity } from '../../database';
 import { Nitro } from '../../Nitro';
 import { GroupInfoComposer, GroupMemberComposer, GroupMembersRefreshComposer, Outgoing, OutgoingPacket } from '../../packets';
@@ -11,7 +11,7 @@ import { GroupMember } from './GroupMember';
 import { GroupRank } from './GroupRank';
 import { GroupState } from './GroupState';
 
-export class Group
+export class Group extends Manager
 {
     private _entity: GroupEntity;
 
@@ -22,9 +22,12 @@ export class Group
     private _totalMembersPending: number;
 
     private _lastAccess: number;
+    private _disposeTimeout: NodeJS.Timeout;
 
     constructor(entity: GroupEntity)
     {
+        super(`Group ${ entity.id }`);
+
         if(!(entity instanceof GroupEntity)) throw new Error('invalid_entity');
 
         this._entity                = entity;
@@ -36,6 +39,24 @@ export class Group
         this._totalMembersPending   = entity.totalMembersPending || 0;
 
         this._lastAccess            = TimeHelper.currentTimestamp;
+        this._disposeTimeout        = null;
+    }
+
+    protected async onInit(): Promise<void>
+    {
+        await this.loadPendingCount();
+    }
+
+    protected async onDispose(): Promise<void>
+    {
+        this.cancelDispose();
+
+        await this.saveNow();
+    }
+
+    private updateLastAccess(): void
+    {
+        this._lastAccess = TimeHelper.currentTimestamp;
     }
 
     public save(): void
@@ -48,6 +69,24 @@ export class Group
         Nitro.gameScheduler.removeGroup(this);
         
         await getManager().save(this._entity);
+    }
+
+    public tryDispose(): void
+    {
+        if(this._disposeTimeout) return;
+
+        if(this._activeMembers.length) return;
+
+        if(this._lastAccess < (TimeHelper.currentTimestamp - 60000)) return;
+
+        this._disposeTimeout = setTimeout(async () => await Nitro.gameManager.groupManager.removeGroup(this), 60000);
+    }
+
+    public cancelDispose(): void
+    {
+        if(this._disposeTimeout) clearTimeout(this._disposeTimeout);
+
+        this._disposeTimeout = null;
     }
 
     public isOwner(user: User): boolean
@@ -425,8 +464,6 @@ export class Group
     {
         if(!packet) return null;
 
-        this.updateLastAccess();
-
         return packet
             .writeInt(this.id)
             .writeString(this.name, this.badge);
@@ -437,8 +474,6 @@ export class Group
         if(!user || !packet) return null;
 
         const rank = user.inventory.groups.getMembershipRank(this.id);
-
-        this.updateLastAccess();
 
         return packet
             .writeInt(this.id)
@@ -460,11 +495,6 @@ export class Group
             .writeBoolean(this.memberRights)
             .writeInt(this.isAdmin(user) ? this.totalMembersPending : 0)
             .writeBoolean(this.forumEnabled);
-    }
-
-    private updateLastAccess(): void
-    {
-        this._lastAccess = TimeHelper.currentTimestamp;
     }
 
     public get id(): number
@@ -570,10 +600,5 @@ export class Group
     public set totalMembersPending(count: number)
     {
         this._totalMembersPending = count;
-    }
-
-    public get lastAccess(): number
-    {
-        return this._lastAccess;
     }
 }

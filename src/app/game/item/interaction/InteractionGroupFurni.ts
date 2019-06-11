@@ -6,9 +6,9 @@ import { InteractionDefault } from './InteractionDefault';
 
 export class InteractionGroupFurni extends InteractionDefault implements ParseExtraData
 {
-    constructor()
+    constructor(name: string = null)
     {
-        super('group_furni');
+        super(name || 'group_furni');
     }
 
     public parseExtraData(item: Item, packet: OutgoingPacket): OutgoingPacket

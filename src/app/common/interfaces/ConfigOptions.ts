@@ -93,7 +93,8 @@ export interface ConfigOptions
             idleTimerMs: number,
             handItemMs: number,
             lookTimerMs: number,
-            roamTimerMs: number
+            roamTimerMs: number,
+            idleKickMs: number
         },
         furni: {
             wired: {

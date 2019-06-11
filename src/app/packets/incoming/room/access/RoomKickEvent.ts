@@ -25,17 +25,12 @@ export class RoomKickEvent extends Incoming
 
             if(!doorTile)
             {
-                if(unit.type === UnitType.USER) unit.user.connections.processOutgoing(new GenericErrorComposer(GenericError.KICKED));
+                unit.user.connections.processOutgoing(new GenericErrorComposer(GenericError.KICKED));
 
                 return unit.reset();
             }
 
-            unit.location.setGoalAction(() =>
-            {
-                if(unit.type === UnitType.USER) unit.user.connections.processOutgoing(new GenericErrorComposer(GenericError.KICKED));
-
-                unit.reset();
-            });
+            unit.location.setGoalAction(() => unit.type === UnitType.USER && unit.user.connections.processOutgoing(new GenericErrorComposer(GenericError.KICKED)));
 
             unit.location.walkTo(doorTile.position, false);
         }

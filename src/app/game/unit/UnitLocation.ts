@@ -387,8 +387,6 @@ export class UnitLocation
     {
         if(!this._unit || !this._unit.room) return;
 
-        this.updateHeight(this._position);
-
         const currentItem = this.getCurrentItem();
 
         if(!currentItem || !currentItem.baseItem.canSit || !currentItem.baseItem.canLay)

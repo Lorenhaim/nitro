@@ -1,4 +1,4 @@
-import { Manager, TimeHelper } from '../../common';
+import { Manager } from '../../common';
 import { GroupDao } from '../../database';
 import { Group } from './Group';
 
@@ -6,18 +6,27 @@ export class GroupManager extends Manager
 {
     private _groups: Group[];
 
+    private _disposeInterval: NodeJS.Timeout;
+
     constructor()
     {
         super('GroupManager');
 
-        this._groups = [];
+        this._groups            = [];
+
+        this._disposeInterval   = null;
     }
 
-    protected async onInit(): Promise<void> {}
+    protected async onInit(): Promise<void>
+    {
+        this._disposeInterval = setInterval(() => this.tryDisposeAll(), 60000);
+    }
 
     protected async onDispose(): Promise<void>
     {
-        await this.cleanup(true);
+        if(this._disposeInterval) clearInterval(this._disposeInterval);
+
+        await this.removeAllGroups();
     }
 
     public async getGroup(groupId: number): Promise<Group>
@@ -63,7 +72,7 @@ export class GroupManager extends Manager
 
         if(!group) return null;
 
-        await group.loadPendingCount();
+        await group.init();
 
         return this.addGroup(group);
     }
@@ -86,13 +95,42 @@ export class GroupManager extends Manager
         return this.getActiveGroup(groupId) !== null;
     }
 
-    public async cleanup(force: boolean = false): Promise<void>
+    private async removeAllGroups(): Promise<void>
+    {
+        if(!this._groups.length) return;
+        
+        for(let i = this._groups.length - 1; i >= 0; i--) this.removeGroup(this._groups[i]);
+    }
+
+    public async removeGroup(group: Group): Promise<void>
+    {
+        if(!group) return;
+        
+        const totalGroups = this._groups.length;
+
+        if(!totalGroups) return;
+        
+        for(let i = 0; i < totalGroups; i++)
+        {
+            const activeGroup = this._groups[i];
+
+            if(!activeGroup) continue;
+
+            if(activeGroup !== group) continue;
+
+            await activeGroup.dispose();
+
+            this._groups.splice(i, 1);
+
+            return;
+        }
+    }
+
+    private tryDisposeAll(): void
     {
         const totalGroups = this._groups.length;
 
         if(!totalGroups) return;
-
-        const allowedElapsed = TimeHelper.currentTimestamp - 30000;
 
         for(let i = 0; i < totalGroups; i++)
         {
@@ -100,16 +138,7 @@ export class GroupManager extends Manager
 
             if(!group) continue;
 
-            if(!force)
-            {
-                if(group.activeMembers.length > 0) continue;
-                
-                if(group.lastAccess < allowedElapsed) continue;
-            }
-
-            await group.saveNow();
-
-            this._groups.splice(i, 1);
+            group.tryDispose();
         }
     }
 }

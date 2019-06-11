@@ -92,7 +92,8 @@ export const Config: ConfigOptions = {
             idleTimerMs: 600000,
             handItemMs: 300000,
             lookTimerMs: 4000,
-            roamTimerMs: 10000
+            roamTimerMs: 10000,
+            idleKickMs: 600000
         },
         furni: {
             wired: {
