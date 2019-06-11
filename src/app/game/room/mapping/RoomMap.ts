@@ -38,24 +38,23 @@ export class RoomMap
         const totalX    = this._room.model.totalX;
         const totalY    = this._room.model.totalY;
 
-        if(totalX && totalY)
+        if(!totalX || !totalY) return;
+
+        for(let y = 0; y < totalY; y++)
         {
-            for(let y = 0; y < totalY; y++)
+            for(let x = 0; x < totalX; x++)
             {
-                for(let x = 0; x < totalX; x++)
-                {
-                    const tile = new RoomTile(this._room, new Position(x, y), this._room.model.getTileHeight(x, y));
+                const tile = new RoomTile(this._room, new Position(x, y), this._room.model.getTileHeight(x, y));
 
-                    if(tile.position.compare(this._room.model.doorPosition)) tile.isDoor = true;
+                if(tile.position.compare(this._room.model.doorPosition)) tile.isDoor = true;
 
-                    tile.state = this._room.model.getTileState(x, y) || RoomTileState.CLOSED;
+                tile.state = this._room.model.getTileState(x, y) || RoomTileState.CLOSED;
 
-                    if(this._map[x] === undefined) this._map[x] = [];
+                if(this._map[x] === undefined) this._map[x] = [];
 
-                    this._map[x][y] = tile;
+                this._map[x][y] = tile;
 
-                    this._tiles.push(this._map[x][y]);
-                }
+                this._tiles.push(this._map[x][y]);
             }
         }
 
@@ -72,30 +71,25 @@ export class RoomMap
     {
         const totalTiles = this._tiles.length;
 
-        if(totalTiles)
+        if(!totalTiles) return;
+
+        for(let i = 0; i < totalTiles; i++) this._tiles[i].clearUnits();
+
+        const totalUnits = this._room.unitManager.units.length;
+
+        if(!totalUnits) return;
+
+        for(let i = 0; i < totalUnits; i++)
         {
-            for(let i = 0; i < totalTiles; i++)
-            {
-                const tile = this._tiles[i];
+            const unit = this._room.unitManager.units[i];
 
-                tile.clearUnits();
-            }
-        }
+            if(!unit) continue;
 
-        const units = this._room.unitManager.units;
+            const tile = unit.location.getCurrentTile();
 
-        if(units)
-        {
-            const totalUnits = units.length;
-
-            for(let i = 0; i < totalUnits; i++)
-            {
-                const unit = units[i];
-
-                const tile = unit.location.getCurrentTile();
-
-                if(tile) tile.addUnit(unit);
-            }
+            if(!tile) continue;
+            
+            tile.addUnit(unit);
         }
     }
 
@@ -151,12 +145,11 @@ export class RoomMap
 
                 tile.addItem(item);
 
-                if(tile.tileHeight < item.height)
-                {
-                    item.itemBelow      = tile.highestItem;
-                    tile.tileHeight     = item.height;
-                    tile.highestItem    = item;
-                }
+                if(tile.tileHeight > item.height) continue;
+
+                item.itemBelow      = tile.highestItem;
+                tile.tileHeight     = item.height;
+                tile.highestItem    = item;
             }
         }
 
@@ -165,22 +158,17 @@ export class RoomMap
 
     public getTile(position: Position): RoomTile
     {
-        if(position && this._map[position.x] !== undefined && this._map[position.x][position.y] !== undefined)
-        {
-            const tile = this._map[position.x][position.y];
+        if(!position || this._map[position.x] === undefined || this._map[position.x][position.y] === undefined) return null;
+        
+        const tile = this._map[position.x][position.y];
 
-            if(!tile) return null;
+        if(!tile) return null;
 
-            const state = this._room.model.getTileState(tile.position.x, tile.position.y);
+        const state = this._room.model.getTileState(tile.position.x, tile.position.y);
 
-            if(!state) return null;
-
-            if(state === RoomTileState.CLOSED) return null;
-
-            return tile;
-        }
-
-        return null;
+        if(!state || state === RoomTileState.CLOSED) return null;
+        
+        return tile;
     }
 
     public getBlockedPositions(): Position[]
@@ -211,15 +199,13 @@ export class RoomMap
 
     public getValidTile(unit: Unit, position: Position, isGoal: boolean = true): RoomTile
     {
-        if(!position) return null;
+        if(!unit || !position) return null;
         
         const tile = this.getTile(position);
 
         if(!tile) return null;
         
         if(tile.isDoor) return tile;
-        
-        if(this._room.model.getTileState(tile.position.x, tile.position.y) === RoomTileState.CLOSED) return null;
         
         const totalUnits = tile.units.length;
 
@@ -230,8 +216,6 @@ export class RoomMap
                 const existingUnit = tile.units[i];
 
                 if(!existingUnit) continue;
-
-                if(!unit) break;
 
                 if(existingUnit.id === unit.id) return tile;
 
@@ -247,73 +231,20 @@ export class RoomMap
 
         const highestItem = tile.highestItem;
 
-        if(highestItem)
+        if(!highestItem) return tile;
+
+        if(highestItem.groupId)
         {
-            if(highestItem.groupId)
-            {
-                if(!highestItem.isGroupItemOpen(unit)) return null;
-            }
-
-            if(!tile.canWalk)
-            {
-                if(unit)
-                {
-                    if(highestItem.isItemOpen) return tile;
-    
-                    if(!highestItem.position.compare(unit.location.position)) return null;
-                }
-    
-                if(highestItem.isItemOpen) return tile;
-                    
-                return null;
-            }
-            else
-            {
-                if(highestItem.isItemClosed) return null;
-
-                if(unit)
-                {
-                    if(unit.type === UnitType.USER && unit.connectedUnit || unit.type === UnitType.PET)
-                    {
-                        if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
-                    }
-                }
-
-                if(!highestItem.baseItem.canWalk) return null;
-            }
+            if(!highestItem.isGroupItemOpen(unit)) return null;
         }
 
-        // if(!tile.canWalk)
-        // {
-        //     if(highestItem)
-        //     {
-        //         if(unit)
-        //         {
-        //             if(highestItem.isItemOpen) return tile;
+        if(unit.type === UnitType.USER && unit.connectedUnit || unit.type === UnitType.PET)
+        {
+            if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
+        }
 
-        //             if(!highestItem.position.compare(unit.location.position)) return null;
-        //         }
+        if(!highestItem.isItemOpen) return null;
 
-        //         if(highestItem.isItemOpen) return tile;
-                
-        //         return null;
-        //     }
-        // }
-        // else
-        // {
-        //     if(highestItem)
-        //     {
-        //         if(highestItem.isItemClosed) return null;
-
-        //         if(unit.type === UnitType.USER && unit.connectedUnit || unit.type === UnitType.PET)
-        //         {
-        //             if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
-        //         }
-
-        //         if(!highestItem.baseItem.canWalk) return null;
-        //     }
-        // }
-                    
         return tile;
     }
 
@@ -339,8 +270,6 @@ export class RoomMap
 
                 if(!existingUnit) continue;
 
-                if(!unit) break;
-
                 if(existingUnit.id === unit.id) return tile;
 
                 if(existingUnit === unit.connectedUnit) return tile;
@@ -351,17 +280,16 @@ export class RoomMap
 
         const highestItem = tile.highestItem;
 
-        if(highestItem)
+        if(!highestItem) return tile;
+
+        if(highestItem.groupId)
         {
-            if(highestItem.groupId)
-            {
-                if(!highestItem.isGroupItemOpen(unit)) return null;
-            }
-
-            if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
-
-            if(!highestItem.isItemOpen) return null;
+            if(!highestItem.isGroupItemOpen(unit)) return null;
         }
+
+        if(highestItem.baseItem.canSit || highestItem.baseItem.canLay) return null;
+
+        if(!highestItem.isItemOpen) return null;
 
         return tile;
     }

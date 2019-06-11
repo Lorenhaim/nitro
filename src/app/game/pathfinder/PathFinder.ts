@@ -1,4 +1,3 @@
-import { TimeHelper } from '../../common';
 import { Emulator } from '../../Emulator';
 import { Unit } from '../unit';
 import { PathFinderNode } from './PathFinderNode';
@@ -12,7 +11,7 @@ export class PathFinder
         
         const currentRoom = unit.room;
 
-        if(!currentRoom) return false;
+        if(!currentRoom || !currentRoom.map) return false;
 
         const isGoal        = positionNext.compare(positionGoal);
         const currentTile   = currentRoom.map.getValidTile(unit, position, false);
@@ -35,52 +34,36 @@ export class PathFinder
             const firstCheck    = currentRoom.map.getValidDiagonalTile(unit, new Position(positionNext.x, position.y));
             const secondCheck   = currentRoom.map.getValidDiagonalTile(unit, new Position(position.x, positionNext.y));
 
-            if(!firstCheck && !secondCheck) return false;
+            if(!firstCheck && !secondCheck) return null;
         }
 
-        if(toItem)
+        if(!toItem) return true;
+
+        if(isGoal) return toItem.baseItem.canWalk || toItem.isItemOpen;
+        else
         {
-            if(isGoal)
-            {
-                if(toItem.baseItem.canSit || toItem.baseItem.canLay) return true;
-                
-                return toItem.baseItem.canWalk || toItem.isItemOpen;
-            }
-            else
-            {
-                if(toItem.baseItem.canSit || toItem.baseItem.canLay) return false;
+            if(toItem.baseItem.canSit || toItem.baseItem.canLay) return null;
 
-                return toItem.baseItem.canWalk || toItem.isItemOpen;
-            }
+            return toItem.baseItem.canWalk || toItem.isItemOpen && !toItem.baseItem.canSit && !toItem.baseItem.canLay;
         }
-
-        return true;
     }
 
     public static makePath(unit: Unit, position: Position): Position[]
     {
-        const start = TimeHelper.currentTimestamp;
-
         const positions: Position[] = [];
 
         let node = this.calculateWalkingNode(unit, position);
 
-        if(node)
+        if(!node || !node.nextNode) return null;
+
+        while(node.nextNode)
         {
-            do
-            {
-                if(node.nextNode)
-                {
-                    positions.push(node.position);
-                    node = node.nextNode;
-                }
-                else
-                {
-                    node = null;
-                }
-            }
-            while(node);
+            positions.push(node.position);
+
+            node = node.nextNode;
         }
+
+        if(!positions.length) return null;
 
         return positions.reverse();
     }
@@ -149,34 +132,32 @@ export class PathFinder
                 }
                 else tempNode = nodeMap[tempPosition.x][tempPosition.y];
 
-                if(!tempNode.isClosed)
-                {
-                    difference = 0;
+                if(tempNode.isClosed) continue;
 
-                    if(currentNode.position.x !== tempNode.position.x) difference += 2;
-                    if(currentNode.position.y !== tempNode.position.y) difference += 2;
+                difference = 0;
+
+                if(currentNode.position.x !== tempNode.position.x) difference += 2;
+                if(currentNode.position.y !== tempNode.position.y) difference += 2;
                     
-                    cost = currentNode.cost + difference + tempNode.position.getDistanceAround(goalNode.position);
+                cost = currentNode.cost + difference + tempNode.position.getDistanceAround(goalNode.position);
 
-                    if(!tempNode.isOpen)
-                    {
-                        if(cost < tempNode.cost)
-                        {
-                            tempNode.cost       = cost;
-                            tempNode.nextNode   = currentNode;
-                        }
+                if(tempNode.isOpen) continue;
 
-                        if(tempNode.position.compare(goalNode.position))
-                        {
-                            tempNode.nextNode = currentNode;
-
-                            return tempNode;
-                        }
-
-                        tempNode.isOpen = true;
-                        nodes.push(tempNode);
-                    }
+                if(cost < tempNode.cost)
+                {
+                    tempNode.cost       = cost;
+                    tempNode.nextNode   = currentNode;
                 }
+
+                if(tempNode.position.compare(goalNode.position))
+                {
+                    tempNode.nextNode = currentNode;
+
+                    return tempNode;
+                }
+
+                tempNode.isOpen = true;
+                nodes.push(tempNode);
             }
         }
 

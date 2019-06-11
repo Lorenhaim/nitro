@@ -536,7 +536,7 @@ export class Item
     {
         if(this._baseItem.hasInteraction(InteractionGate, InteractionTeleport))
         {
-            if(this._entity.extraData && this._entity.extraData !== '0') return true;
+            if(this.extraData && this.extraData !== '0') return true;
 
             return false;
         }

@@ -26,13 +26,8 @@ export class RoomUnitManager
 
     public dispose(): void
     {
-        const totalUnits = this._units.length;
-
-        if(totalUnits) this.removeUnits(true, true, ...this._units);
-
-        const totalQueues = this._unitsQueuing.length;
-
-        if(totalQueues) this.removeQueues(...this._unitsQueuing);
+        this.removeAllUnits();
+        this.removeAllQueues();
     }
 
     public getUnit(id: number): Unit
@@ -189,27 +184,13 @@ export class RoomUnitManager
         unit.canLocate = true;
     }
 
-    public removeUnits(runReset: boolean = true, sendHotelView: boolean = true, ...units: Unit[]): void
+    public removeAllUnits(runReset: boolean = true, sendHotelView: boolean = true): void
     {
-        const removedUnits = [ ...units ];
-
-        if(!removedUnits) return;
-
-        const totalRemovedUnits = removedUnits.length;
-
-        if(!totalRemovedUnits) return;
-
-        for(let i = 0; i < totalRemovedUnits; i++)
-        {
-            const removedUnit = removedUnits[i];
-
-            if(!removedUnit) continue;
-
-            this.removeUnit(removedUnit, runReset, sendHotelView, false);
-        }
+        if(!this._units.length) return;
+        
+        for(let i = this._units.length - 1; i >= 0; i--) this.removeUnit(this._units[i], runReset, sendHotelView, false);
 
         this.updateTotalUsers();
-
         this._room.tryDispose();
     }
 
@@ -256,6 +237,15 @@ export class RoomUnitManager
         }
 
         if(updateRoom) this._room.tryDispose();
+    }
+
+    public removeAllQueues(runReset: boolean = true, sendHotelView: boolean = true): void
+    {
+        if(!this._unitsQueuing.length) return;
+        
+        for(let i = this._unitsQueuing.length - 1; i >= 0; i--) this.removeQueue(this._unitsQueuing[i]);
+
+        this._room.tryDispose();
     }
 
     public removeQueues(...units: Unit[]): void

@@ -97,7 +97,7 @@ export class UnitLocation
 
         const positions = path ? path : direct ? [ position ] : PathFinder.makePath(this._unit, position);
 
-        if(!positions.length) return this.stopWalking();
+        if(!positions || !positions.length) return this.stopWalking();
         
         this._positionGoal  = position;
         this._currentPath   = positions;
@@ -480,6 +480,8 @@ export class UnitLocation
 
     public stopWalking(): void
     {
+        if(!this._isWalking) return;
+        
         this.clearWalking();
 
         if(this._unit.type === UnitType.USER)

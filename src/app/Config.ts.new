@@ -65,6 +65,10 @@ export const Config: ConfigOptions = {
             savePath: "C:/mycamerapath/",
             saveUrl: "https://website.com/camera/"
         },
+        plugins: {
+            enabled: true,
+            path: "C:/mypluginpath/"
+        },
         catalog: {
             maxPurchaseStack: 50
         },

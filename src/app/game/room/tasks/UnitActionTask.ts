@@ -1,4 +1,6 @@
+import { Emulator } from '../../../Emulator';
 import { UnitStatusComposer } from '../../../packets';
+import { Position } from '../../pathfinder';
 import { Unit, UnitStatus, UnitStatusType } from '../../unit';
 import { Room } from '../Room';
 import { Task } from './Task';
@@ -47,6 +49,8 @@ export class UnitActionTask extends Task
 
             this.processUnit(unit);
 
+            if(unit.room !== this._room) continue;
+
             if(!unit.needsUpdate) continue;
 
             unit.needsUpdate = false;
@@ -72,11 +76,21 @@ export class UnitActionTask extends Task
         {
             const nextPosition = unit.location.currentPath.shift();
 
+            if(nextPosition.compare(unit.location.position)) return unit.location.stopWalking();
+
             if(!nextPosition) return unit.location.stopWalking();
 
             const nextTile = unit.room.map.getValidTile(unit, nextPosition, unit.location.currentPath.length === 0);
 
             if(!nextTile) return this.retryPath(unit);
+
+            if(Emulator.config.game.pathfinder.steps.allowDiagonals)
+            {
+                const firstCheck    = unit.room.map.getValidDiagonalTile(unit, new Position(nextPosition.x, unit.location.position.y));
+                const secondCheck   = unit.room.map.getValidDiagonalTile(unit, new Position(unit.location.position.x, nextPosition.y));
+
+                if(!firstCheck && !secondCheck) return unit.location.stopWalking();
+            }
             
             const nextItem      = nextTile.highestItem;
             const currentItem   = unit.location.getCurrentItem();

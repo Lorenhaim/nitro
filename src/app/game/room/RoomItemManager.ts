@@ -371,9 +371,7 @@ export class RoomItemManager extends Manager
         const validatedItems: Item[]        = [];
         const affectedPositions: Position[] = [];
 
-        const totalActiveItems = this._items.length;
-
-        if(!totalActiveItems) return;
+        if(!this._items.length) return;
 
         for(let i = 0; i < totalRemoved; i++)
         {
@@ -382,6 +380,8 @@ export class RoomItemManager extends Manager
             if(!item) continue;
 
             if(!user.unit.isOwner() && !user.unit.isGroupAdmin() && item.userId !== user.id) continue;
+
+            const totalActiveItems = this._items.length;
 
             for(let j = 0; j < totalActiveItems; j++)
             {

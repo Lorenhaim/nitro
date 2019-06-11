@@ -99,6 +99,9 @@ export class RollerTask extends Task
                 if(!roller) continue;
 
                 const totalItems = roller.items.length;
+                const totalUnits = roller.units.length;
+
+                if(totalItems || totalUnits) updatedPositions.push(roller.position, roller.positionNext);
 
                 if(totalItems)
                 {
@@ -110,11 +113,7 @@ export class RollerTask extends Task
 
                         this.finishItemRoll(item);
                     }
-
-                    updatedPositions.push(roller.position, roller.positionNext);
                 }
-
-                const totalUnits = roller.units.length;
 
                 if(totalUnits)
                 {
@@ -149,8 +148,6 @@ export class RollerTask extends Task
                     }
                 }
             }
-
-            this._room.map.generateCollisions();
 
             if(updatedPositions.length) this._room.map.updatePositions(false, ...updatedPositions);
 

@@ -12,35 +12,30 @@ export class RoomManager extends Manager
     private _rooms: Room[];
     private _roomModels: RoomModel[];
 
+    private _disposeInterval: NodeJS.Timeout;
+
     constructor()
     {
         super('RoomManager');
 
         this._rooms             = [];
         this._roomModels        = [];
+
+        this._disposeInterval   = null;
     }
 
     protected async onInit(): Promise<void>
     {
         await this.loadRoomModels();
+
+        this._disposeInterval = setInterval(() => this.tryDisposeAll(), 60000);
     }
 
     protected async onDispose(): Promise<void>
     {
-        const totalRooms = this._rooms.length;
+        if(this._disposeInterval) clearInterval(this._disposeInterval);
 
-        if(!totalRooms) return;
-        
-        for(let i = 0; i < totalRooms; i++)
-        {
-            const room = this._rooms[i];
-
-            if(!room) continue;
-
-            await room.dispose();
-
-            this._rooms.splice(i, 1);
-        }
+        await this.removeAllRooms();
     }
 
     public async getRoom(roomId: number): Promise<Room>
@@ -109,6 +104,13 @@ export class RoomManager extends Manager
     public hasRoom(roomId: number): boolean
     {
         return this.getActiveRoom(roomId) !== null;
+    }
+
+    private async removeAllRooms(): Promise<void>
+    {
+        if(!this._rooms.length) return;
+        
+        for(let i = this._rooms.length - 1; i >= 0; i--) this.removeRoom(this._rooms[i]);
     }
 
     public async removeRoom(room: Room): Promise<void>
@@ -225,6 +227,22 @@ export class RoomManager extends Manager
     public hasModel(modelId: number): boolean
     {
         return this.getModel(modelId) !== null;
+    }
+
+    private tryDisposeAll(): void
+    {
+        const totalRooms = this._rooms.length;
+
+        if(!totalRooms) return;
+
+        for(let i = 0; i < totalRooms; i++)
+        {
+            const room = this._rooms[i];
+
+            if(!room) continue;
+
+            room.tryDispose();
+        }
     }
 
     private async loadRoomModels(): Promise<void>

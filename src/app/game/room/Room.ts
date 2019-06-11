@@ -34,7 +34,8 @@ export class Room extends Manager
     private _wiredManager: RoomWiredManager;
 
     private _objectOwners: { id: number, username: string }[];
-    private _didCancelDispose: boolean;
+    private _disposeTimeout: NodeJS.Timeout;
+    private _disposeCancelled: boolean;
 
     constructor(entity: RoomEntity)
     {
@@ -60,7 +61,8 @@ export class Room extends Manager
         this._wiredManager      = new RoomWiredManager(this);
 
         this._objectOwners      = [];
-        this._didCancelDispose  = false;
+        this._disposeTimeout    = null;
+        this._disposeCancelled  = false;
     }
 
     protected async onInit(): Promise<void>
@@ -87,6 +89,8 @@ export class Room extends Manager
 
     protected async onDispose(): Promise<void>
     {
+        this.cancelDispose();
+        
         this._taskManager.dispose();
 
         await this._botManager.dispose();
@@ -106,21 +110,18 @@ export class Room extends Manager
     {
         if(this._isDisposed || this._isDisposing || this._isLoading) return;
 
+        if(this._disposeTimeout) return;
+
         if(this._details.usersNow) return;
 
-        this._didCancelDispose = false;
-
-        setTimeout(async () =>
-        {
-            if(this._didCancelDispose) return;
-
-            await Emulator.gameManager.roomManager.removeRoom(this);
-        }, 60000);
+        setTimeout(async () => await Emulator.gameManager.roomManager.removeRoom(this), 60000);
     }
 
     public cancelDispose(): void
     {
-        this._didCancelDispose = true;
+        if(this._disposeTimeout) clearTimeout(this._disposeTimeout);
+
+        this._disposeTimeout = null;
     }
 
     private loadCategory(): void
@@ -295,10 +296,5 @@ export class Room extends Manager
     public get objectOwners(): { id: number, username: string }[]
     {
         return this._objectOwners;
-    }
-
-    public get didCancelDispose(): boolean
-    {
-        return this._didCancelDispose;
     }
 }
