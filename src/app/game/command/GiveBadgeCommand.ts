@@ -7,23 +7,27 @@ export class GiveBadgeCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'gb', 'givebadge');
+        super(PermissionList.GIVE_BADGE, 'give_badge', 'gb');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        if(user)
-        {
-            const username  = parts[0];
-            const badgeCode    = parts[1];
+        if(!user) return;
 
-            if(username && badgeCode)
-            {
-                const onlineUser = Nitro.gameManager.userManager.getUserByUsername(username);
+        if(!user.hasPermission(PermissionList.GIVE_BADGE)) return;
 
-                if(onlineUser) await onlineUser.inventory.badges.giveBadge(badgeCode);
-            }
-        }
+        const exisitingUser = await Nitro.gameManager.userManager.getOfflineUserByUsername(parts[0]);
+
+        parts.splice(0, 1);
+
+        if(!exisitingUser) return;
+        
+        await exisitingUser.inventory.badges.giveBadge(...parts);
+    }
+
+    public get usage(): string
+    {
+        return `< username > < badgeCode[] >`;
     }
 
     public get description(): string

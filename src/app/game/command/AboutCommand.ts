@@ -27,6 +27,11 @@ export class AboutCommand extends Command
             `TheGeneral - Arcturus`));
     }
 
+    public get usage(): string
+    {
+        return '';
+    }
+
     public get description(): string
     {
         return 'Information about the server'

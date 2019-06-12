@@ -27,6 +27,11 @@ export class CreditsCommand extends Command
         activeUser.unit.chatSelf(`You have received ${ parts[1] } credits!`);
     }
 
+    public get usage(): string
+    {
+        return `< username > < +/- amount >`;
+    }
+
     public get description(): string
     {
         return 'Gives credits';

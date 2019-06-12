@@ -7,7 +7,7 @@ export class SummonCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'summon');
+        super(PermissionList.SUMMON_USER, 'summon');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
@@ -26,14 +26,12 @@ export class SummonCommand extends Command
 
         if(!onlineUser || !onlineUser.unit) return;
 
-        if(onlineUser.unit.room !== currentRoom)
-        {
-            await onlineUser.unit.fowardRoom(currentRoom.id);
-        }
+        if(onlineUser.unit.room !== currentRoom) onlineUser.unit.fowardRoom(currentRoom.id);
+    }
 
-        onlineUser.unit.location.walkToUnit(user.unit, false);
-
-        //onlineUser.unit.location.setGoalAction(onlineUser.unit.location.lookAtPosition, onlineUser.unit.location.position);
+    public get usage(): string
+    {
+        return `< username >`;
     }
 
     public get description(): string

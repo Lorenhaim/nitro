@@ -10,7 +10,7 @@ export class CoordinatesCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'coords', 'coordinates', 'location', 'position', 'pos', 'xyz');
+        super(PermissionList.NONE, 'coords', 'pos', 'xyz');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
@@ -53,6 +53,10 @@ export class CoordinatesCommand extends Command
                 `  publicName => ${ currentItem.baseItem.publicName }\r` +
                 `  productName => ${ currentItem.baseItem.productName }\r` +
                 `  spriteId => ${ currentItem.baseItem.spriteId }\r` +
+                `  width => ${ currentItem.baseItem.width }\r` +
+                `  length => ${ currentItem.baseItem.length }\r` +
+                `  stackHeight => ${ currentItem.baseItem.stackHeight }\r` +
+                `  interaction => ${ currentItem.baseItem.interaction.constructor.name }\r` +
                 `  canWalk => ${ currentItem.baseItem.canWalk }\r` +
                 `  canSit => ${ currentItem.baseItem.canSit }\r` +
                 `  canLay => ${ currentItem.baseItem.canLay }\r` +
@@ -60,6 +64,11 @@ export class CoordinatesCommand extends Command
         }
         
         if(message) user.connections.processOutgoing(new GenericAlertComposer(message));
+    }
+
+    public get usage(): string
+    {
+        return '';
     }
 
     public get description(): string

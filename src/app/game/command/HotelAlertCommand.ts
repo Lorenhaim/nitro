@@ -8,14 +8,21 @@ export class HotelAlertCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'hotelalert', 'ha');
+        super(PermissionList.NONE, 'hotel_alert', 'ha');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        const message = parts[0];
+        const message = parts.join(' ');
 
-        if(message) Nitro.gameManager.userManager.processOutgoing(new GenericAlertComposer(message + `\r\r- <b> ${ user.details.username }</b>`));
+        if(!message) return;
+        
+        Nitro.gameManager.userManager.processOutgoing(new GenericAlertComposer(message + `\r\r- <b> ${ user.details.username }</b>`));
+    }
+
+    public get usage(): string
+    {
+        return `< message >`;
     }
 
     public get description(): string

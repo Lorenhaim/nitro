@@ -7,12 +7,17 @@ export class UpdateItemsCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'update_items');
+        super(PermissionList.UPDATE_ITEMS, 'update_items', 'ui');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
     {
         await Nitro.gameManager.itemManager.reload();
+    }
+
+    public get usage(): string
+    {
+        return '';
     }
 
     public get description(): string

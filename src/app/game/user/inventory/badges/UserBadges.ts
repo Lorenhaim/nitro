@@ -45,6 +45,8 @@ export class UserBadges extends Manager
         {
             const badge = this._badges[i];
 
+            if(!badge) continue;
+
             if(badge.badgeCode !== badgeCode) continue;
             
             return badge;
@@ -108,6 +110,8 @@ export class UserBadges extends Manager
             this._badges.push(badge);
 
             this._user.connections.processOutgoing(new UserBadgeAddComposer(badge));
+
+
         }
     }
 

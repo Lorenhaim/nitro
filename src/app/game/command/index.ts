@@ -17,7 +17,8 @@ export * from './RoomSpectateCommand';
 export * from './ShutdownCommand';
 export * from './SitCommand';
 export * from './SummonCommand';
-export * from './ToggleLocatingCommand';
+export * from './ToggleLocationCommand';
 export * from './UnloadRoomCommand';
 export * from './UpdateCatalogCommand';
 export * from './UpdateItemsCommand';
+

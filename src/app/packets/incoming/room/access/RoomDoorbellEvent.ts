@@ -22,7 +22,7 @@ export class RoomDoorbellEvent extends Incoming
 
             if(user.unit.roomQueue !== currentRoom) return;
 
-            if(!accepted) return currentRoom.unitManager.removeQueue(user.unit);
+            if(!accepted) return user.unit.reset();
             else return await user.unit.enterRoomPartOne(currentRoom.id, null, true);
         }
 

@@ -7,7 +7,7 @@ export class ReloadRoomCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'reloadRoom', 'rr');
+        super(PermissionList.RELOAD_ROOM, 'reload_room', 'rr');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
@@ -53,6 +53,11 @@ export class ReloadRoomCommand extends Command
                 activeUser.unit.fowardRoom(currentRoom.id);
             }
         }, 300);
+    }
+
+    public get usage(): string
+    {
+        return '';
     }
 
     public get description(): string

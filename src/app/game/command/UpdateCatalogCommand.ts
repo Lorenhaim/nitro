@@ -7,7 +7,7 @@ export class UpdateCatalogCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'update_catalog');
+        super(PermissionList.UPDATE_CATALOG, 'update_catalog', 'uc');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
@@ -15,6 +15,11 @@ export class UpdateCatalogCommand extends Command
         await Nitro.gameManager.catalogManager.reload();
 
         Nitro.gameManager.catalogManager.notifyReload();
+    }
+
+    public get usage(): string
+    {
+        return '';
     }
 
     public get description(): string

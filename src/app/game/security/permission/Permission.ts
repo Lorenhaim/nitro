@@ -22,12 +22,14 @@ export class Permission
     public hasPermission(permission: PermissionList | string): boolean
     {
         if(!permission) return false;
+
+        if(permission === PermissionList.NONE) return true;
+
+        if(this.hasAllPermissions()) return true;
         
         permission = this._entity[permission.toString()];
 
         if(permission === undefined || !permission) return false;
-
-        if(this.hasAllPermissions()) return true;
 
         return permission === '1';
     }

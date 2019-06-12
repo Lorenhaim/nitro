@@ -79,62 +79,56 @@ export class UnitActionTask extends Task
             
         if(!unit.location.isWalking) return;
 
-        unit.location.processNextPosition();
-
         if(!unit.canLocate && unit.location.isWalkingSelf) return unit.location.stopWalking();
 
-        else if(unit.location.currentPath.length)
+        if(!unit.location.currentPath.length) return unit.location.stopWalking();
+
+        unit.location.processNextPosition();
+        
+        this.checkStep(unit, unit.location.position, unit.location.currentPath.shift());
+
+        if(!unit.location.isFastWalking || !unit.location.fastWalkingSpeed) return;
+
+        if(!unit.location.currentPath.length) return;
+
+        for(let i = 0; i < unit.location.fastWalkingSpeed; i++)
         {
-            this.checkStep(unit, unit.location.currentPath.shift());
+            if(unit.location.currentPath.length < 2) return;
 
-            if(!unit.location.isFastWalking || !unit.location.fastWalkingSpeed) return;
-
-            if(unit.location.currentPath.length <= 1) return;
-            
-            for(let i = 0; i < unit.location.fastWalkingSpeed; i++)
+            if(unit.location.positionNext)
             {
-                if(unit.location.positionNext)
-                {
-                    const nextTile = unit.room.map.getTile(unit.location.positionNext);
+                const nextTile = unit.room.map.getTile(unit.location.positionNext);
 
-                    if(nextTile) nextTile.removeUnit(unit);
-                }
-
-                this.checkStep(unit, unit.location.currentPath.shift());
-
-                if(unit.location.currentPath.length > 1) continue;
-
-                return;
+                if(nextTile) nextTile.removeUnit(unit);
             }
 
-            unit.needsUpdate = true;
+            this.checkStep(unit, unit.location.positionNext.copy(), unit.location.currentPath.shift());
         }
-
-        else return unit.location.stopWalking();
     }
 
-    private checkStep(unit: Unit, position: Position): void
+    private checkStep(unit: Unit, position: Position, positionNext: Position): void
     {
-        if(!position) return;
+        if(!unit || !position) return;
 
-        if(position.compare(unit.location.position)) return unit.location.stopWalking();
+        if(!positionNext) return unit.location.stopWalking();
 
-        if(!position) return unit.location.stopWalking();
-
-        const nextTile = unit.room.map.getValidTile(unit, position, unit.location.currentPath.length === 0);
+        const currentTile   = unit.room.map.getTile(position);
+        const nextTile      = unit.room.map.getValidTile(unit, positionNext, unit.location.currentPath.length === 0);
 
         if(!nextTile) return this.retryPath(unit);
 
+        if(currentTile === nextTile) return unit.location.stopWalking();
+
         if(Nitro.config.game.pathfinder.steps.allowDiagonals)
         {
-            const firstCheck    = unit.room.map.getValidDiagonalTile(unit, new Position(position.x, unit.location.position.y));
-            const secondCheck   = unit.room.map.getValidDiagonalTile(unit, new Position(unit.location.position.x, position.y));
+            const firstCheck    = unit.room.map.getValidDiagonalTile(unit, new Position(positionNext.x, position.y));
+            const secondCheck   = unit.room.map.getValidDiagonalTile(unit, new Position(position.x, positionNext.y));
 
             if(!firstCheck && !secondCheck) return unit.location.stopWalking();
         }
         
+        const currentItem   = currentTile.highestItem;
         const nextItem      = nextTile.highestItem;
-        const currentItem   = unit.location.getCurrentItem();
 
         if(currentItem)
         {
@@ -142,22 +136,20 @@ export class UnitActionTask extends Task
             {
                 const interaction: any = currentItem.baseItem.interaction;
 
-                if(interaction && interaction.onLeave) interaction.onLeave(unit, currentItem, position);
+                if(interaction && interaction.onLeave) interaction.onLeave(unit, currentItem, positionNext);
             }
         }
 
-        const currentTile = unit.location.getCurrentTile();
-
         if(currentTile) currentTile.removeUnit(unit);
-
+        
         nextTile.addUnit(unit);
 
         unit.location.removeStatus(UnitStatusType.LAY, UnitStatusType.SIT);
         unit.location.addStatus(new UnitStatus(UnitStatusType.MOVE, `${ nextTile.position.x },${ nextTile.position.y },${ nextTile.walkingHeight + unit.location.additionalHeight }`));
 
-        unit.location.position.setDirection(unit.location.position.calculateWalkDirection(position));
+        unit.location.position.setDirection(position.calculateWalkDirection(positionNext));
         
-        unit.location.positionNext = position;
+        unit.location.positionNext = positionNext;
 
         if(nextItem)
         {
@@ -173,6 +165,8 @@ export class UnitActionTask extends Task
                 }
             }
         }
+
+        unit.needsUpdate = true;
     }
 
     private retryPath(unit: Unit): void

@@ -18,10 +18,10 @@ export class RoomUnitManager
     {
         if(!(room instanceof Room)) throw new Error('invalid_room');
 
-        this._room              = room;
+        this._room          = room;
 
-        this._units             = [];
-        this._unitsQueuing      = [];
+        this._units         = [];
+        this._unitsQueuing  = [];
     }
 
     public dispose(): void
@@ -69,6 +69,32 @@ export class RoomUnitManager
             if(activeUnit.type !== UnitType.USER) continue;
 
             if(activeUnit.user.id !== userId) continue;
+
+            return activeUnit;
+        }
+
+        return null;
+    }
+
+    public getUnitByUsername(username: string): Unit
+    {
+        if(!username) return null;
+
+        username = username.toLocaleLowerCase();
+        
+        const totalUnits = this._units.length;
+
+        if(!totalUnits) return null;
+
+        for(let i = 0; i < totalUnits; i++)
+        {
+            const activeUnit = this._units[i];
+
+            if(!activeUnit) continue;
+
+            if(activeUnit.type !== UnitType.USER) continue;
+
+            if(activeUnit.user.details.username.toLocaleLowerCase() !== username) continue;
 
             return activeUnit;
         }

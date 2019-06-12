@@ -7,15 +7,17 @@ export class ShutdownCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'shutdown');
+        super(PermissionList.SHUTDOWN_SERVER, 'shutdown');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        if(user)
-        {
-            await Nitro.dispose();
-        }
+        await Nitro.dispose();
+    }
+
+    public get usage(): string
+    {
+        return '';
     }
 
     public get description(): string

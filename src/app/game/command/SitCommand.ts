@@ -11,14 +11,21 @@ export class SitCommand extends Command
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        const height    = parts[0] || 0;
-        const direction = parts[1] || 0;
+        if(!user || !user.unit) return;
 
-        if(user && user.unit) user.unit.location.sit(true, parseInt(<any> height), parseInt(<any> direction));
+        const height    = !parts[0] ? 0.50 : parseInt(parts[0]);
+        const direction = !parts[1] ? null : parseInt(parts[1]);
+        
+        user.unit.location.sit(true, height, direction);
+    }
+
+    public get usage(): string
+    {
+        return '< height? > < direction? >';
     }
 
     public get description(): string
     {
-        return 'Sit';
+        return 'Toggle sitting at your current location';
     }
 }

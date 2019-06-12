@@ -258,8 +258,6 @@ export class RoomMap
         
         if(tile.isDoor) return tile;
         
-        if(this._room.model.getTileState(tile.position.x, tile.position.y) === RoomTileState.CLOSED) return null;
-        
         const totalUnits = tile.units.length;
         
         if(totalUnits)

@@ -140,7 +140,12 @@ export class Unit
 
             if(this._user)
             {
-                if(sendHotelView) this._user.connections.processOutgoing(new HotelViewComposer());
+                if(sendHotelView)
+                {
+                    this._user.connections.processOutgoing(new HotelViewComposer());
+
+                    this._isSpectating = false;
+                }
 
                 this._user.messenger.updateAllFriends();
             }
@@ -393,7 +398,7 @@ export class Unit
     {
         if(!message || !this._room) return;
 
-        //if(this._lastChat && this._lastChat < TimeHelper.currentTimestamp - 250) return; // spam guard
+        if(this._lastChat && this._lastChat > (TimeHelper.currentTimestamp - 250)) return;
 
         this._timer.resetIdleTimer();
 
@@ -419,14 +424,14 @@ export class Unit
                 unit: this,
                 message: message,
                 emotion,
-                bubble: ChatBubble.ALERT
+                bubble: ChatBubble.NORMAL
             }));
 
             if(this._type === UnitType.USER) this.user.connections.processOutgoing(new UnitChatWhisperComposer({
                 unit: this,
                 message: message,
                 emotion,
-                bubble: ChatBubble.ALERT
+                bubble: ChatBubble.NORMAL
             }));
         }
         else

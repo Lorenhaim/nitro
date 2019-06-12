@@ -6,14 +6,17 @@ export class RoomSpectateCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'spectate');
+        super(PermissionList.ROOM_SPECTATE, 'room_spectate', 'spectate');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
     {
         user.unit.spectate(true);
-        // set some var, this composer needs to be sent after entering but before the map loads
-        //user.connections.processOutgoing(new RoomSpectatorComposer());
+    }
+
+    public get usage(): string
+    {
+        return '';
     }
 
     public get description(): string

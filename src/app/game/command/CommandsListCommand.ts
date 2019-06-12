@@ -27,6 +27,8 @@ export class CommandsListCommand extends Command
 
         validCommands.push(`Commands Available ( ${ commands.length } )`);
 
+        validCommands.push(`? is an optional parameter\r[] can take multiple arguments seperated by a space`);
+
         for(let i = 0; i < totalCommands; i++)
         {
             const command = commands[i];
@@ -35,14 +37,19 @@ export class CommandsListCommand extends Command
 
             if(command === this) continue;
 
-            validCommands.push(`Name: ${ command.constructor.name }\rDescription: ${ command.description }\rUsage: ${ command.aliases }`);
+            validCommands.push(`Name: ${ command.constructor.name }\rDescription: ${ command.description }\rUsage: < ${ command.aliases.join(', ') } > ${ command.usage }`);
         }
 
         if(validCommands.length) return user.connections.processOutgoing(new GenericAlertMessagesComposer(...validCommands));
     }
 
+    public get usage(): string
+    {
+        return '';
+    }
+
     public get description(): string
     {
-        return 'Commands';
+        return 'Command List';
     }
 }

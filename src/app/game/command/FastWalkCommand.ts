@@ -6,14 +6,14 @@ export class FastWalkCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'fast_walk');
+        super(PermissionList.NONE, 'fast_walk', 'fw');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
     {
         if(!user || !user.unit) return;
 
-        const speed = !parts[0] ? 0 : parseInt(parts[0]);
+        const speed = !parts[0] ? 1 : parseInt(parts[0]);
 
         if(speed)
         {
@@ -24,8 +24,13 @@ export class FastWalkCommand extends Command
         else return user.unit.location.fastWalk(true, speed);
     }
 
+    public get usage(): string
+    {
+        return `< speed? >`;
+    }
+
     public get description(): string
     {
-        return 'Fast walks';
+        return 'Increases amount of steps taken each cycle';
     }
 }

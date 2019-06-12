@@ -24,13 +24,11 @@ export class UserManager extends Manager
 
         for(let i = 0; i < totalUsers; i++)
         {
-            const user = this._users[i];
+            const user = this._users.shift();
 
             if(!user) continue;
 
             await user.dispose();
-
-            this._users.splice(i, 1);
         }
     }
 
@@ -56,9 +54,9 @@ export class UserManager extends Manager
 
     public getUserByUsername(username: string): User
     {
-        username = username.toLocaleLowerCase();
-
         if(!username) return null;
+
+        username = username.toLocaleLowerCase();
 
         const totalUsers = this._users.length;
 

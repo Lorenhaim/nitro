@@ -6,40 +6,31 @@ export class PullCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'pull');
+        super(PermissionList.PULL_UNIT, 'pull');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        if(user && user.unit && parts)
-        {
-            const currentRoom = user.unit.room;
+        if(!user || !user.unit) return;
+        
+        const currentRoom = user.unit.room;
 
-            if(currentRoom)
-            {
-                const username = parts[0];
-                const extended = parts[1];
+        if(!currentRoom) return;
+        
+        const unit = currentRoom.unitManager.getUnitByUsername(parts[0]);
 
-                if(username && extended)
-                {
-                    if(username === 'pet')
-                    {
-                        const pet = currentRoom.petManager.getPetByName(extended);
+        if(!unit) return;
 
-                        if(pet) pet.unit.location.walkTo(user.unit.location.position.getPositionInfront());
-                    }
-                }
+        unit.location.walkToUnit(user.unit, false);
+    }
 
-                else if(username && username !== user.details.username)
-                {
-                    //
-                }
-            }
-        }
+    public get usage(): string
+    {
+        return `< username >`;
     }
 
     public get description(): string
     {
-        return 'Pulls a unit towards you';
+        return 'Pulls a user towards you';
     }
 }

@@ -7,15 +7,17 @@ export class RebootCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'reboot');
+        super(PermissionList.REBOOT_SERVER, 'reboot');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        if(user)
-        {
-            await Nitro.reboot();
-        }
+        await Nitro.reboot();
+    }
+
+    public get usage(): string
+    {
+        return '';
     }
 
     public get description(): string

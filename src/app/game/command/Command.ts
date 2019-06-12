@@ -28,5 +28,7 @@ export abstract class Command
         return this._aliases;
     }
 
+    public abstract get usage(): string;
+
     public abstract get description(): string;
 }

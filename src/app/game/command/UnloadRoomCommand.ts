@@ -7,18 +7,25 @@ export class UnloadRoomCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'unload');
+        super(PermissionList.UNLOAD_ROOM, 'unload_room', 'ur');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
     {
-        if(!user) return;
+        if(!user || !user.unit) return;
 
         const currentRoom = user.unit.room;
 
         if(!currentRoom) return;
 
+        if(!user.unit.isOwner()) return;
+
         await Nitro.gameManager.roomManager.removeRoom(currentRoom);
+    }
+
+    public get usage(): string
+    {
+        return '';
     }
 
     public get description(): string

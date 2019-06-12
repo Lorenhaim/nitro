@@ -3,11 +3,11 @@ import { PermissionList } from '../security';
 import { User } from '../user';
 import { Command } from './Command';
 
-export class ToggleLocatingCommand extends Command
+export class ToggleLocationCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'sl');
+        super(PermissionList.TOGGLE_LOCATION, 'toggle_location', 'tl');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
@@ -19,8 +19,13 @@ export class ToggleLocatingCommand extends Command
         activeUser.unit.canLocate = !activeUser.unit.canLocate;
     }
 
+    public get usage(): string
+    {
+        return `< username >`;
+    }
+
     public get description(): string
     {
-        return 'Toggle location for the specified user';
+        return 'Toggles the users ability to interact with the room map';
     }
 }

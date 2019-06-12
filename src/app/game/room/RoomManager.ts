@@ -35,7 +35,18 @@ export class RoomManager extends Manager
     {
         if(this._disposeInterval) clearInterval(this._disposeInterval);
 
-        await this.removeAllRooms();
+        const totalRooms = this._rooms.length;
+
+        if(!totalRooms) return;
+        
+        for(let i = 0; i < totalRooms; i++)
+        {
+            const room = this._rooms.shift();
+
+            if(!room) continue;
+
+            await room.dispose();
+        }
     }
 
     public async getRoom(roomId: number): Promise<Room>
@@ -104,13 +115,6 @@ export class RoomManager extends Manager
     public hasRoom(roomId: number): boolean
     {
         return this.getActiveRoom(roomId) !== null;
-    }
-
-    private async removeAllRooms(): Promise<void>
-    {
-        if(!this._rooms.length) return;
-        
-        for(let i = this._rooms.length - 1; i >= 0; i--) await this.removeRoom(this._rooms[i]);
     }
 
     public async removeRoom(room: Room): Promise<void>

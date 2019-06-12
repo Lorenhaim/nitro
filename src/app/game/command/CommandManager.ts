@@ -18,7 +18,7 @@ import { RoomSpectateCommand } from './RoomSpectateCommand';
 import { ShutdownCommand } from './ShutdownCommand';
 import { SitCommand } from './SitCommand';
 import { SummonCommand } from './SummonCommand';
-import { ToggleLocatingCommand } from './ToggleLocatingCommand';
+import { ToggleLocationCommand } from './ToggleLocationCommand';
 import { UnloadRoomCommand } from './UnloadRoomCommand';
 import { UpdateCatalogCommand } from './UpdateCatalogCommand';
 import { UpdateItemsCommand } from './UpdateItemsCommand';
@@ -146,7 +146,7 @@ export class CommandManager extends Manager
         this.registerCommand(new ShutdownCommand());
         this.registerCommand(new SitCommand());
         this.registerCommand(new SummonCommand());
-        this.registerCommand(new ToggleLocatingCommand());
+        this.registerCommand(new ToggleLocationCommand());
         this.registerCommand(new UnloadRoomCommand());
         this.registerCommand(new UpdateCatalogCommand());
         this.registerCommand(new UpdateItemsCommand());

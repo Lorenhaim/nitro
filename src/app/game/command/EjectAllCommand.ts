@@ -6,7 +6,7 @@ export class EjectAllCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'ea', 'ejectall');
+        super(PermissionList.NONE, 'ejectall', 'eject_all', 'ea');
     }
 
     public async process(user: User, parts: string[]): Promise<void>
@@ -20,6 +20,11 @@ export class EjectAllCommand extends Command
         if(!items || !items.length) return;
 
         currentRoom.itemManager.removeItem(user, ...items);
+    }
+
+    public get usage(): string
+    {
+        return '';
     }
 
     public get description(): string
