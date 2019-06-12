@@ -1,7 +1,16 @@
 export enum InteractionType
 {
-    CLOTHING                        = 'clothing',
     DEFAULT                         = 'default',
+    BATTLE_BANZAI_GATE_BLUE         = 'bb_gate_blue',
+    BATTLE_BANZAI_GATE_GREEN        = 'bb_gate_green',
+    BATTLE_BANZAI_GATE_RED          = 'bb_gate_red',
+    BATTLE_BANZAI_GATE_YELLOW       = 'bb_gate_yellow',
+    BATTLE_BANZAI_SCOREBOARD_BLUE   = 'bb_scoreboard_blue',
+    BATTLE_BANZAI_SCOREBOARD_GREEN  = 'bb_scoreboard_green',
+    BATTLE_BANZAI_SCOREBOARD_RED    = 'bb_scoreboard_red',
+    BATTLE_BANZAI_SCOREBOARD_YELLOW = 'bb_scoreboard_yellow',
+    BATTLE_BANZAI_TILE              = 'bb_tile',
+    CLOTHING                        = 'clothing',
     DICE                            = 'dice',
     DIMMER                          = 'dimmer',
     EXCHANGE                        = 'exchange',

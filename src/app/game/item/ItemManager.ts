@@ -2,7 +2,7 @@ import { getManager } from 'typeorm';
 import { Manager } from '../../common';
 import { ItemBaseDao, ItemEntity } from '../../database';
 import { BaseItem } from './base';
-import { Interaction, InteractionClothing, InteractionDefault, InteractionDice, InteractionDimmer, InteractionExchange, InteractionGate, InteractionGroupFurni, InteractionGroupGate, InteractionMultiHeight, InteractionPetJump, InteractionRoller, InteractionStackHelper, InteractionTeleport, InteractionVendingMachine, WiredEffectUnitTeleport, WiredTriggerEnterRoom, WiredTriggerSaysSomething, WiredTriggerStateChanged, WiredTriggerWalkOnFurni } from './interaction';
+import { Interaction, InteractionBattleBanzaiGateBlue, InteractionBattleBanzaiGateGreen, InteractionBattleBanzaiGateRed, InteractionBattleBanzaiGateYellow, InteractionBattleBanzaiScoreboardBlue, InteractionBattleBanzaiScoreboardGreen, InteractionBattleBanzaiScoreboardRed, InteractionBattleBanzaiScoreboardYellow, InteractionBattleBanzaiTile, InteractionClothing, InteractionDefault, InteractionDice, InteractionDimmer, InteractionExchange, InteractionGate, InteractionGroupFurni, InteractionGroupGate, InteractionMultiHeight, InteractionPetJump, InteractionRoller, InteractionStackHelper, InteractionTeleport, InteractionVendingMachine, WiredEffectUnitTeleport, WiredTriggerEnterRoom, WiredTriggerSaysSomething, WiredTriggerStateChanged, WiredTriggerWalkOnFurni } from './interaction';
 import { Item } from './Item';
 
 export class ItemManager extends Manager
@@ -97,6 +97,19 @@ export class ItemManager extends Manager
         this._interactions.push(new WiredTriggerStateChanged());
         this._interactions.push(new WiredTriggerEnterRoom());
         this._interactions.push(new WiredTriggerWalkOnFurni());
+
+        // BATTLE BANZAI
+        this._interactions.push(new InteractionBattleBanzaiTile());
+
+        this._interactions.push(new InteractionBattleBanzaiGateBlue());
+        this._interactions.push(new InteractionBattleBanzaiGateGreen());
+        this._interactions.push(new InteractionBattleBanzaiGateRed());
+        this._interactions.push(new InteractionBattleBanzaiGateYellow());
+
+        this._interactions.push(new InteractionBattleBanzaiScoreboardBlue());
+        this._interactions.push(new InteractionBattleBanzaiScoreboardGreen());
+        this._interactions.push(new InteractionBattleBanzaiScoreboardRed());
+        this._interactions.push(new InteractionBattleBanzaiScoreboardYellow());
 
         this.logger.log(`Loaded ${ this._interactions.length } interactions`);
     }

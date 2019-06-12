@@ -1,4 +1,5 @@
 export * from './actions';
+export * from './games';
 export * from './Interaction';
 export * from './InteractionClothing';
 export * from './InteractionDefault';

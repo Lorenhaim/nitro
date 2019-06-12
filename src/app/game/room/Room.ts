@@ -8,6 +8,7 @@ import { RoomMap } from './mapping';
 import { RoomModel } from './models';
 import { RoomBotManager } from './RoomBotManager';
 import { RoomDetails } from './RoomDetails';
+import { RoomGameManager } from './RoomGameManager';
 import { RoomItemManager } from './RoomItemManager';
 import { RoomPetManager } from './RoomPetManager';
 import { RoomSecurityManager } from './RoomSecurityManager';
@@ -25,12 +26,13 @@ export class Room extends Manager
     private _model: RoomModel;
     private _map: RoomMap;
 
-    private _unitManager: RoomUnitManager;
-    private _taskManager: RoomTaskManager;
-    private _itemManager: RoomItemManager;
     private _botManager: RoomBotManager;
+    private _gameManager: RoomGameManager;
+    private _itemManager: RoomItemManager;
     private _petManager: RoomPetManager;
     private _securityManager: RoomSecurityManager;
+    private _taskManager: RoomTaskManager;
+    private _unitManager: RoomUnitManager;
     private _wiredManager: RoomWiredManager;
 
     private _objectOwners: { id: number, username: string }[];
@@ -51,12 +53,13 @@ export class Room extends Manager
         
         this.loadCategory();
 
-        this._unitManager       = new RoomUnitManager(this);
-        this._taskManager       = new RoomTaskManager(this);
-        this._itemManager       = new RoomItemManager(this);
         this._botManager        = new RoomBotManager(this);
+        this._gameManager       = new RoomGameManager(this);
+        this._itemManager       = new RoomItemManager(this);
         this._petManager        = new RoomPetManager(this);
         this._securityManager   = new RoomSecurityManager(this);
+        this._taskManager       = new RoomTaskManager(this);
+        this._unitManager       = new RoomUnitManager(this);
         this._wiredManager      = new RoomWiredManager(this);
 
         this._objectOwners      = [];
@@ -78,6 +81,7 @@ export class Room extends Manager
         await this._itemManager.init();
         await this._botManager.init();
         await this._petManager.init();
+        await this._gameManager.init();
         await this._securityManager.init();
 
         this._map.generateMap();
@@ -93,6 +97,7 @@ export class Room extends Manager
 
         await this._botManager.dispose();
         await this._petManager.dispose();
+        await this._gameManager.dispose();
         await this._securityManager.dispose();
 
         this._unitManager.dispose();
@@ -256,24 +261,19 @@ export class Room extends Manager
         return this._map;
     }
 
-    public get unitManager(): RoomUnitManager
+    public get botManager(): RoomBotManager
     {
-        return this._unitManager;
+        return this._botManager;
     }
 
-    public get taskManager(): RoomTaskManager
+    public get gameManager(): RoomGameManager
     {
-        return this._taskManager;
+        return this._gameManager;
     }
 
     public get itemManager(): RoomItemManager
     {
         return this._itemManager;
-    }
-
-    public get botManager(): RoomBotManager
-    {
-        return this._botManager;
     }
 
     public get petManager(): RoomPetManager
@@ -284,6 +284,16 @@ export class Room extends Manager
     public get securityManager(): RoomSecurityManager
     {
         return this._securityManager;
+    }
+
+    public get taskManager(): RoomTaskManager
+    {
+        return this._taskManager;
+    }
+
+    public get unitManager(): RoomUnitManager
+    {
+        return this._unitManager;
     }
 
     public get wiredManager(): RoomWiredManager
