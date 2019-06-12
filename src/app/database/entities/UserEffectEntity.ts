@@ -17,10 +17,10 @@ export class UserEffectEntity
     @Column({ name: 'seconds_allowed' })
     public secondsAllowed: number;
 
-    @Column({ name: 'seconds_used' })
+    @Column({ name: 'seconds_used', default: 0 })
     public secondsUsed: number;
 
-    @Column({ name: 'timestamp_activated', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ name: 'timestamp_activated', nullable: true })
     public timestampActivated: Date;
 
     @Column({ name: 'timestamp_created', default: () => 'CURRENT_TIMESTAMP' })

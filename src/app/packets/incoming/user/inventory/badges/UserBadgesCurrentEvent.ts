@@ -2,7 +2,7 @@ import { Nitro } from '../../../../../Nitro';
 import { UserBadgesCurrentComposer } from '../../../../outgoing';
 import { Incoming } from '../../../Incoming';
 
-export class BadgesCurrentEvent extends Incoming
+export class UserBadgesCurrentEvent extends Incoming
 {
     public async process(): Promise<void>
     {
@@ -12,7 +12,7 @@ export class BadgesCurrentEvent extends Incoming
 
             if(!user) return;
 
-            await user.inventory.init();
+            await user.inventory.badges.init();
             
             this.client.processOutgoing(new UserBadgesCurrentComposer(user));
         }

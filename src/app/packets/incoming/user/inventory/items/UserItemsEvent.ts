@@ -8,56 +8,48 @@ export class UserItemsEvent extends Incoming
     {
         try
         {
-            //if(!this.client.user.inventory.items.isLoaded) await this.client.user.inventory.items.init();
-
             const items = this.client.user.inventory.items.items;
 
-            if(items)
+            if(!items) return this.client.processOutgoing(new UserItemsComposer(0, 0, null));
+            
+            const totalItems = items.length;
+
+            if(!totalItems) return this.client.processOutgoing(new UserItemsComposer(0, 0, null));
+            
+            let totalPages = Math.ceil(totalItems / 1000);
+
+            if(totalPages === 0) totalPages = 1;
+
+            let totalRead       = 0;
+            let currentCount    = 0;
+            let currentPage     = 0;
+            let currentItems: Item[] = [];
+
+            while(totalRead < totalItems)
             {
-                const totalItems = items.length;
+                if(currentCount === 0) currentPage++;
 
-                if(totalItems)
+                currentItems.push(items[totalRead]);
+
+                totalRead++;
+                currentCount++;
+
+                if(currentCount === 1000)
                 {
-                    let totalPages = Math.ceil(totalItems / 1000);
+                    this.client.processOutgoing(new UserItemsComposer(totalPages, currentPage, currentItems));
 
-                    if(totalPages === 0) totalPages = 1;
+                    currentCount = 0;
+                    currentItems = [];
+                }
+                
+                else if(totalRead === totalItems)
+                {
+                    this.client.processOutgoing(new UserItemsComposer(totalPages, currentPage, currentItems));
 
-                    let totalRead       = 0;
-                    let currentCount    = 0;
-                    let currentPage     = 0;
-                    let currentItems: Item[] = [];
-
-                    while(totalRead < totalItems)
-                    {
-                        if(currentCount === 0) currentPage++;
-
-                        currentItems.push(items[totalRead]);
-
-                        totalRead++;
-                        currentCount++;
-
-                        if(currentCount === 1000)
-                        {
-                            this.client.processOutgoing(new UserItemsComposer(totalPages, currentPage, currentItems));
-
-                            currentCount = 0;
-                            currentItems = [];
-                        }
-                        
-                        else if(totalRead === totalItems)
-                        {
-                            this.client.processOutgoing(new UserItemsComposer(totalPages, currentPage, currentItems));
-
-                            currentCount = 0;
-                            currentItems = [];
-                        }
-                    }
-
-                    return;
+                    currentCount = 0;
+                    currentItems = [];
                 }
             }
-            
-            this.client.processOutgoing(new UserItemsComposer(0, 0, null));
         }
 
         catch(err)

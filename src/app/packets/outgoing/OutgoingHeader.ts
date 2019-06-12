@@ -19,6 +19,7 @@ export enum OutgoingHeader
     CATALOG_PURCHASE             = 869,
     CATALOG_PURCHASE_FAILED      = 1404,
     CATALOG_PURCHASE_UNAVAILABLE = 3770,
+    CATALOG_SEARCH               = 3388,
     CATALOG_SOLD_OUT             = 377,
     CATALOG_UPDATED              = 1866,
     CLIENT_LATENCY               = 10,

@@ -1,13 +1,12 @@
-import { UserOutfitsComposer } from '../../../../outgoing';
 import { Incoming } from '../../../Incoming';
 
-export class OutfitsEvent extends Incoming
+export class UserEffectEnableEvent extends Incoming
 {
     public async process(): Promise<void>
     {
         try
         {
-            this.client.processOutgoing(new UserOutfitsComposer());
+            this.client.user.inventory.effects.enableEffect(this.packet.readInt());
         }
 
         catch(err)

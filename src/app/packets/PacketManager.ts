@@ -114,6 +114,7 @@ export class PacketManager
         this.addHandler(IncomingHeader.GIFT_CONFIG, IncomingCatalog.GiftConfigEvent);
         this.addHandler(IncomingHeader.DISCOUNT_CONFIG, IncomingCatalog.DiscountConfigEvent);
         this.addHandler(IncomingHeader.CATALOG_CLUB, IncomingCatalog.CatalogClubEvent);
+        this.addHandler(IncomingHeader.CATALOG_SEARCH, IncomingCatalog.CatalogSearchEvent);
     }
 
     private registerClient(): void
@@ -271,9 +272,9 @@ export class PacketManager
 
     private registerUser(): void
     {
-        this.addHandler(IncomingHeader.USER_BADGES, IncomingUser.BadgesEvent);
-        this.addHandler(IncomingHeader.USER_BADGES_CURRENT, IncomingUser.BadgesCurrentEvent);
-        this.addHandler(IncomingHeader.USER_BADGES_CURRENT_UPDATE, IncomingUser.BadgesCurrentUpdateEvent);
+        this.addHandler(IncomingHeader.USER_BADGES, IncomingUser.UserBadgesEvent);
+        this.addHandler(IncomingHeader.USER_BADGES_CURRENT, IncomingUser.UserBadgesCurrentEvent);
+        this.addHandler(IncomingHeader.USER_BADGES_CURRENT_UPDATE, IncomingUser.UserBadgesUpdateEvent);
 
         this.addHandler(IncomingHeader.USER_ITEMS, IncomingUser.UserItemsEvent);
         this.addHandler(IncomingHeader.USER_ITEMS_TEST, IncomingUser.UserItemsEvent);
@@ -282,6 +283,9 @@ export class PacketManager
         this.addHandler(IncomingHeader.USER_BOTS, IncomingUser.UserBotsEvent);
 
         this.addHandler(IncomingHeader.USER_RESPECT, IncomingUser.UserRespectEvent);
+
+        this.addHandler(IncomingHeader.USER_EFFECT_ACTIVATE, IncomingUser.UserEffectActivateEvent);
+        this.addHandler(IncomingHeader.USER_EFFECT_ENABLE, IncomingUser.UserEffectEnableEvent);
 
         this.addHandler(IncomingHeader.USER_CLUB, IncomingUser.UserClubEvent);
         this.addHandler(IncomingHeader.USER_CURRENCY, IncomingUser.UserCurrencyEvent);
@@ -292,8 +296,8 @@ export class PacketManager
         this.addHandler(IncomingHeader.USER_PROFILE, IncomingUser.UserProfileEvent);
         this.addHandler(IncomingHeader.USER_SETTINGS, IncomingUser.UserSettingsEvent);
         this.addHandler(IncomingHeader.USER_TAGS, IncomingUser.UserTagsEvent);
-        this.addHandler(IncomingHeader.USER_OUTFITS, IncomingUser.OutfitsEvent);
-        this.addHandler(IncomingHeader.USER_OUTFIT_SAVE, IncomingUser.OutfitSaveEvent);
+        this.addHandler(IncomingHeader.USER_OUTFITS, IncomingUser.UserOutfitsEvent);
+        this.addHandler(IncomingHeader.USER_OUTFIT_SAVE, IncomingUser.UserOutfitSaveEvent);
         this.addHandler(IncomingHeader.USER_MOTTO, IncomingUser.UserMottoEvent);
         this.addHandler(IncomingHeader.USER_HOME_ROOM, IncomingUser.UserHomeRoomEvent);
         this.addHandler(IncomingHeader.USER_FOLLOW, IncomingUser.UserFollowEvent);

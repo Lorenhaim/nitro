@@ -21,6 +21,7 @@ export enum IncomingHeader
     CATALOG_MODE                   = 1195,
     CATALOG_PAGE                   = 412,
     CATALOG_PURCHASE               = 3492,
+    CATALOG_SEARCH                 = 2594,
     CLIENT_LATENCY                 = 295,
     CLIENT_LATENCY_MEASURE         = 96,
     CLIENT_PONG                    = 2596,
@@ -155,6 +156,8 @@ export enum IncomingHeader
     USER_RESPECT                   = 2694,
     USER_SETTINGS                  = 2388,
     USER_TAGS                      = 17,
+    USER_EFFECT_ACTIVATE           = 2959,
+    USER_EFFECT_ENABLE             = 1752,
     WIRED_EFFECT_SAVE              = 2281,
     WIRED_TRIGGER_SAVE             = 1520
 }

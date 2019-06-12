@@ -5,6 +5,7 @@ export * from './CatalogPagesComposer';
 export * from './CatalogPurchaseComposer';
 export * from './CatalogPurchaseFailedComposer';
 export * from './CatalogPurchaseUnavailableComposer';
+export * from './CatalogSearchComposer';
 export * from './CatalogSoldOutComposer';
 export * from './CatalogUpdatedComposer';
 export * from './discount';

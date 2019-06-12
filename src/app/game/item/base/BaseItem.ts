@@ -182,21 +182,6 @@ export class BaseItem
         return false;
     }
 
-    // public hasInteraction(...interactions: InteractionType[]): boolean
-    // {
-    //     const types = [ ...interactions ];
-
-    //     if(!types) return false;
-        
-    //     const totalTypes = types.length;
-
-    //     if(!totalTypes) return false;
-        
-    //     for(let i = 0; i < totalTypes; i++) if(this._interaction.name === types[i]) return true;
-
-    //     return false;
-    // }
-
     public getRandomVending(): UnitHandItem
     {
         const totalVendingIds = this._vendingIds.length;

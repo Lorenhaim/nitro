@@ -1,5 +1,4 @@
 export * from './common';
-export * from './Config';
 export * from './database';
 export * from './game';
 export * from './networking';

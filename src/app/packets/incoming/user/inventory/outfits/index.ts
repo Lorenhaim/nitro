@@ -1,2 +1,2 @@
-export * from './OutfitSaveEvent';
-export * from './OutfitsEvent';
+export * from './UserOutfitSaveEvent';
+export * from './UserOutfitsEvent';

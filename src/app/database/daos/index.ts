@@ -16,4 +16,5 @@ export * from './UserBadgeDao';
 export * from './UserClothingDao';
 export * from './UserCurrencyDao';
 export * from './UserDao';
+export * from './UserEffectDao';
 export * from './UserOutfitDao';

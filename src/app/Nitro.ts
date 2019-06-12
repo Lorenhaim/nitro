@@ -25,12 +25,15 @@ export class Nitro
         try
         {
             console.log();
-            console.log(`       _   ___ __              `);
-            console.log(`      / | / (_) /__________    `);
-            console.log(`     /  |/ / / __/ ___/ __ \\  `);
-            console.log(`    / /|  / / /_/ /  / /_/ /   `);
-            console.log(`   /_/ |_/_/\\__/_/   \\____/  `);
-            console.log(`   v0.0.1 by Billsonnn         `);
+            console.log(`       _   ___ __`);
+            console.log(`      / | / (_) /__________`);
+            console.log(`     /  |/ / / __/ ___/ __ \\`);
+            console.log(`    / /|  / / /_/ /  / /_/ /`);
+            console.log(`   /_/ |_/_/\\__/_/   \\____/`);
+            console.log(`   v0.0.1 by Billsonnn`);
+            console.log();
+            console.log(`   Thanks for using Nitro. To report bugs`);
+            console.log(`   or issues join us on Discord: https://discord.gg/7etsMAs`);
             console.log();
             
             if(!config)

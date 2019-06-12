@@ -19,7 +19,7 @@ camera
 dist
 errors.txt
 docs
-src/app/Config.ts
+src/Config.ts
 src/plugins
 src/ssl
 plugins

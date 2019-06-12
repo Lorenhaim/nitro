@@ -1,6 +1,6 @@
 import { Incoming } from '../../../Incoming';
 
-export class BadgesCurrentUpdateEvent extends Incoming
+export class UserBadgesUpdateEvent extends Incoming
 {
     public async process(): Promise<void>
     {
@@ -15,8 +15,8 @@ export class BadgesCurrentUpdateEvent extends Incoming
 
                 if(slotNumber && badgeCode) badges.push({ slotNumber, badgeCode });
             }
-
-            if(badges.length) this.client.user.inventory.badges.setCurrentBadges(...badges);
+            
+            this.client.user.inventory.badges.setCurrentBadges(...badges);
         }
 
         catch(err)

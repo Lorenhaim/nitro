@@ -17,8 +17,9 @@
     "exclude": [
         "node_modules",
         "dist",
-        "swf",
+        "plugins",
+        "public",
         "sqls",
-        "camera"
+        "swf"
     ]
 }

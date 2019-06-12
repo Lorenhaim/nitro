@@ -127,6 +127,30 @@ export class CatalogManager extends Manager
         return null;
     }
 
+    public getItemByOfferId(offerId: number): CatalogItem
+    {
+        if(!offerId) return null;
+
+        console.log(offerId);
+        
+        const totalItems = this._items.length;
+
+        if(!totalItems) return null;
+        
+        for(let i = 0; i < totalItems; i++)
+        {
+            const item = this._items[i];
+
+            if(!item) continue;
+
+            if(item.offerId !== offerId) continue;
+
+            return item;
+        }
+
+        return null;
+    }
+
     public getItems(pageId: number): CatalogItem[]
     {
         if(!pageId) return null;

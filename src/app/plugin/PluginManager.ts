@@ -20,6 +20,16 @@ export class PluginManager extends Manager
         this._events    = [];
     }
 
+    protected async onInit(): Promise<void>
+    {
+        await this.loadPlugins();
+    }
+
+    protected async onDispose(): Promise<void>
+    {
+
+    }
+
     public getPlugin(name: string): NitroPlugin
     {
         if(!name) return null;
@@ -56,16 +66,6 @@ export class PluginManager extends Manager
         this._plugins.push(plugin);
 
         return plugin;
-    }
-
-    protected async onInit(): Promise<void>
-    {
-        await this.loadPlugins();
-    }
-
-    protected async onDispose(): Promise<void>
-    {
-
     }
 
     public registerEvent(event: typeof PluginEvent, handler: Function): void
