@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { Connection, createConnection } from 'typeorm';
 import { ConfigOptions, Logger } from './common';
 import { GameManager, GameScheduler } from './game';
@@ -41,11 +42,20 @@ export class Nitro
 
             Nitro._config = config;
 
+            if(config.general.environment === 'development')
+            {
+                config.database.entities.push(join(__dirname, '/database/entities/*Entity.ts'));
+            }
+            else
+            {
+                config.database.entities.push(join(__dirname, '/database/entities/*Entity.js'));
+            }
+
             Nitro._timestampStarted = Date.now();
 
             Nitro._logger.log(`Starting Nitro`);
 
-            Nitro._database          = await createConnection();
+            Nitro._database          = await createConnection(config.database);
             Nitro._gameManager       = new GameManager();
             Nitro._gameScheduler     = new GameScheduler();
             Nitro._packetManager     = new PacketManager();

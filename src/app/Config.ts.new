@@ -4,7 +4,20 @@ export const Config: ConfigOptions = {
     general: {
         siteName: 'Nitro',
         siteUrl: 'https://website.com',
-        production: 'PRODUCTION-201611291003-338511768'
+        production: 'PRODUCTION-201611291003-338511768',
+        environment: 'production'
+    },
+    database: {
+        type: 'mysql',
+        host: 'localhost',
+        port: 3306,
+        username: 'root',
+        password: '',
+        database: '',
+        entities: [],
+        synchronize: false, // always leave false unless you want to generate a clean database
+        logging: false,
+        logger: 'file'
     },
     captcha: {
         enabled: false,
@@ -30,14 +43,14 @@ export const Config: ConfigOptions = {
         port: 1242,
         enabled: true,
         url: {
-            figureData: 'https://nitrots.co/assets/gamedata/figuredata.xml',
-            furniData: 'https://nitrots.co/assets/gamedata/furnidata.xml',
-            productData: 'https://nitrots.co/assets/gamedata/productdata.txt',
-            swf: 'https://nitrots.co/assets/gordon/PRODUCTION-201611291003-338511768/Habbo.swf',
-            swfBase: 'https://nitrots.co/assets/gordon/',
-            texts: 'https://nitrots.co/assets/gamedata/external_texts.txt',
-            variables: 'https://nitrots.co/assets/gamedata/external.variables.txt',
-            avatarUrl: 'http://www.habbo.com/habbo-imaging/avatarimage?figure='
+            figureData: '',
+            furniData: '',
+            productData: '',
+            swf: '',
+            swfBase: '',
+            texts: '',
+            variables: '',
+            avatarUrl: ''
         }
     },
     game: {
@@ -57,12 +70,12 @@ export const Config: ConfigOptions = {
             },
             alert: {
                 enabled: false,
-                message: `Welcome to Nitro!\r\r`,
+                message: `Welcome to Nitro!`,
                 type: 'default'
             }
         },
         camera: {
-            savePath: "C:/mycamerapath/",
+            savePath: "C:/camerapath/",
             saveUrl: "https://website.com/camera/"
         },
         plugins: {
@@ -92,7 +105,7 @@ export const Config: ConfigOptions = {
             idleTimerMs: 600000,
             handItemMs: 300000,
             lookTimerMs: 4000,
-            roamTimerMs: 10000,
+            roamTimerMs: 60000,
             idleKickMs: 600000
         },
         furni: {

@@ -1,12 +1,15 @@
 import moment = require('moment');
+import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 
 export interface ConfigOptions
 {
     general: {
         siteName: string,
         siteUrl: string,
-        production: string
+        production: string,
+        environment: 'production' | 'development'
     },
+    database: MysqlConnectionOptions,
     captcha: {
         enabled: boolean,
         publicKey: string,
