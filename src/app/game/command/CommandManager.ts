@@ -6,6 +6,7 @@ import { CommandsListCommand } from './CommandsListCommand';
 import { CoordinatesCommand } from './CoordinatesCommand';
 import { CreditsCommand } from './CreditsCommand';
 import { EjectAllCommand } from './EjectAllCommand';
+import { FastWalkCommand } from './FastWalkCommand';
 import { GiveBadgeCommand } from './GiveBadgeCommand';
 import { HotelAlertCommand } from './HotelAlertCommand';
 import { PickupAllCommand } from './PickupAllCommand';
@@ -133,6 +134,7 @@ export class CommandManager extends Manager
         this.registerCommand(new CoordinatesCommand());
         this.registerCommand(new CreditsCommand());
         this.registerCommand(new EjectAllCommand());
+        this.registerCommand(new FastWalkCommand());
         this.registerCommand(new GiveBadgeCommand());
         this.registerCommand(new HotelAlertCommand());
         this.registerCommand(new PickupAllCommand());

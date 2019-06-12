@@ -85,69 +85,94 @@ export class UnitActionTask extends Task
 
         else if(unit.location.currentPath.length)
         {
-            const nextPosition = unit.location.currentPath.shift();
+            this.checkStep(unit, unit.location.currentPath.shift());
 
-            if(nextPosition.compare(unit.location.position)) return unit.location.stopWalking();
+            if(!unit.location.isFastWalking || !unit.location.fastWalkingSpeed) return;
 
-            if(!nextPosition) return unit.location.stopWalking();
-
-            const nextTile = unit.room.map.getValidTile(unit, nextPosition, unit.location.currentPath.length === 0);
-
-            if(!nextTile) return this.retryPath(unit);
-
-            if(Nitro.config.game.pathfinder.steps.allowDiagonals)
-            {
-                const firstCheck    = unit.room.map.getValidDiagonalTile(unit, new Position(nextPosition.x, unit.location.position.y));
-                const secondCheck   = unit.room.map.getValidDiagonalTile(unit, new Position(unit.location.position.x, nextPosition.y));
-
-                if(!firstCheck && !secondCheck) return unit.location.stopWalking();
-            }
+            if(unit.location.currentPath.length <= 1) return;
             
-            const nextItem      = nextTile.highestItem;
-            const currentItem   = unit.location.getCurrentItem();
-
-            if(currentItem)
+            for(let i = 0; i < unit.location.fastWalkingSpeed; i++)
             {
-                if(currentItem !== nextItem)
+                if(unit.location.positionNext)
                 {
-                    const interaction: any = currentItem.baseItem.interaction;
+                    const nextTile = unit.room.map.getTile(unit.location.positionNext);
 
-                    if(interaction && interaction.onLeave) interaction.onLeave(unit, currentItem, nextPosition);
+                    if(nextTile) nextTile.removeUnit(unit);
                 }
-            }
 
-            const currentTile = unit.location.getCurrentTile();
+                this.checkStep(unit, unit.location.currentPath.shift());
 
-            if(currentTile) currentTile.removeUnit(unit);
+                if(unit.location.currentPath.length > 1) continue;
 
-            nextTile.addUnit(unit);
-
-            unit.location.removeStatus(UnitStatusType.LAY, UnitStatusType.SIT);
-            unit.location.addStatus(new UnitStatus(UnitStatusType.MOVE, `${ nextTile.position.x },${ nextTile.position.y },${ nextTile.walkingHeight + unit.location.additionalHeight }`));
-
-            unit.location.position.setDirection(unit.location.position.calculateWalkDirection(nextPosition));
-            
-            unit.location.positionNext = nextPosition;
-
-            if(nextItem)
-            {
-                const interaction: any = nextItem.baseItem.interaction;
-
-                if(interaction)
-                {
-                    if(interaction.beforeStep) interaction.beforeStep(unit, nextItem);
-
-                    if(nextItem !== currentItem)
-                    {
-                        if(interaction.onEnter) interaction.onEnter(unit, nextItem);
-                    }
-                }
+                return;
             }
 
             unit.needsUpdate = true;
         }
 
         else return unit.location.stopWalking();
+    }
+
+    private checkStep(unit: Unit, position: Position): void
+    {
+        if(!position) return;
+
+        if(position.compare(unit.location.position)) return unit.location.stopWalking();
+
+        if(!position) return unit.location.stopWalking();
+
+        const nextTile = unit.room.map.getValidTile(unit, position, unit.location.currentPath.length === 0);
+
+        if(!nextTile) return this.retryPath(unit);
+
+        if(Nitro.config.game.pathfinder.steps.allowDiagonals)
+        {
+            const firstCheck    = unit.room.map.getValidDiagonalTile(unit, new Position(position.x, unit.location.position.y));
+            const secondCheck   = unit.room.map.getValidDiagonalTile(unit, new Position(unit.location.position.x, position.y));
+
+            if(!firstCheck && !secondCheck) return unit.location.stopWalking();
+        }
+        
+        const nextItem      = nextTile.highestItem;
+        const currentItem   = unit.location.getCurrentItem();
+
+        if(currentItem)
+        {
+            if(currentItem !== nextItem)
+            {
+                const interaction: any = currentItem.baseItem.interaction;
+
+                if(interaction && interaction.onLeave) interaction.onLeave(unit, currentItem, position);
+            }
+        }
+
+        const currentTile = unit.location.getCurrentTile();
+
+        if(currentTile) currentTile.removeUnit(unit);
+
+        nextTile.addUnit(unit);
+
+        unit.location.removeStatus(UnitStatusType.LAY, UnitStatusType.SIT);
+        unit.location.addStatus(new UnitStatus(UnitStatusType.MOVE, `${ nextTile.position.x },${ nextTile.position.y },${ nextTile.walkingHeight + unit.location.additionalHeight }`));
+
+        unit.location.position.setDirection(unit.location.position.calculateWalkDirection(position));
+        
+        unit.location.positionNext = position;
+
+        if(nextItem)
+        {
+            const interaction: any = nextItem.baseItem.interaction;
+
+            if(interaction)
+            {
+                if(interaction.beforeStep) interaction.beforeStep(unit, nextItem);
+
+                if(nextItem !== currentItem)
+                {
+                    if(interaction.onEnter) interaction.onEnter(unit, nextItem);
+                }
+            }
+        }
     }
 
     private retryPath(unit: Unit): void

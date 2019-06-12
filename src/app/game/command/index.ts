@@ -5,6 +5,7 @@ export * from './CommandsListCommand';
 export * from './CoordinatesCommand';
 export * from './CreditsCommand';
 export * from './EjectAllCommand';
+export * from './FastWalkCommand';
 export * from './GiveBadgeCommand';
 export * from './HotelAlertCommand';
 export * from './PickupAllCommand';

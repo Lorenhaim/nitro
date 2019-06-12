@@ -4,7 +4,7 @@ import { ItemEntity } from '../../database';
 import { Nitro } from '../../Nitro';
 import { ItemExtraDataComposer, ItemStateComposer, ItemWallUpdateComposer, OutgoingPacket } from '../../packets';
 import { AffectedPositions, Direction, Position } from '../pathfinder';
-import { Room, RoomTile, RoomTileState } from '../room';
+import { Room, RoomTile } from '../room';
 import { Unit, UnitType } from '../unit';
 import { User } from '../user';
 import { BaseItem, BaseItemType } from './base';
@@ -157,8 +157,6 @@ export class Item
             const tile = room.map.getTile(affectedPositions[i]);
 
             if(!tile) return false;
-
-            if(tile.state === RoomTileState.CLOSED) return false;
 
             if(tile.isDoor) return false;
 

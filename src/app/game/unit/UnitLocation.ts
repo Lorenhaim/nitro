@@ -21,13 +21,17 @@ export class UnitLocation
     private _position: Position;
     private _positionGoal: Position;
     private _positionNext: Position;
+    
+    private _currentPath: Position[];
+    private _isWalking: boolean;
+    private _isWalkingSelf: boolean;
+
+    private _isFastWalking: boolean;
+    private _fastWalkingSpeed: number;
 
     private _rolling: UnitRolling;
     private _teleporting: UnitTeleporting;
 
-    private _currentPath: Position[];
-    private _isWalking: boolean;
-    private _isWalkingSelf: boolean;
     private _additionalHeight: number;
     private _danceType: UnitDance;
     private _handType: UnitHandItem;
@@ -52,11 +56,15 @@ export class UnitLocation
         this._positionGoal      = null;
         this._positionNext      = null;
 
-        this._rolling           = null;
-
         this._currentPath       = [];
         this._isWalking         = false;
         this._isWalkingSelf     = true;
+
+        this._isFastWalking     = false;
+        this._fastWalkingSpeed  = 0;
+        
+        this._rolling           = null;
+
         this._additionalHeight  = 0;
         this._danceType         = null;
         this._handType          = null;
@@ -267,6 +275,27 @@ export class UnitLocation
         }
 
         this._unit.room.unitManager.processOutgoing(new UnitActionComposer(this._unit, action));
+    }
+
+    public fastWalk(flag: boolean = true, speed: number = 0): void
+    {
+        if(!this._unit || !this._unit.room) return;
+
+        if(flag)
+        {
+            this._fastWalkingSpeed  = speed || 1;
+
+            if(this._isFastWalking) return;
+
+            this._isFastWalking     = true;
+        }
+        else
+        {
+            if(!this._isFastWalking) return;
+
+            this._isFastWalking     = false;
+            this._fastWalkingSpeed  = 0;
+        }
     }
 
     public getStatus(type: UnitStatusType): UnitStatus
@@ -598,6 +627,31 @@ export class UnitLocation
         this._positionNext = position;
     }
 
+    public get currentPath(): Position[]
+    {
+        return this._currentPath;
+    }
+
+    public get isWalking(): boolean
+    {
+        return this._isWalking;
+    }
+
+    public get isWalkingSelf(): boolean
+    {
+        return this._isWalkingSelf;
+    }
+
+    public get isFastWalking(): boolean
+    {
+        return this._isFastWalking;
+    }
+
+    public get fastWalkingSpeed(): number
+    {
+        return this._fastWalkingSpeed;
+    }
+
     public get rolling(): UnitRolling
     {
         return this._rolling;
@@ -616,26 +670,6 @@ export class UnitLocation
     public set teleporting(teleporting: UnitTeleporting)
     {
         this._teleporting = teleporting;
-    }
-
-    public get currentPath(): Position[]
-    {
-        return this._currentPath;
-    }
-
-    public set currentPath(path: Position[])
-    {
-        this._currentPath = path;
-    }
-
-    public get isWalking(): boolean
-    {
-        return this._isWalking;
-    }
-
-    public get isWalkingSelf(): boolean
-    {
-        return this._isWalkingSelf;
     }
 
     public get additionalHeight(): number
