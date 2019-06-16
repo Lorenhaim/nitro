@@ -32,8 +32,8 @@ export class Nitro
             console.log(`   /_/ |_/_/\\__/_/   \\____/`);
             console.log(`   v0.0.1 by Billsonnn`);
             console.log();
-            console.log(`   Thanks for using Nitro. To report bugs`);
-            console.log(`   or issues join us on Discord: https://discord.gg/7etsMAs`);
+            console.log(`   Thanks for using Nitro. To report bugs or issues`);
+            console.log(`   join us on Discord: https://discord.gg/7etsMAs`);
             console.log();
             
             if(!config)

@@ -224,14 +224,13 @@ export class Position
             {
                 const position = new Position(x, y);
 
-                if(position)
-                {
-                    if(this.compare(position)) continue;
+                if(!position) continue;
+                
+                if(this.compare(position)) continue;
 
-                    const distance = position.getDistanceAround(this);
+                const distance = position.getDistanceAround(this);
 
-                    if(distance <= radius) positions.push(new Position(x, y));
-                }
+                if(distance <= radius) positions.push(new Position(x, y));
             }
         }
 

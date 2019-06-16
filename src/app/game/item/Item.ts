@@ -4,11 +4,11 @@ import { ItemEntity } from '../../database';
 import { Nitro } from '../../Nitro';
 import { ItemExtraDataComposer, ItemStateComposer, ItemWallUpdateComposer, OutgoingPacket } from '../../packets';
 import { AffectedPositions, Direction, Position } from '../pathfinder';
-import { Room, RoomTile } from '../room';
+import { BattleBanzaiGame, Room, RoomTile } from '../room';
 import { Unit, UnitType } from '../unit';
 import { User } from '../user';
 import { BaseItem, BaseItemType } from './base';
-import { InteractionGate, InteractionGroupGate, InteractionRoller, InteractionTeleport } from './interaction';
+import { InteractionBattleBanzaiGate, InteractionGate, InteractionGroupGate, InteractionRoller, InteractionTeleport } from './interaction';
 import { ItemRolling } from './ItemRolling';
 
 export class Item
@@ -237,21 +237,24 @@ export class Item
 
     public setExtraData(extraData: string | number, send: boolean = true): void
     {
-        this._entity.extraData = extraData === null ? null : extraData.toString();
+        extraData = extraData === null ? null : extraData.toString();
+
+        if(this._entity.extraData === extraData) return;
+
+        this._entity.extraData = extraData;
 
         this.save();
 
-        if(this._room && send)
+        if(!this._room || !send) return;
+        
+        if(this._baseItem.type === BaseItemType.WALL)
         {
-            if(this._baseItem.type === BaseItemType.WALL)
-            {
-                this._room.unitManager.processOutgoing(new ItemWallUpdateComposer(this));
-            }
-            else
-            {
-                if(this.isLimited) this._room.unitManager.processOutgoing(new ItemExtraDataComposer(this));
-                else this._room.unitManager.processOutgoing(new ItemStateComposer(this));
-            }
+            this._room.unitManager.processOutgoing(new ItemWallUpdateComposer(this));
+        }
+        else
+        {
+            if(this.isLimited) this._room.unitManager.processOutgoing(new ItemExtraDataComposer(this));
+            else this._room.unitManager.processOutgoing(new ItemStateComposer(this));
         }
     }
 
@@ -539,19 +542,20 @@ export class Item
             return false;
         }
 
-        return this._baseItem.canWalk;
-    }
-
-    public get isItemClosed(): boolean
-    {
-        if(this._baseItem.hasInteraction(InteractionGate, InteractionTeleport))
+        if(this._baseItem.hasInteraction(InteractionBattleBanzaiGate))
         {
-            if(this._entity.extraData === '0') return true;
+            if(!this._room) return false;
 
-            return false;
+            const game = this._room.gameManager.getActiveGame(BattleBanzaiGame);
+
+            if(!game) return true;
+
+            if(game.isStarted) return false;
+
+            return true;
         }
 
-        return !this._baseItem.canWalk;
+        return this._baseItem.canWalk;
     }
 
     public get timestampCreated(): Date

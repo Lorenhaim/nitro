@@ -61,7 +61,9 @@ export class InteractionTeleport extends InteractionDefault implements OnStop, O
             }
             else
             {
-                item.setExtraData(1, false);
+                item.setExtraData(1);
+
+                unit.canLocate = false;
 
                 setTimeout(() =>
                 {
@@ -76,10 +78,6 @@ export class InteractionTeleport extends InteractionDefault implements OnStop, O
     public beforeStep(unit: Unit, item: Item): void
     {
         super.beforeStep(unit, item);
-
-        unit.canLocate = false;
-
-        item.setExtraData(1);
     }
 
     public onStop(unit: Unit, item: Item): void

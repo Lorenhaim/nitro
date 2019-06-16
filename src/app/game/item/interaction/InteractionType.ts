@@ -10,6 +10,7 @@ export enum InteractionType
     BATTLE_BANZAI_SCOREBOARD_RED    = 'bb_scoreboard_red',
     BATTLE_BANZAI_SCOREBOARD_YELLOW = 'bb_scoreboard_yellow',
     BATTLE_BANZAI_TILE              = 'bb_tile',
+    BATTLE_BANZAI_TIMER             = 'bb_counter',
     CLOTHING                        = 'clothing',
     DICE                            = 'dice',
     DIMMER                          = 'dimmer',

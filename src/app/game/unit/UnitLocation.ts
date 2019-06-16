@@ -466,6 +466,7 @@ export class UnitLocation
         
         this._position.x    = this._positionNext.x;
         this._position.y    = this._positionNext.y;
+        this._positionNext  = null;
 
         this.updateHeight(this._position);
 

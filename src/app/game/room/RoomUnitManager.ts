@@ -249,6 +249,8 @@ export class RoomUnitManager
 
             if(currentTile) currentTile.removeUnit(activeUnit);
 
+            this._room.gameManager.removeUnitFromGames(activeUnit);
+
             this.processOutgoing(new UnitRemoveComposer(activeUnit.id));
 
             activeUnit.room = null;

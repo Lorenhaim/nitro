@@ -1,5 +1,6 @@
+import { Unit } from '../../unit';
 import { Room } from '../Room';
-import { GameTeam, GameTeamIdentifier } from './teams';
+import { GamePlayer, GameTeam, GameTeamColor } from './teams';
 
 export abstract class RoomGame
 {
@@ -17,9 +18,9 @@ export abstract class RoomGame
     {
         if(!(room instanceof Room)) throw new Error('invalid_room');
 
-        this._room  = room;
+        this._room          = room;
 
-        this._teams = [];
+        this._teams         = [];
 
         this._isStarted     = false;
         this._isStarting    = false;
@@ -58,9 +59,20 @@ export abstract class RoomGame
 
     protected abstract async onEnd(): Promise<void>;
 
-    public getTeam(identifier: GameTeamIdentifier): GameTeam
+    public getTeam(color: GameTeamColor): GameTeam
     {
-        if(!identifier) return null;
+        if(color === null) return null;
+
+        const instance = this.getActiveTeam(color);
+
+        if(instance) return instance;
+
+        return this.createTeam(color);
+    }
+
+    public getActiveTeam(color: GameTeamColor): GameTeam
+    {
+        if(color === null) return null;
 
         const totalTeams = this._teams.length;
 
@@ -72,7 +84,7 @@ export abstract class RoomGame
 
             if(!team) continue;
 
-            if(team.identifier !== identifier) continue;
+            if(team.color !== color) continue;
 
             return team;
         }
@@ -80,9 +92,117 @@ export abstract class RoomGame
         return null;
     }
 
-    public hasTeam(identifier: GameTeamIdentifier): boolean
+    public getTeamForUnit(unit: Unit): GameTeam
     {
-        return this.getTeam(identifier) !== null;
+        if(!unit) return null;
+
+        const totalTeams = this._teams.length;
+
+        if(!totalTeams) return null;
+
+        for(let i = 0; i < totalTeams; i++)
+        {
+            const team = this._teams[i];
+
+            if(!team) continue;
+
+            if(!team.hasPlayer(unit)) continue;
+
+            return team;
+        }
+
+        return null;
+    }
+
+    public getPlayerForTeam(unit: Unit): GamePlayer
+    {
+        if(!unit) return null;
+
+        const totalTeams = this._teams.length;
+
+        if(!totalTeams) return null;
+
+        for(let i = 0; i < totalTeams; i++)
+        {
+            const team = this._teams[i];
+
+            if(!team) continue;
+
+            const player = team.getPlayer(unit);
+
+            if(!player) continue;
+
+            return player;
+        }
+
+        return null;
+    }
+
+    public removePlayerFromTeam(unit: Unit): void
+    {
+        if(!unit) return null;
+
+        const team = this.getTeamForUnit(unit);
+
+        if(!team) return;
+
+        team.removePlayer(unit);
+    }
+
+    public hasTeam(color: GameTeamColor): boolean
+    {
+        return this.getTeam(color) !== null;
+    }
+
+    protected createTeam(color: GameTeamColor): GameTeam
+    {
+        if(color === null) return null;
+
+        const instance = this.getActiveTeam(color);
+
+        if(instance) return instance;
+
+        const team = new GameTeam(this, color);
+
+        if(!team) return null;
+
+        this._teams.push(team);
+
+        return team;
+    }
+
+    public resetTeams(removePlayers: boolean = false): void
+    {
+        const totalTeams = this._teams.length;
+
+        if(!totalTeams) return;
+
+        for(let i = 0; i < totalTeams; i++)
+        {
+            const team = this._teams[i];
+
+            if(!team) continue;
+            
+            if(removePlayers) team.resetPlayers();
+            
+            team.reset();
+        }
+    }
+
+    public resetAllScores(): void
+    {
+        const totalTeams = this._teams.length;
+
+        if(!totalTeams) return;
+
+        for(let i = 0; i < totalTeams; i++)
+        {
+            const team = this._teams[i];
+
+            if(!team) continue;
+
+            team.resetScore();
+        }
     }
 
     public get room(): Room

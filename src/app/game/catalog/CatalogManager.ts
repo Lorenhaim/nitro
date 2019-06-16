@@ -130,8 +130,6 @@ export class CatalogManager extends Manager
     public getItemByOfferId(offerId: number): CatalogItem
     {
         if(!offerId) return null;
-
-        console.log(offerId);
         
         const totalItems = this._items.length;
 
