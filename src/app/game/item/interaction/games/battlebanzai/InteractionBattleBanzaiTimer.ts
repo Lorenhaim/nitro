@@ -1,4 +1,4 @@
-import { BattleBanzaiGame } from '../../../../room';
+import { GameType } from '../../../../room';
 import { Unit } from '../../../../unit';
 import { Item } from '../../../Item';
 import { InteractionDefault } from '../../InteractionDefault';
@@ -18,12 +18,12 @@ export class InteractionBattleBanzaiTimer extends InteractionDefault
 
         if(!currentRoom) return;
 
-        const gameInstance = currentRoom.gameManager.getGame(BattleBanzaiGame);
+        const gameInstance = currentRoom.gameManager.getGame(GameType.BATTLE_BANZAI);
 
         if(!gameInstance) return;
 
         setTimeout(async () => await gameInstance.start(), 300);
         
-        return;
+        super.onClick(unit, item, false);
     }
 }

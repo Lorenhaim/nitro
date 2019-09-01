@@ -1,4 +1,4 @@
-import { BattleBanzaiGame } from '../../../../room';
+import { BattleBanzaiGame, GameType } from '../../../../room';
 import { Unit } from '../../../../unit';
 import { Item } from '../../../Item';
 import { OnClick, OnStep } from '../../actions';
@@ -13,7 +13,7 @@ export class InteractionBattleBanzaiTile extends InteractionDefault implements O
 
     public onClick(unit: Unit, item: Item): void
     {        
-        return;
+        super.onClick(unit, item, false);
     }
 
     public onStep(unit: Unit, item: Item): void
@@ -24,11 +24,9 @@ export class InteractionBattleBanzaiTile extends InteractionDefault implements O
 
         if(!currentRoom) return;
 
-        const game = currentRoom.gameManager.getActiveGame(BattleBanzaiGame);
+        const game = <BattleBanzaiGame> currentRoom.gameManager.getActiveGame(GameType.BATTLE_BANZAI);
 
         if(!game) return;
-
-        if(!(game instanceof BattleBanzaiGame)) return;
 
         if(!game.isStarted) return;
 

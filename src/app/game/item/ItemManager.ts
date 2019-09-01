@@ -2,7 +2,7 @@ import { getManager } from 'typeorm';
 import { Manager } from '../../common';
 import { ItemBaseDao, ItemEntity } from '../../database';
 import { BaseItem } from './base';
-import { Interaction, InteractionBattleBanzaiGateBlue, InteractionBattleBanzaiGateGreen, InteractionBattleBanzaiGateRed, InteractionBattleBanzaiGateYellow, InteractionBattleBanzaiScoreboardBlue, InteractionBattleBanzaiScoreboardGreen, InteractionBattleBanzaiScoreboardRed, InteractionBattleBanzaiScoreboardYellow, InteractionBattleBanzaiTile, InteractionBattleBanzaiTimer, InteractionClothing, InteractionDefault, InteractionDice, InteractionDimmer, InteractionExchange, InteractionGate, InteractionGroupFurni, InteractionGroupGate, InteractionMultiHeight, InteractionPetJump, InteractionRoller, InteractionStackHelper, InteractionTeleport, InteractionVendingMachine, WiredEffectUnitTeleport, WiredTriggerEnterRoom, WiredTriggerSaysSomething, WiredTriggerStateChanged, WiredTriggerWalkOnFurni } from './interaction';
+import { Interaction, InteractionBattleBanzaiGateBlue, InteractionBattleBanzaiGateGreen, InteractionBattleBanzaiGateRed, InteractionBattleBanzaiGateYellow, InteractionBattleBanzaiScoreboardBlue, InteractionBattleBanzaiScoreboardGreen, InteractionBattleBanzaiScoreboardRed, InteractionBattleBanzaiScoreboardYellow, InteractionBattleBanzaiSphere, InteractionBattleBanzaiTeleport, InteractionBattleBanzaiTile, InteractionBattleBanzaiTimer, InteractionClothing, InteractionDefault, InteractionDice, InteractionDimmer, InteractionExchange, InteractionFreezeGateBlue, InteractionFreezeGateGreen, InteractionFreezeGateRed, InteractionFreezeGateYellow, InteractionFreezeGeyser, InteractionFreezeScoreboardBlue, InteractionFreezeScoreboardGreen, InteractionFreezeScoreboardRed, InteractionFreezeScoreboardYellow, InteractionFreezeTile, InteractionFreezeTimer, InteractionGate, InteractionGroupFurni, InteractionGroupGate, InteractionMultiHeight, InteractionPetJump, InteractionRoller, InteractionStackHelper, InteractionTeleport, InteractionVendingMachine, WiredEffectUnitTeleport, WiredTriggerEnterRoom, WiredTriggerSaysSomething, WiredTriggerStateChanged, WiredTriggerWalkOnFurni } from './interaction';
 import { Item } from './Item';
 
 export class ItemManager extends Manager
@@ -33,19 +33,21 @@ export class ItemManager extends Manager
 
     public getBaseItem(id: number): BaseItem
     {
-        if(id)
+        if(!id) return null;
+        
+        const totalItems = this._baseItems.length;
+
+        if(!totalItems) return null;
+        
+        for(let i = 0; i < totalItems; i++)
         {
-            const totalItems = this._baseItems.length;
+            const base = this._baseItems[i];
 
-            if(totalItems)
-            {
-                for(let i = 0; i < totalItems; i++)
-                {
-                    const base = this._baseItems[i];
+            if(!base) continue;
 
-                    if(base.id === id) return base;
-                }
-            }
+            if(base.id !== id) continue;
+
+            return base;
         }
 
         return null;
@@ -55,14 +57,17 @@ export class ItemManager extends Manager
     {
         const totalInteractions = this._interactions.length;
 
-        if(totalInteractions)
+        if(!totalInteractions) return null;
+        
+        for(let i = 0; i < totalInteractions; i++)
         {
-            for(let i = 0; i < totalInteractions; i++)
-            {
-                const interaction = this._interactions[i];
+            const interaction = this._interactions[i];
 
-                if(interaction.name === name) return interaction;
-            }
+            if(!interaction) continue;
+
+            if(interaction.name !== name) continue;
+
+            return interaction;
         }
 
         return null;
@@ -99,6 +104,8 @@ export class ItemManager extends Manager
         this._interactions.push(new WiredTriggerWalkOnFurni());
 
         // BATTLE BANZAI
+        this._interactions.push(new InteractionBattleBanzaiSphere());
+        this._interactions.push(new InteractionBattleBanzaiTeleport());
         this._interactions.push(new InteractionBattleBanzaiTile());
         this._interactions.push(new InteractionBattleBanzaiTimer());
 
@@ -111,6 +118,21 @@ export class ItemManager extends Manager
         this._interactions.push(new InteractionBattleBanzaiScoreboardGreen());
         this._interactions.push(new InteractionBattleBanzaiScoreboardRed());
         this._interactions.push(new InteractionBattleBanzaiScoreboardYellow());
+
+        // FREEZE
+        this._interactions.push(new InteractionFreezeGeyser());
+        this._interactions.push(new InteractionFreezeTile());
+        this._interactions.push(new InteractionFreezeTimer());
+
+        this._interactions.push(new InteractionFreezeGateBlue());
+        this._interactions.push(new InteractionFreezeGateGreen());
+        this._interactions.push(new InteractionFreezeGateRed());
+        this._interactions.push(new InteractionFreezeGateYellow());
+
+        this._interactions.push(new InteractionFreezeScoreboardBlue());
+        this._interactions.push(new InteractionFreezeScoreboardGreen());
+        this._interactions.push(new InteractionFreezeScoreboardRed());
+        this._interactions.push(new InteractionFreezeScoreboardYellow());
 
         this.logger.log(`Loaded ${ this._interactions.length } interactions`);
     }

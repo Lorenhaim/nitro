@@ -14,13 +14,13 @@ export class WiredTriggerEnterRoom extends WiredTrigger
 
     public canTrigger(item: Item, ...args: any[]): boolean
     {
+        if(!item || !item.wiredData) return false;
+
         const user = args[0];
 
         if(!user || !(user instanceof User)) return false;
 
-        if(!item.wiredData) return true;
-
-        if(user.details.username.localeCompare(item.wiredData) === -1) return false;
+        if(user.details.username.toLocaleLowerCase().localeCompare(item.wiredData.toLocaleLowerCase()) === -1) return false;
 
         return true;
     }

@@ -40,62 +40,56 @@ export class RoomTile
 
     public addUnit(unit: Unit): void
     {
-        if(unit && !this._isDoor)
+        if(!unit || this._isDoor) return;
+        
+        const totalUnits = this._units.length;
+        
+        if(totalUnits)
         {
-            const totalUnits = this._units.length;
-
-            if(totalUnits)
+            for(let i = 0; i < totalUnits; i++)
             {
-                for(let i = 0; i < totalUnits; i++)
-                {
-                    const existingUnit = this._units[i];
+                const existingUnit = this._units[i];
 
-                    if(existingUnit.id === unit.id) return;
-                }
+                if(existingUnit.id === unit.id) return;
             }
-
-            this._units.push(unit);
         }
+
+        this._units.push(unit);
     }
 
     public removeUnit(unit: Unit): void
     {
-        if(unit)
+        if(!unit) return;
+        
+        const totalUnits = this._units.length;
+
+        if(!totalUnits) return;
+        
+        for(let i = 0; i < totalUnits; i++)
         {
-            const totalUnits = this._units.length;
+            const result = this._units[i];
 
-            if(totalUnits)
-            {
-                for(let i = 0; i < totalUnits; i++)
-                {
-                    const result = this._units[i];
+            if(result.id !== unit.id) continue;
 
-                    if(result.id === unit.id)
-                    {
-                        this._units.splice(i, 1);
+            this._units.splice(i, 1);
 
-                        return;
-                    }
-                }
-            }
+            return;
         }
     }
 
     public getItem(item: Item): Item
     {
-        if(item)
+        if(!item) return null;
+        
+        const totalItems = this._items.length;
+
+        if(!totalItems) return null;
+        
+        for(let i = 0; i < totalItems; i++)
         {
-            const totalItems = this._items.length;
+            const activeItem = this._items[i];
 
-            if(totalItems)
-            {
-                for(let i = 0; i < totalItems; i++)
-                {
-                    const activeItem = this._items[i];
-
-                    if(activeItem.id === item.id) return activeItem;
-                }
-            }
+            if(activeItem.id === item.id) return activeItem;
         }
 
         return null;
@@ -127,7 +121,9 @@ export class RoomTile
 
                 if(!item) continue;
 
-                if(item.baseItem.interaction instanceof type) return true;
+                if(!(item.baseItem.interaction instanceof type)) continue;
+
+                return true;
             }
         }
 
@@ -136,22 +132,21 @@ export class RoomTile
 
     public addItem(item: Item): void
     {
-        if(item)
+        if(!item) return;
+        
+        const totalItems = this._items.length;
+
+        if(totalItems)
         {
-            const totalItems = this._items.length;
-
-            if(totalItems)
+            for(let i = 0; i < totalItems; i++)
             {
-                for(let i = 0; i < totalItems; i++)
-                {
-                    const activeItem = this._items[i];
+                const activeItem = this._items[i];
 
-                    if(activeItem.id === item.id) return;
-                }
+                if(activeItem.id === item.id) return;
             }
-
-            this._items.push(item);
         }
+
+        this._items.push(item);
     }
 
     public clearItems(): void
@@ -165,14 +160,14 @@ export class RoomTile
         this._units = [];
     }
 
-    public touches(roomTile: RoomTile): boolean
+    public touches(tile: RoomTile): boolean
     {
-        return roomTile && this._position.getDistanceAround(roomTile.position) <= 2;
+        return tile && this._position.getDistanceAround(tile.position) <= 2;
     }
 
     public getRelativeHeight(): number
     {
-        if(this._state === RoomTileState.CLOSED || !this.canStack || this.isDoor) return 32767;
+        if(this._state === RoomTileState.CLOSED || !this.canStack) return 32767;
 
         return this._tileHeight * 256;
     }
@@ -252,6 +247,8 @@ export class RoomTile
     public get canStack(): boolean
     {
         if(this._highestItem) return this._highestItem.baseItem.canStack;
+
+        if(this._isDoor) return false;
 
         return true;
     }

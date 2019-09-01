@@ -27,25 +27,20 @@ export class PathFinder
         const fromItem  = currentTile.highestItem;
         const toItem    = nextTile.highestItem;
 
-        if(nextHeight > currentHeight + Nitro.config.game.pathfinder.steps.maxWalkingHeight) return false;
+        if(Math.abs(nextHeight - currentHeight) > Math.abs(Nitro.config.game.pathfinder.steps.maxWalkingHeight)) return false;
 
         if(Nitro.config.game.pathfinder.steps.allowDiagonals && !position.compare(positionNext))
         {
             const firstCheck    = currentRoom.map.getValidDiagonalTile(unit, new Position(positionNext.x, position.y));
             const secondCheck   = currentRoom.map.getValidDiagonalTile(unit, new Position(position.x, positionNext.y));
 
-            if(!firstCheck && !secondCheck) return null;
+            if(!firstCheck && !secondCheck) return false;
         }
 
         if(!toItem) return true;
 
-        if(isGoal) return toItem.baseItem.canWalk || toItem.isItemOpen;
-        else
-        {
-            if(toItem.baseItem.canSit || toItem.baseItem.canLay) return null;
-
-            return toItem.baseItem.canWalk || toItem.isItemOpen && !toItem.baseItem.canSit && !toItem.baseItem.canLay;
-        }
+        if(isGoal) return toItem.isItemOpen;
+        else return toItem.isItemOpen && !toItem.baseItem.canSit && !toItem.baseItem.canLay;
     }
 
     public static makePath(unit: Unit, position: Position): Position[]

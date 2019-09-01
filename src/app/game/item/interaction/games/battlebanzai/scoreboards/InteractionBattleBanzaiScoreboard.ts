@@ -7,11 +7,11 @@ export class InteractionBattleBanzaiScoreboard extends InteractionDefault implem
 {
     constructor(name: string = null)
     {
-        super(name || 'bb_scoreboard');
+        super(name || 'bb_s');
     }
 
     public onClick(unit: Unit, item: Item): void
     {
-        return;
+        super.onClick(unit, item, false);
     }
 }

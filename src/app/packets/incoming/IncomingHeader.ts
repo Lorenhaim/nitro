@@ -59,7 +59,7 @@ export enum IncomingHeader
     ITEM_DIMMER_SETTINGS           = 2813,
     ITEM_DIMMER_TOGGLE             = 2296,
     ITEM_EXCHANGE_REDEEM           = 3115,
-    ITEM_FLOOR_CLICK               = 99,
+    ITEM_MULTISTATE                = 99,
     ITEM_FLOOR_UPDATE              = 248,
     ITEM_PAINT                     = 711,
     ITEM_PICKUP                    = 3456,
@@ -159,5 +159,13 @@ export enum IncomingHeader
     USER_EFFECT_ACTIVATE           = 2959,
     USER_EFFECT_ENABLE             = 1752,
     WIRED_EFFECT_SAVE              = 2281,
-    WIRED_TRIGGER_SAVE             = 1520
+    WIRED_TRIGGER_SAVE             = 1520,
+    TRADE                          = 1481,
+    TRADE_CLOSE                    = 2551,
+    TRADE_ITEM                     = 3107,
+    TRADE_ITEMS                    = 1263,
+    TRADE_ACCEPT                   = 3863,
+    TRADE_ITEM_REMOVE              = 3845,
+    TRADE_CANCEL                   = 2341,
+    TRADE_CONFIRM                  = 2760
 }

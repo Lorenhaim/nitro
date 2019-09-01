@@ -49,7 +49,7 @@ export class ItemWallComposer extends Outgoing
         
         this.packet.writeInt(totalItems);
 
-        for(let i = 0; i < totalItems; i++) items[i].parseWallData(this.packet);
+        for(let i = 0; i < totalItems; i++) items[i].parseItem(this.packet);
         
         return this.packet.prepare();
     }

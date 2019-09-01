@@ -21,7 +21,7 @@ export class ItemDiceClickEvent extends Incoming
 
             if(!(interaction instanceof InteractionDice)) return;
 
-            interaction.onClick(this.client.user.unit, item);
+            interaction.onDiceClick(this.client.user.unit, item);
         }
 
         catch(err)

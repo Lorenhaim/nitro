@@ -1,4 +1,4 @@
-export const enum UnitHandItem
+export enum UnitHandItem
 {
     NONE        = 0,
     TEA         = 1,

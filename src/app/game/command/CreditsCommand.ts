@@ -7,7 +7,7 @@ export class CreditsCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'credits');
+        super(PermissionList.MODIFY_CREDITS, 'credits');
     }
 
     public async process(user: User, parts: string[]): Promise<void>

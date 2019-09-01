@@ -6,7 +6,7 @@ import { GroupRank } from '../group';
 import { WiredTriggerSaysSomething } from '../item';
 import { Position } from '../pathfinder';
 import { Pet } from '../pet';
-import { ChatBubble, ChatType, Room, RoomEnterError, RoomRightsType, RoomState } from '../room';
+import { ChatBubble, ChatType, Room, RoomEnterError, RoomRightsType, RoomState, TradeUser } from '../room';
 import { PermissionList } from '../security';
 import { User } from '../user';
 import { UnitStatus, UnitStatusType } from './status';
@@ -34,6 +34,7 @@ export class Unit
     private _roomQueue: Room;
     private _location: UnitLocation;
     private _timer: UnitTimer;
+    private _tradeUser: TradeUser;
 
     private _isIdle: boolean;
     private _idleStart: number;
@@ -85,6 +86,7 @@ export class Unit
         this._roomQueue     = null;
         this._location      = new UnitLocation(this);
         this._timer         = new UnitTimer(this);
+        this._tradeUser     = null;
 
         this._isIdle        = false;
         this._idleStart     = 0;
@@ -121,8 +123,6 @@ export class Unit
 
             this._timer.stopTimers();
 
-            if(this._room) this._room.unitManager.removeUnit(this, false);
-
             if(this._roomQueue)
             {
                 this._roomQueue.unitManager.removeQueue(this);
@@ -130,13 +130,18 @@ export class Unit
                 if(sendHotelView && this._user) this._user.connections.processOutgoing(new RoomAccessDeniedComposer());
             }
 
-            this._room          = null;
-            this._roomQueue     = null;
-            this._isRoomLoading = false;
+            if(this._tradeUser) this._tradeUser.stopTrading();
+
+            if(this._room) this._room.unitManager.removeUnit(this, false);
 
             if(this._location) this._location.reset();
 
             this.connectUnit(null);
+
+            this._room          = null;
+            this._roomQueue     = null;
+            this._isRoomLoading = false;
+            this._tradeUser     = null;
 
             if(this._user)
             {
@@ -191,9 +196,9 @@ export class Unit
 
         if(this._isRoomLoading) return;
 
-        this._isRoomLoading = true;
-
         this.reset(false);
+
+        this._isRoomLoading = true;
 
         const room = await Nitro.gameManager.roomManager.getRoom(id);
 
@@ -332,11 +337,9 @@ export class Unit
         {
             if(status)
             {
-                let roomId = this._room.id + 0;
-
                 this._room.unitManager.removeUnit(this, true, false);
 
-                this.fowardRoom(roomId);
+                this.fowardRoom(this._room.id);
             }
             else this._room.unitManager.removeUnit(this, true, true);
         }
@@ -397,6 +400,10 @@ export class Unit
     public chat(type: ChatType, message: string): void
     {
         if(!message || !this._room) return;
+
+        const messageLength = message.length;
+
+        if(messageLength < 1 || messageLength > 100) return;
 
         if(this._lastChat && this._lastChat > (TimeHelper.currentTimestamp - 250)) return;
 
@@ -495,6 +502,8 @@ export class Unit
     public loadRights(): void
     {
         if(!this._room) return;
+
+        if(this._type !== UnitType.USER) return;
 
         let rightsType: RoomRightsType = RoomRightsType.NONE;
 
@@ -629,6 +638,16 @@ export class Unit
     public get timer(): UnitTimer
     {
         return this._timer;
+    }
+
+    public get tradeUser(): TradeUser
+    {
+        return this._tradeUser;
+    }
+
+    public set tradeUser(trade: TradeUser)
+    {
+        this._tradeUser = trade;
     }
 
     public get isIdle(): boolean

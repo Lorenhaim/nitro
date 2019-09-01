@@ -1,12 +1,12 @@
-import { BanzaiTile, BattleBanzaiGame, GamePlayer, RoomGame } from '../room';
+import { BanzaiTile, GamePlayer, GameTile, RoomGame } from '../room';
 import { Position, standardPoints } from './position';
 
 export class FloodFill
 {
-    public static getFill(player: GamePlayer, tile: BanzaiTile): BanzaiTile[]
+    public static getFill(player: GamePlayer, tile: BanzaiTile): GameTile[]
     {
-        const closed: BanzaiTile[]    = [];
-        const open: BanzaiTile[]      = [];
+        const closed: GameTile[]    = [];
+        const open: GameTile[]      = [];
 
         open.push(tile);
 
@@ -26,7 +26,7 @@ export class FloodFill
                 {
                     for(let i = 0; i < totalNeighbours; i++)
                     {
-                        const neighbour = neighbours[i];
+                        const neighbour = <BanzaiTile> neighbours[i];
 
                         if(!neighbour) return null;
 
@@ -43,11 +43,9 @@ export class FloodFill
         return closed;
     }
 
-    public static neighbours(game: RoomGame, position: Position): BanzaiTile[]
+    public static neighbours(game: RoomGame, position: Position, radius: number = 1): GameTile[]
     {
-        if(!(game instanceof BattleBanzaiGame)) return null;
-
-        const tiles: BanzaiTile[] = [];
+        const tiles: GameTile[] = [];
 
         const totalPoints = standardPoints.length;
 
@@ -59,11 +57,16 @@ export class FloodFill
 
             if(!point) continue;
 
-            const temp = position.addPosition(point);
+            let temp: Position = position;
 
-            if(!temp) continue;
+            for(let j = 0; j < radius; j++)
+            {
+                temp = temp.addPosition(point);
 
-            tiles.push(game.getTile(temp));
+                if(!temp) continue;
+
+                tiles.push(game.getTile(temp));
+            }
         }
 
         if(!tiles.length) return null;

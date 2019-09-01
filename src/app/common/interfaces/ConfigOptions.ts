@@ -10,11 +10,6 @@ export interface ConfigOptions
         environment: 'production' | 'development'
     },
     database: MysqlConnectionOptions,
-    captcha: {
-        enabled: boolean,
-        publicKey: string,
-        secretKey: string
-    },
     logging: {
         enabled: boolean,
         packets: {
@@ -29,21 +24,6 @@ export interface ConfigOptions
             web: boolean
         }
     },
-    client: {
-        ip: string,
-        port: number,
-        enabled: boolean,
-        url: {
-            figureData: string,
-            furniData: string,
-            productData: string,
-            swf: string,
-            swfBase: string,
-            texts: string,
-            variables: string,
-            avatarUrl: string
-        }
-    },
     game: {
         enabled: boolean,
         ip: string,
@@ -56,8 +36,7 @@ export interface ConfigOptions
         },
         login: {
             security: {
-                validateProduction: boolean,
-                validateVariables: boolean
+                validateProduction: boolean
             },
             alert: {
                 enabled: boolean,
@@ -69,10 +48,6 @@ export interface ConfigOptions
             savePath: string,
             saveUrl: string
         },
-        plugins: {
-            enabled: boolean,
-            path: string
-        },
         catalog: {
             maxPurchaseStack: number
         }
@@ -80,7 +55,14 @@ export interface ConfigOptions
             maxFriends: number,
             maxFriendsHabboClub: number
         },
-        rollerTick: number,
+        tasks: {
+            roller: {
+                tick: number
+            },
+            unit: {
+                tick: number
+            }
+        },
         pathfinder: {
             steps: {
                 ignoreDoorTile: boolean,
@@ -90,7 +72,15 @@ export interface ConfigOptions
             }
         },
         rooms: {
-            maxUnitsPerRoom: number
+            maxUnitsPerRoom: number,
+            games: {
+                freeze: {
+                    geyserRandomMs: number
+                }
+            }
+        },
+        newUser: {
+            homeRoom: number
         },
         unit: {
             idleTimerMs: number,
@@ -100,6 +90,11 @@ export interface ConfigOptions
             idleKickMs: number
         },
         furni: {
+            placement: {
+                onUnit: boolean,
+                maxZ: number,
+                forceMatchingTileHeights: boolean
+            },
             wired: {
                 maxItems: number
             }
@@ -114,6 +109,10 @@ export interface ConfigOptions
             maxLength: number,
             maxLengthType: moment.unitOfTime.DurationConstructor,
             validateIp: boolean
+        },
+        express: {
+            cors: boolean,
+            allowedUrl: string
         }
     }
 }

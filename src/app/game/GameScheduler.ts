@@ -53,17 +53,17 @@ export class GameScheduler extends Manager
 
     protected async onInit(): Promise<void>
     {
-        this._itemInterval  = setInterval(async () => await this.saveItems(), 10000);
+        this._itemInterval  = setInterval(() => this.saveItems(), 10000);
 
-        this._roomInterval  = setInterval(async () => await this.saveRooms(), 10000);
+        this._roomInterval  = setInterval(() => this.saveRooms(), 10000);
 
-        this._userInterval  = setInterval(async () => await this.saveUsers(), 10000);
+        this._userInterval  = setInterval(() => this.saveUsers(), 10000);
 
-        this._petInterval   = setInterval(async () => await this.savePets(), 10000);
+        this._petInterval   = setInterval(() => this.savePets(), 10000);
 
-        this._botInterval   = setInterval(async () => await this.saveBots(), 10000);
+        this._botInterval   = setInterval(() => this.saveBots(), 10000);
 
-        this._groupInterval = setInterval(async () => await this.saveGroups(), 10000);
+        this._groupInterval = setInterval(() => this.saveGroups(), 10000);
     }
 
     protected async onDispose(): Promise<void>

@@ -4,6 +4,6 @@ export class InteractionBattleBanzaiScoreboardGreen extends InteractionBattleBan
 {
     constructor()
     {
-        super('bb_scoreboard_green');
+        super('bb_s_green');
     }
 }

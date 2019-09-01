@@ -23,6 +23,8 @@ export abstract class WiredTrigger extends InteractionWired implements OnClick, 
         if(!unit.hasRights()) return;
         
         unit.user.connections.processOutgoing(new WiredTriggerConfigComposer(item));
+
+        super.onClick(unit, item, false);
     }
 
     public onTriggered(item: Item): void

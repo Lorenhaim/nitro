@@ -11,14 +11,13 @@ export class SecurityRegisterEvent extends Incoming
         {
             if(this.client instanceof SocketClient)
             {
-                const userId = await Nitro.gameManager.securityManager.authenticationManager.registerUser(this.packet.readString(), this.packet.readString(), this.packet.readString(), this.packet.readString(), this.client.ip);
+                const userId = await Nitro.gameManager.securityManager.authenticationManager.registerUser(this.packet.readString(), this.packet.readString(), this.packet.readString(), this.client.ip);
 
-                if(userId)
-                {
-                    const webTicket = await Nitro.gameManager.securityManager.ticketManager.generateWebTicket(userId, this.client.ip);
+                if(!userId) return this.client.processOutgoing(new SecurityRegisterComposer(false));
+                
+                const webTicket = await Nitro.gameManager.securityManager.ticketManager.generateWebTicket(userId, this.client.ip);
 
-                    this.client.processOutgoing(new SecurityRegisterComposer(true, webTicket));
-                }
+                this.client.processOutgoing(new SecurityRegisterComposer(true, webTicket));
             }
         }
 

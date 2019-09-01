@@ -34,16 +34,16 @@ export abstract class Client<T>
         this._willDestoryUser   = true;
 
         this._pingLast          = null;
-        this._pingInterval      = setInterval(async () => await this.requestPong(), 20000);
+        this._pingInterval      = setInterval(() => this.requestPong(), 20000);
         this._pongReceived      = false;
 
         this._isDisposed        = false;
         this._isDisposing       = false;
     }
 
-    private async requestPong(): Promise<void>
+    private requestPong(): Promise<void>
     {
-        if(this._pingLast && !this._pongReceived) return await this.dispose();
+        if(this._pingLast && !this._pongReceived) return this.dispose();
 
         this._pingLast      = TimeHelper.currentTimestamp;
         this._pongReceived  = false;
@@ -75,7 +75,7 @@ export abstract class Client<T>
         if(user instanceof User) this._user = user;
     }
 
-    public async processIncoming(...incoming: IncomingPacket[]): Promise<void>
+    public processIncoming(...incoming: IncomingPacket[]): Promise<void>
     {
         const packets = [ ...incoming ];
 
@@ -119,7 +119,7 @@ export abstract class Client<T>
 
             try
             {
-                await instance.process();
+                instance.process();
             }
 
             catch(err)

@@ -1,4 +1,4 @@
-export const enum RoomPaintType
+export enum RoomPaintType
 {
     WALLPAPER   = 'wallpaper',
     FLOOR       = 'floor',

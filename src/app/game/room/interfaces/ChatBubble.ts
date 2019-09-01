@@ -1,4 +1,4 @@
-export const enum ChatBubble
+export enum ChatBubble
 {
     NORMAL         = 0,
     ALERT          = 1,

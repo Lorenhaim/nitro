@@ -1,4 +1,4 @@
-export const enum NavigatorSearchAction
+export enum NavigatorSearchAction
 {
     NONE    = 0,
     MORE    = 1,

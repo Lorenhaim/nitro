@@ -79,9 +79,7 @@ export class SecurityTicketEvent extends Incoming
             }
 
             else if(this.client instanceof SocketClient)
-            {
-                if(Nitro.config.captcha.enabled) await Nitro.gameManager.securityManager.authenticationManager.validateCaptcha(this.packet.readString(), this.client.ip);
-                    
+            {    
                 const userId = await Nitro.gameManager.securityManager.ticketManager.checkWebTicket(this.packet.readString(), this.client.ip);
 
                 if(!userId) return this.client.processOutgoing(new SecurityTicketComposer(false));

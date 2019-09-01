@@ -1,9 +1,11 @@
-import { ConfigOptions, Nitro } from './app';
+import { Nitro } from './app';
 import { Config } from './Config';
 
-async function start(config: ConfigOptions)
+async function start()
 {
-    await Nitro.bootstrap(config);
+    await Nitro.bootstrap(Config);
+
+    await Nitro.start();
 }
 
-start(Config);
+start();

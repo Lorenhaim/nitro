@@ -8,10 +8,9 @@ export class UnitSignEvent extends Incoming
         {
             const currentRoom = this.client.user.unit.room;
 
-            if(currentRoom)
-            {
-                if(this.client.user.unit.canLocate) this.client.user.unit.location.sign(this.packet.readInt());
-            }
+            if(!currentRoom) return;
+            
+            this.client.user.unit.location.sign(this.packet.readInt());
         }
 
         catch(err)

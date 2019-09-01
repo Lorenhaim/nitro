@@ -44,7 +44,7 @@ export class RollingComposer extends Outgoing
         }
         else this.packet.writeInt(0);
         
-        this.packet.writeInt(this._rollerData.roller.id);
+        this.packet.writeInt(this._rollerData.roller ? this._rollerData.roller.id : 0);
 
         if(this._unit)
         {

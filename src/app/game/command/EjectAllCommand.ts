@@ -19,7 +19,7 @@ export class EjectAllCommand extends Command
 
         if(!items || !items.length) return;
 
-        currentRoom.itemManager.removeItem(user, ...items);
+        currentRoom.itemManager.removeItem(user, false, ...items);
     }
 
     public get usage(): string

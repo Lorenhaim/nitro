@@ -17,11 +17,6 @@ export class InteractionTeleport extends InteractionDefault implements OnStop, O
         if(user && item) item.setExtraData(0);
     }
 
-    public onEnter(unit: Unit, item: Item): void
-    {
-        super.onEnter(unit, item);
-    }
-
     public onStep(unit: Unit, item: Item): void
     {
         super.onStep(unit, item);
@@ -73,6 +68,8 @@ export class InteractionTeleport extends InteractionDefault implements OnStop, O
                 }, 300);
             }
         }
+
+        super.onClick(unit, item, false);
     }
 
     public beforeStep(unit: Unit, item: Item): void

@@ -1,6 +1,6 @@
 import { OutgoingPacket } from '../../../packets';
 import { Position } from '../../pathfinder';
-import { Unit, UnitEffect } from '../../unit';
+import { Unit, UnitEffect, UnitType } from '../../unit';
 import { User } from '../../user';
 import { Item } from '../Item';
 import { BeforeStep, OnClick, OnEnter, OnLeave, OnMove, OnStep, OnStop, ParseExtraData } from './actions';
@@ -13,7 +13,7 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
         super(name || 'default');
     }
 
-    public onClick(unit: Unit, item: Item, toggleState: boolean = false): void
+    public onClick(unit: Unit, item: Item, toggleState: boolean = true): void
     {
         if(!unit || !item) return;
 
@@ -21,30 +21,30 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
         
         if(!room) return;
 
-        //room.wiredManager.processTrigger(WiredTriggerStateChanged, this);
-
-        if(toggleState) return item.toggleState();
+        if(toggleState) item.toggleState();
     }
 
     public onEnter(unit: Unit, item: Item): void
     {
-        if(unit && item)
+        if(!unit || !item) return;
+
+        if(item.baseItem.hasEffect)
         {
-            if(item.baseItem.hasEffect)
+            const gender = unit.type === UnitType.USER ? unit.user.details.gender : null;
+
+            const effectId = item.baseItem.getRandomEffect(gender);
+
+            if(effectId)
             {
                 if(unit.location.effectType)
                 {
                     if(item.baseItem.effectIds.indexOf(unit.location.effectType) === -1)
                     {
-                        const effectId = item.baseItem.getRandomEffect(unit.user.details.gender);
-
                         if(effectId) unit.location.effect(effectId);
                     }
                 }
                 else
                 {
-                    const effectId = item.baseItem.getRandomEffect(unit.user.details.gender);
-
                     if(effectId) unit.location.effect(effectId);
                 }
             }
@@ -53,27 +53,25 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
 
     public onLeave(unit: Unit, item: Item, positionNext: Position = null): void
     {
-        if(unit && item)
+        if(!unit || !item) return;
+        
+        const room = item.room;
+
+        if(!room) return;
+        
+        if(item.baseItem.hasEffect)
         {
-            const room = item.room;
-
-            if(room)
+            if(positionNext)
             {
-                if(item.baseItem.hasEffect)
-                {
-                    if(positionNext)
-                    {
-                        const nextTile = room.map.getTile(positionNext);
+                const nextTile = room.map.getTile(positionNext);
 
-                        if(nextTile && nextTile.highestItem)
-                        {
-                            if(nextTile.highestItem.baseItem !== item.baseItem) unit.location.effect(UnitEffect.NONE);
-                        }
-                        else unit.location.effect(UnitEffect.NONE);
-                    }
-                    else unit.location.effect(UnitEffect.NONE);
+                if(nextTile && nextTile.highestItem)
+                {
+                    if(nextTile.highestItem.baseItem !== item.baseItem) unit.location.effect(UnitEffect.NONE);
                 }
+                else unit.location.effect(UnitEffect.NONE);
             }
+            else unit.location.effect(UnitEffect.NONE);
         }
     }
 
@@ -89,20 +87,23 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
         
         if(item.baseItem.hasEffect)
         {
-            if(unit.location.effectType)
-            {
-                if(item.baseItem.effectIds.indexOf(unit.location.effectType) === -1)
-                {
-                    const effectId = item.baseItem.getRandomEffect(unit.user.details.gender);
+            const gender = unit.type === UnitType.USER ? unit.user.details.gender : null;
 
+            const effectId = item.baseItem.getRandomEffect(gender);
+
+            if(effectId)
+            {
+                if(unit.location.effectType)
+                {
+                    if(item.baseItem.effectIds.indexOf(unit.location.effectType) === -1)
+                    {
+                        if(effectId) unit.location.effect(effectId);
+                    }
+                }
+                else
+                {
                     if(effectId) unit.location.effect(effectId);
                 }
-            }
-            else
-            {
-                const effectId = item.baseItem.getRandomEffect(unit.user.details.gender);
-
-                if(effectId) unit.location.effect(effectId);
             }
         }
              
@@ -113,14 +114,15 @@ export class InteractionDefault extends Interaction implements OnClick, OnEnter,
 
         else if(item.baseItem.canLay)
         {
-            const closestPillow = item.room.map.getClosestValidPillow(unit, unit.location.position);
+            const pillow = item.room.map.convertToValidPillow(unit, unit.location.position, item);
 
-            if(closestPillow)
+            if(pillow)
             {
-                if(!closestPillow.compare(unit.location.position))
+                if(!pillow.compare(unit.location.position))
                 {
-                    unit.location.position.x = closestPillow.x;
-                    unit.location.position.y = closestPillow.y;
+
+                    unit.location.position.x = pillow.x;
+                    unit.location.position.y = pillow.y;
                 }
 
                 unit.location.lay(true, item.baseItem.stackHeight, item.position.direction);

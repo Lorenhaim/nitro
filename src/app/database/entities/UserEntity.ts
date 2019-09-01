@@ -41,7 +41,7 @@ export class UserEntity
     @Column({ name: 'gender', type: 'enum', enum: UnitGender, default: UnitGender.MALE })
     public gender: UnitGender;
 
-    @Column({ name: 'figure', default: 'hr-115-42.hd-195-19.ch-3030-82.lg-275-1408.fa-1201.ca-1804-64' })
+    @Column({ name: 'figure', default: 'lg-270-82.hd-180-1.ch-210-66.sh-290-81.hr-100-40' })
     public figure: string;
 
     @Column({ name: 'rank_id', nullable: true })

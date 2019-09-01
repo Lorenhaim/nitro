@@ -1,0 +1,9 @@
+export enum TradeError
+{
+    TRADING_DISABLED        = 1,
+    USER_TRADING_DISABLED   = 2,
+    TARGET_TRADING_DISABLED = 4,
+    ROOM_TRADING_DISABLED   = 6,
+    TRADING_ACTIVE          = 7,
+    TARGET_TRADING_ACTIVE   = 8
+}

@@ -1,6 +1,6 @@
 import { SocketClient } from '../../../networking';
 import { Nitro } from '../../../Nitro';
-import { SecurityTicketComposer } from '../../outgoing';
+import { SecurityTicketComposer, UserHomeRoomComposer, UserPermissionsComposer, UserRightsComposer } from '../../outgoing';
 import { Incoming } from '../Incoming';
 
 export class SecurityLoginEvent extends Incoming
@@ -11,10 +11,6 @@ export class SecurityLoginEvent extends Incoming
         {
             if(this.client instanceof SocketClient)
             {
-                // if(Emulator.config.getBoolean('captcha.enabled', false))
-                // {
-                //     if(!Emulator.gameManager.securityManager.authenticationManager.validateCaptcha(this.packet.readString(), this.client.ip))
-                // }
 
                 const userId = await Nitro.gameManager.securityManager.authenticationManager.checkCredentials(this.packet.readString(), this.packet.readString());
 
@@ -47,7 +43,11 @@ export class SecurityLoginEvent extends Incoming
 
                     const webTicket = await Nitro.gameManager.securityManager.ticketManager.generateWebTicket(this.client.user.id, this.client.ip);
 
-                    this.client.processOutgoing(new SecurityTicketComposer(true, webTicket));
+                    this.client.processOutgoing(
+                        new SecurityTicketComposer(true, webTicket),
+                        new UserHomeRoomComposer(),
+                        new UserRightsComposer(),
+                        new UserPermissionsComposer());
 
                     return;
                 }
@@ -59,7 +59,6 @@ export class SecurityLoginEvent extends Incoming
             if(this.client instanceof SocketClient)
             {
                 if(err && err.message === 'invalid_login') this.client.processOutgoing(new SecurityTicketComposer(false));
-                if(err && err.message === 'invalid_captcha') this.client.processOutgoing(new SecurityTicketComposer(false));
             }
         }
     }

@@ -1,4 +1,4 @@
-export const enum BotSetting
+export enum BotSetting
 {
     FIGURE      = 1,
     CHAT        = 2,

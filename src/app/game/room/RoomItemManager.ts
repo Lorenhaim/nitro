@@ -2,7 +2,8 @@ import { Manager } from '../../common';
 import { ItemDao } from '../../database';
 import { Nitro } from '../../Nitro';
 import { GenericNotificationListComposer, ItemFloorAddComposer, ItemFloorRemoveComposer, ItemFloorUpdateComposer, ItemWallAddComposer, ItemWallRemoveComposer, ItemWallUpdateComposer, RoomPaintComposer } from '../../packets';
-import { BaseItemType, Interaction, InteractionDimmer } from '../item';
+import { RollingComposer } from '../../packets/outgoing/room/RollingComposer';
+import { BaseItemType, Interaction, InteractionDimmer, ItemRolling, RollerData } from '../item';
 import { Item } from '../item/Item';
 import { NotificationList, NotificationMessage, NotificationType } from '../notification';
 import { AffectedPositions, Position } from '../pathfinder';
@@ -270,7 +271,7 @@ export class RoomItemManager extends Manager
         }
     }
 
-    public moveItem(user: User, item: Item, position: Position): void
+    public moveItem(user: User, item: Item, position: Position, rolling: boolean = false): void
     {
         if(!user || !item || !position) return;
 
@@ -332,21 +333,44 @@ export class RoomItemManager extends Manager
             }
 
             const oldPosition = item.position.copy();
-            
-            item.position.setDirection(position.direction);
-            
-            item.position.x = position.x;
-            item.position.y = position.y;
 
-            const tile = item.getTile();
+            if(rolling)
+            {
+                const rollingData = new RollerData(null, oldPosition, position);
 
-            if(tile && tile.highestItem !== item) item.position.z = tile.tileHeight;
+                const nextTile = this._room.map.getTile(position);
+
+                const nextHeight = nextTile && nextTile.highestItem !== item ? nextTile.tileHeight : item.position.z;
+
+                item.rolling = new ItemRolling(item, rollingData, oldPosition.z, nextHeight);
+
+                item.position.x = item.rolling.rollerData.positionNext.x;
+                item.position.y = item.rolling.rollerData.positionNext.y;
+                item.position.z = item.rolling.nextHeight;
+
+                rollingData.items.push(item);
+                
+                this._room.unitManager.processOutgoing(new RollingComposer(rollingData));
+
+                setTimeout(() => item.rolling = null, 100);
+            }
+            else
+            {
+                item.position.setDirection(position.direction);
+                
+                item.position.x = position.x;
+                item.position.y = position.y;
+
+                const tile = item.getTile();
+    
+                if(tile && tile.highestItem !== item) item.position.z = tile.tileHeight;
+
+                this._room.unitManager.processOutgoing(new ItemFloorUpdateComposer(item));
+            }
 
             const affectedPositions = [ ...AffectedPositions.getPositions(item, oldPosition), ...AffectedPositions.getPositions(item) ];
 
             item.save();
-            
-            this._room.unitManager.processOutgoing(new ItemFloorUpdateComposer(item));
 
             if(affectedPositions.length) this._room.map.updatePositions(true, ...affectedPositions);
         }
@@ -356,7 +380,7 @@ export class RoomItemManager extends Manager
         if(interaction && interaction.onMove) interaction.onMove(user, item);
     }
 
-    public removeItem(user: User, ...items: Item[]): void
+    public removeItem(user: User, animate: boolean = true, ...items: Item[]): void
     {
         if(!this._room.details.allowEditing) return user.connections.processOutgoing(new GenericNotificationListComposer(new NotificationList(NotificationType.FURNI_PLACEMENT_ERROR).quickMessage(NotificationMessage.NO_EDITING)));
 
@@ -418,7 +442,7 @@ export class RoomItemManager extends Manager
 
                     affectedPositions.push(...AffectedPositions.getPositions(activeItem, activeItem.position));
                     
-                    this._room.unitManager.processOutgoing(new ItemFloorRemoveComposer(activeItem));
+                    this._room.unitManager.processOutgoing(new ItemFloorRemoveComposer(activeItem, animate));
 
                     if(!item.willRemove && activeItem.userId === user.id)
                     {

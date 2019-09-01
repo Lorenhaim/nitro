@@ -1,11 +1,12 @@
 import { Nitro } from '../../Nitro';
-import { GroupBadgesComposer, ItemFloorComposer, ItemWallComposer, Outgoing, RoomDoorbellCloseComposer, RoomInfoComposer, RoomInfoOwnerComposer, RoomPaintComposer, RoomPromotionComposer, RoomScoreComposer, RoomThicknessComposer, UnitComposer, UnitDanceComposer, UnitEffectComposer, UnitHandItemComposer, UnitIdleComposer, UnitRemoveComposer, UnitStatusComposer, UserFowardRoomComposer } from '../../packets';
+import { GroupBadgesComposer, ItemFloorComposer, ItemWallComposer, Outgoing, RoomDoorbellCloseComposer, RoomInfoComposer, RoomInfoOwnerComposer, RoomPaintComposer, RoomPromotionComposer, RoomScoreComposer, RoomThicknessComposer, RoomTradeErrorComposer, UnitComposer, UnitDanceComposer, UnitEffectComposer, UnitHandItemComposer, UnitIdleComposer, UnitRemoveComposer, UnitStatusComposer, UserFowardRoomComposer } from '../../packets';
 import { Group } from '../group';
 import { InteractionTeleport, WiredTriggerEnterRoom } from '../item';
 import { Position } from '../pathfinder';
 import { Room } from '../room';
 import { Unit, UnitType } from '../unit';
 import { RoomPaintType } from './interfaces';
+import { TradeError, TradeSession } from './trading';
 
 export class RoomUnitManager
 {
@@ -13,6 +14,8 @@ export class RoomUnitManager
 
     private _units: Unit[];
     private _unitsQueuing: Unit[];
+
+    private _tradeSessions: TradeSession[];
 
     constructor(room: Room)
     {
@@ -22,12 +25,14 @@ export class RoomUnitManager
 
         this._units         = [];
         this._unitsQueuing  = [];
+        this._tradeSessions = [];
     }
 
     public dispose(): void
     {
-        this.removeAllUnits();
+        this.removeAllTrades();
         this.removeAllQueues();
+        this.removeAllUnits();
     }
 
     public getUnit(id: number): Unit
@@ -212,9 +217,7 @@ export class RoomUnitManager
 
     public removeAllUnits(runReset: boolean = true, sendHotelView: boolean = true): void
     {
-        if(!this._units.length) return;
-        
-        for(let i = this._units.length - 1; i >= 0; i--) this.removeUnit(this._units[i], runReset, sendHotelView, false);
+        if(this._units.length) for(let i = this._units.length - 1; i >= 0; i--) this.removeUnitAtIndex(i, runReset, sendHotelView, false);
 
         this.updateTotalUsers();
         this._room.tryDispose();
@@ -236,92 +239,170 @@ export class RoomUnitManager
 
             if(activeUnit !== unit) continue;
 
-            const currentItem = activeUnit.location.getCurrentItem();
-
-            if(currentItem)
-            {
-                const interaction: any = currentItem.baseItem.interaction;
-
-                if(interaction && interaction.onLeave) interaction.onLeave(activeUnit, currentItem);
-            }
-
-            const currentTile = activeUnit.location.getCurrentTile();
-
-            if(currentTile) currentTile.removeUnit(activeUnit);
-
-            this._room.gameManager.removeUnitFromGames(activeUnit);
-
-            this.processOutgoing(new UnitRemoveComposer(activeUnit.id));
-
-            activeUnit.room = null;
-
-            if(runReset) activeUnit.reset(sendHotelView);
-            
-            this._units.splice(i, 1);
-
-            if(updateRoom) this.updateTotalUsers();
-
-            break;
+            return this.removeUnitAtIndex(i, runReset, sendHotelView, updateRoom);
         }
-
-        if(updateRoom) this._room.tryDispose();
     }
 
-    public removeAllQueues(runReset: boolean = true, sendHotelView: boolean = true): void
+    private removeUnitAtIndex(i: number, runReset: boolean = true, sendHotelView: boolean = true, updateRoom: boolean = true): void
     {
-        if(!this._unitsQueuing.length) return;
-        
-        for(let i = this._unitsQueuing.length - 1; i >= 0; i--) this.removeQueue(this._unitsQueuing[i]);
+        if(i === -1) return;
 
-        this._room.tryDispose();
-    }
+        const unit = this._units[i];
 
-    public removeQueues(...units: Unit[]): void
-    {
-        const removedQueues = [ ...units ];
+        if(!unit) return;
 
-        if(!removedQueues) return;
+        const currentItem = unit.location.getCurrentItem();
 
-        const totalRemovedQueues = removedQueues.length;
-
-        if(!totalRemovedQueues) return;
-
-        for(let i = 0; i < totalRemovedQueues; i++)
+        if(currentItem)
         {
-            const removedQueue = removedQueues[i];
+            const interaction: any = currentItem.baseItem.interaction;
 
-            if(!removedQueue) continue;
-
-            this.removeQueue(removedQueue);
+            if(interaction && interaction.onLeave) interaction.onLeave(unit, currentItem);
         }
+
+        const currentTile = unit.location.getCurrentTile();
+
+        if(currentTile) currentTile.removeUnit(unit);
+
+        this._room.gameManager.removeUnitFromGames(unit);
+
+        this.processOutgoing(new UnitRemoveComposer(unit.id));
+
+        unit.room = null;
+
+        if(runReset) unit.reset(sendHotelView);
+            
+        this._units.splice(i, 1);
+
+        if(updateRoom)
+        {
+            this.updateTotalUsers();
+
+            this._room.tryDispose();
+        }
+    }
+
+    public removeAllQueues(): void
+    {
+        if(this._unitsQueuing.length) for(let i = this._unitsQueuing.length - 1; i >= 0; i--) this.removeQueueAtIndex(i);
     }
 
     public removeQueue(unit: Unit): void
     {
         if(!unit) return;
 
-        const totalQueue = this._unitsQueuing.length;
+        const totalQueues = this._unitsQueuing.length;
 
-        if(!totalQueue) return;
+        if(!totalQueues) return;
 
-        for(let i = 0; i < totalQueue; i++)
+        for(let i = 0; i < totalQueues; i++)
         {
-            const foundUnit = this._unitsQueuing[i];
+            const activeQueue = this._unitsQueuing[i];
 
-            if(!foundUnit) continue;
+            if(!activeQueue) continue;
 
-            if(foundUnit !== unit) continue;
+            if(activeQueue !== unit) continue;
 
-            if(foundUnit.type !== UnitType.USER) continue;
-
-            foundUnit.roomQueue = null;
-
-            this._room.securityManager.rightsOutgoing(new RoomDoorbellCloseComposer(foundUnit.user.details.username));
-
-            this._unitsQueuing.splice(i, 1);
-
-            return;
+            return this.removeQueueAtIndex(i);
         }
+    }
+
+    private removeQueueAtIndex(i: number): void
+    {
+        if(i === -1) return;
+
+        const unit = this._unitsQueuing[i];
+
+        if(!unit) return;
+
+        unit.roomQueue = null;
+
+        this._room.securityManager.rightsOutgoing(new RoomDoorbellCloseComposer(unit.user.details.username));
+            
+        this._unitsQueuing.splice(i, 1);
+    }
+
+    public getTrade(unit: Unit): TradeSession
+    {
+        if(!unit) return null;
+
+        const totalTrades = this._tradeSessions.length;
+
+        if(!totalTrades) return null;
+
+        for(let i = 0; i < totalTrades; i++)
+        {
+            const trade = this._tradeSessions[i];
+
+            if(!trade) continue;
+
+            const activeUnit = trade.getTrader(unit);
+
+            if(!activeUnit) continue;
+
+            return trade;
+        }
+
+        return null;
+    }
+
+    public startTrading(unit: Unit, target: Unit): void
+    {
+        if(!unit || !target) return;
+
+        if(unit.type !== UnitType.USER || target.type !== UnitType.USER) return;
+
+        if(unit.tradeUser) return unit.user.connections.processOutgoing(new RoomTradeErrorComposer(TradeError.TRADING_ACTIVE));
+
+        if(target.tradeUser) return unit.user.connections.processOutgoing(new RoomTradeErrorComposer(TradeError.TARGET_TRADING_ACTIVE, target.user.details.username));
+
+        const trade = new TradeSession(this._room);
+
+        if(!trade) return;
+
+        if(!trade.addTrader(unit) || !trade.addTrader(target)) trade.stopTrading(null, false);
+
+        this._tradeSessions.push(trade);
+
+        trade.startTrading();
+    }
+
+    public removeAllTrades(): void
+    {  
+        if(this._tradeSessions.length) for(let i = this._tradeSessions.length - 1; i >= 0; i--) this.removeTradeAtIndex(i);
+    }
+
+    public removeTrade(trade: TradeSession, notify: boolean = true): void
+    {
+        if(!trade) return;
+
+        const totalTrades = this._tradeSessions.length;
+
+        if(!totalTrades) return;
+
+        for(let i = 0; i < totalTrades; i++)
+        {
+            const activeTrade = this._tradeSessions[i];
+
+            if(!activeTrade) continue;
+
+            if(activeTrade !== trade) continue;
+
+            return this.removeTradeAtIndex(i, notify);
+        }
+    }
+
+    private removeTradeAtIndex(i: number, notify: boolean = true): void
+    {
+        if(i === -1) return;
+
+        const trade = this._tradeSessions[i];
+
+        if(!trade) return;
+
+        if(notify) trade.stopTrading(null, false);
+            
+        this._tradeSessions.splice(i, 1);
     }
 
     public processOutgoing(...composers: Outgoing[]): void

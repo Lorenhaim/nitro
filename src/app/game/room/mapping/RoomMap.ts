@@ -1,6 +1,6 @@
 import { NumberHelper } from '../../../common';
 import { RoomStackHeightComposer } from '../../../packets';
-import { BaseItemType } from '../../item';
+import { BaseItemType, Item } from '../../item';
 import { AffectedPositions, Direction, Position } from '../../pathfinder';
 import { Unit, UnitType } from '../../unit';
 import { Room } from '../Room';
@@ -32,6 +32,8 @@ export class RoomMap
 
     public generateMap(): void
     {
+        if(!this._room.model) return;
+
         this._map   = [];
         this._tiles = [];
 
@@ -109,7 +111,7 @@ export class RoomMap
             tile.tileHeight = tile.defaultHeight;
         }
 
-        const items = this._room.itemManager.items;
+        const items = this._room.itemManager.getItemsByType(BaseItemType.FLOOR);
 
         if(!items) return;
         
@@ -122,8 +124,6 @@ export class RoomMap
             const item = items[i];
 
             if(!item) continue;
-
-            if(item.baseItem.type !== BaseItemType.FLOOR) continue;
 
             const affectedPositions = AffectedPositions.getPositions(item);
 
@@ -147,7 +147,6 @@ export class RoomMap
 
                 if(tile.tileHeight > item.height) continue;
 
-                item.itemBelow      = tile.highestItem;
                 tile.tileHeight     = item.height;
                 tile.highestItem    = item;
             }
@@ -189,7 +188,7 @@ export class RoomMap
 
             if(!highestItem) continue;
 
-            results.push(...AffectedPositions.getPositions(highestItem))
+            results.push(...AffectedPositions.getPositions(highestItem));
         }
 
         if(!results.length) return null;
@@ -303,62 +302,76 @@ export class RoomMap
 
             const tile = this.getValidTile(unit, new Position(x, y));
 
-            if(tile) return tile;
+            if(!tile) continue;
+
+            return tile;
         }
 
         return null;
     }
 
-    public getClosestValidPillow(unit: Unit, position: Position): Position
+    public convertToValidPillow(unit: Unit, position: Position, item: Item): Position
     {
-        if(!unit || !position) return null;
-        
-        const tile = this.getTile(position);
+        if(!unit || !position || !item) return null;
 
-        if(!tile) return null;
-        
-        const item = tile.highestItem;
-
-        if(!item) return null;
-        
-        const pillowPositions = AffectedPositions.getPillowPositions(item);
-
-        if(!pillowPositions) return null;
-        
-        const totalPositions = pillowPositions.length;
-
-        if(!totalPositions) return null;
-
-        let timesChecked = 0;
-
-        for(let i = 0; i < totalPositions; i++)
+        if(this.isPillow(position, item))
         {
-            const pillowPosition = pillowPositions[i];
+            const tile = this.getValidTile(unit, position, true);
 
-            if(!pillowPosition) continue;
-            
-            if(item.position.direction === Direction.NORTH)
-            {
-                if(position.x === pillowPosition.x)
-                {
-                    if(this.getValidTile(unit, pillowPosition)) return pillowPosition;
-                }
-            }
+            return tile ? position : null;
+        }
 
-            else if(item.position.direction === Direction.EAST)
-            {
-                if(position.y === pillowPosition.y)
-                {
-                    if(this.getValidTile(unit, pillowPosition)) return pillowPosition;
-                }
-            }
+        const destination = position.copy();
 
-            if(timesChecked === 1) return pillowPosition;
+        const pillows = AffectedPositions.getPillowPositions(item);
 
-            timesChecked++;
+        if(!pillows) return null;
+
+        const totalPillows = pillows.length;
+
+        if(!totalPillows) return null;
+
+        for(let i = 0; i < totalPillows; i++)
+        {
+            const pillow = pillows[i];
+
+            if(!pillow) continue;
+
+            if(item.position.direction === Direction.NORTH) destination.y = pillow.y;
+            else destination.x = pillow.x;
+
+            const tile = this.getValidTile(unit, destination, true);
+
+            return tile ? destination : null;
         }
 
         return null;
+    }
+
+    public isPillow(position: Position, item: Item): boolean
+    {
+        if(!position || !item) return false;
+
+        if(item.position.compare(position)) return true;
+
+        const pillows = AffectedPositions.getPillowPositions(item);
+
+        if(!pillows) return false;
+
+        const totalPillows = pillows.length;
+
+        if(!totalPillows) return false;
+
+        for(let i = 0; i < totalPillows; i++)
+        {
+            const pillow = pillows[i];
+
+            if(!pillow) continue;
+
+            if(pillow.compare(position)) return true;
+        }
+
+        return false;
     }
 
     public updatePositions(updateUnits: boolean, ...positions: Position[]): void

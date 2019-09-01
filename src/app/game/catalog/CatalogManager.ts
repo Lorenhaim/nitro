@@ -249,16 +249,15 @@ export class CatalogManager extends Manager
 
                     const page = this.getPage(entity.pageId);
 
-                    if(page)
-                    {
-                        if(entity.offerId) page.offerIds.push(entity.offerId);
+                    if(!page) continue;
+                    
+                    if(entity.offerId) page.offerIds.push(entity.offerId);
 
-                        const item = new CatalogItem(entity, page);
+                    const item = new CatalogItem(entity, page);
 
-                        if(item.isLimited) await item.generateLimitedNumbers();
+                    if(item.isLimited) await item.generateLimitedNumbers();
 
-                        this._items.push(item);
-                    }
+                    this._items.push(item);
                 }
             }
         }

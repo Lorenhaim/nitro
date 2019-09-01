@@ -52,12 +52,11 @@ export class PacketManager
         {
             const existing = this._handlers[i];
 
-            if(existing.header === header)
-            {
-                this._handlers.splice(i, 1);
+            if(existing.header !== header) continue;
+            
+            this._handlers.splice(i, 1);
 
-                break;
-            }
+            break;
         }
 
         this._handlers.push({ header, handler });
@@ -73,12 +72,11 @@ export class PacketManager
         {
             const existing = this._handlers[i];
 
-            if(existing.header === header.toString())
-            {
-                handler = existing.handler;
+            if(existing.header !== header.toString()) continue;
+            
+            handler = existing.handler;
 
-                break;
-            }
+            break;
         }
 
         return handler;
@@ -216,7 +214,7 @@ export class PacketManager
         this.addHandler(IncomingHeader.ROOM_SETTINGS, IncomingRoom.RoomSettingsEvent);
         this.addHandler(IncomingHeader.ROOM_DOORBELL, IncomingRoom.RoomDoorbellEvent);
         this.addHandler(IncomingHeader.ITEM_PLACE, IncomingRoom.ItemPlaceEvent);
-        this.addHandler(IncomingHeader.ITEM_FLOOR_CLICK, IncomingRoom.ItemFloorClickEvent);
+        this.addHandler(IncomingHeader.ITEM_MULTISTATE, IncomingRoom.ItemMultiStateEvent);
         this.addHandler(IncomingHeader.ITEM_PICKUP, IncomingRoom.ItemPickupEvent);
         this.addHandler(IncomingHeader.ROOM_RIGHTS_GIVE, IncomingRoom.RoomRightsGiveEvent);
         this.addHandler(IncomingHeader.ROOM_RIGHTS_REMOVE, IncomingRoom.RoomRightsRemoveEvent);
@@ -245,6 +243,15 @@ export class PacketManager
         this.addHandler(IncomingHeader.ROOM_LIKE, IncomingRoom.RoomLikeEvent);
         this.addHandler(IncomingHeader.ROOM_FAVORITE, IncomingRoom.RoomFavoriteEvent);
         this.addHandler(IncomingHeader.ROOM_UNFAVORITE, IncomingRoom.RoomUnfavoriteEvent);
+
+        this.addHandler(IncomingHeader.TRADE, IncomingRoom.RoomTradeEvent);
+        this.addHandler(IncomingHeader.TRADE_CLOSE, IncomingRoom.RoomTradeCloseEvent);
+        this.addHandler(IncomingHeader.TRADE_ITEM, IncomingRoom.RoomTradeItemEvent);
+        this.addHandler(IncomingHeader.TRADE_ITEMS, IncomingRoom.RoomTradeItemsEvent);
+        this.addHandler(IncomingHeader.TRADE_ACCEPT, IncomingRoom.RoomTradeAcceptEvent);
+        this.addHandler(IncomingHeader.TRADE_ITEM_REMOVE, IncomingRoom.RoomTradeItemRemoveEvent);
+        this.addHandler(IncomingHeader.TRADE_CANCEL, IncomingRoom.RoomTradeCancelEvent);
+        this.addHandler(IncomingHeader.TRADE_CONFIRM, IncomingRoom.RoomTradeConfirmEvent);
     }
 
     private registerMessenger(): void

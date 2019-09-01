@@ -7,13 +7,11 @@ export class RoomModelDoorEvent extends Incoming
     {
         try
         {
-            const currentRoom = this.client.user.unit.room;
+            const room = this.client.user.unit.roomLoading || this.client.user.unit.room;
 
-            if(!currentRoom) return;
+            if(!room) return;
 
-            if(!this.client.user.unit.isOwner()) return;
-
-            this.client.processOutgoing(new RoomModelDoorComposer(currentRoom));
+            this.client.processOutgoing(new RoomModelDoorComposer(room));
         }
 
         catch(err)

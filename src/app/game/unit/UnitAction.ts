@@ -1,4 +1,4 @@
-export const enum UnitAction
+export enum UnitAction
 {
     NONE        = 0,
     WAVE        = 1,
@@ -9,3 +9,5 @@ export const enum UnitAction
     JUMP        = 6,
     THUMB_UP    = 7
 }
+
+export const VALID_ACTIONS = [ UnitAction.NONE, UnitAction.WAVE, UnitAction.BLOW_KISS, UnitAction.LAUGH, UnitAction.THUMB_UP ];

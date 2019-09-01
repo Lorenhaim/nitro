@@ -1,3 +1,4 @@
+
 export class FigureHelper
 {
     public static validateFigure(figure: string, forbiddenClothing: number[] = [], ownedClothing: number[] = []): boolean

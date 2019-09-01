@@ -1,4 +1,4 @@
-export const enum UnitEmotion
+export enum UnitEmotion
 {
     NORMAL      = 0,
     HAPPY       = 1,

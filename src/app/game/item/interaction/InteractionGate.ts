@@ -5,9 +5,9 @@ import { InteractionDefault } from './InteractionDefault';
 
 export class InteractionGate extends InteractionDefault implements OnClick
 {
-    constructor()
+    constructor(name: string = null)
     {
-        super('gate');
+        super(name || 'gate');
     }
 
     public onClick(unit: Unit, item: Item): void
@@ -27,5 +27,7 @@ export class InteractionGate extends InteractionDefault implements OnClick
         if(!unit.hasRights()) return;
         
         item.setExtraData(item.extraData === '1' ? 0 : 1);
+
+        super.onClick(unit, item, false);
     }
 }

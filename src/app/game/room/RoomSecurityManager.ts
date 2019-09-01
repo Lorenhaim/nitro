@@ -74,11 +74,11 @@ export class RoomSecurityManager extends Manager
             
             for(let i = 0; i < totalRights; i++)
             {
-                const user = this._rights[i];
+                const existingUser = this._rights[i];
 
-                if(!user) continue;
+                if(!existingUser) continue;
 
-                if(user.id === user.id) return true;
+                if(existingUser.id === user.id) return true;
             }
         }
 
@@ -249,19 +249,17 @@ export class RoomSecurityManager extends Manager
 
         const results = await RoomRightsDao.loadRights(this._room.id);
 
-        if(results)
+        if(!results) return;
+        
+        const totalResults = results.length;
+
+        if(!totalResults) return;
+        
+        for(let i = 0; i < totalResults; i++)
         {
-            const totalResults = results.length;
+            const result = results[i];
 
-            if(totalResults)
-            {
-                for(let i = 0; i < totalResults; i++)
-                {
-                    const result = results[i];
-
-                    this._rights.push({ id: result.user.id, username: result.user.username });
-                }
-            }
+            this._rights.push({ id: result.user.id, username: result.user.username });
         }
     }
 

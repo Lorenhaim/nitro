@@ -19,7 +19,7 @@ export class RoomModelComposer extends Outgoing
     public compose(): OutgoingPacket
     {
         return this.packet
-            .writeBoolean(true)
+            .writeBoolean(this._room.model.isZoomed)
             .writeInt(this._room.details.wallHeight)
             .writeString(this._room.model.model)
             .prepare();

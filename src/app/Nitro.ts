@@ -20,7 +20,7 @@ export class Nitro
     private static _pluginManager: PluginManager;
     private static _networkManager: NetworkManager;
 
-    public static async bootstrap(config: ConfigOptions)
+    public static async bootstrap(config: ConfigOptions): Promise<void>
     {
         try
         {
@@ -58,12 +58,26 @@ export class Nitro
 
             Nitro._logger.log(`Starting Nitro`);
 
-            Nitro._database          = await createConnection(config.database);
-            Nitro._gameManager       = new GameManager();
-            Nitro._gameScheduler     = new GameScheduler();
-            Nitro._packetManager     = new PacketManager();
-            Nitro._pluginManager     = new PluginManager();
+            Nitro._database         = await createConnection(config.database);
+            Nitro._gameManager      = new GameManager();
+            Nitro._gameScheduler    = new GameScheduler();
+            Nitro._packetManager    = new PacketManager();
+            Nitro._pluginManager    = new PluginManager();
+            Nitro._networkManager   = new NetworkManager();
+        }
 
+        catch(err)
+        {
+            Nitro.logger.error(err.message || err, err.stack);
+
+            await Nitro.dispose();
+        }
+    }
+
+    public static async start(): Promise<void>
+    {
+        try
+        {
             await Nitro._gameManager.cleanup();
             await Nitro._gameManager.init();
             await Nitro._gameScheduler.init();
@@ -75,12 +89,12 @@ export class Nitro
 
             Nitro._networkManager.listen();
 
-            Nitro.logger.log(`Started in ${ Date.now() - Nitro._timestampStarted }ms`);
+            Nitro._logger.log(`Started in ${ Date.now() - Nitro._timestampStarted }ms`);
         }
 
         catch(err)
         {
-            Nitro.logger.error(err.message || err, err.stack);
+            Nitro._logger.error(err.message || err, err.stack);
 
             await Nitro.dispose();
         }
@@ -96,7 +110,7 @@ export class Nitro
             if(Nitro._pluginManager) await Nitro._pluginManager.dispose();
             if(Nitro._networkManager) await Nitro._networkManager.dispose();
 
-            if(Nitro._database && Nitro._database.isConnected) Nitro._database.close();
+            if(Nitro._database && Nitro._database.isConnected) await Nitro._database.close();
         }
 
         catch(err)

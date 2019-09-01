@@ -10,4 +10,5 @@ export * from './RoomLikeEvent';
 export * from './RoomSettingsEvent';
 export * from './RoomSettingsSaveEvent';
 export * from './RoomUnfavoriteEvent';
+export * from './trading';
 export * from './unit';

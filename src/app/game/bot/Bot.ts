@@ -22,7 +22,7 @@ export class Bot
         this._unit = new Unit(UnitType.BOT, this);
     }
 
-    public save(): void
+    public save(schedule: boolean = true): void
     {
         if(this._unit && this._unit.location.position)
         {
@@ -32,20 +32,14 @@ export class Bot
             this._entity.direction  = this._unit.location.position.direction;
         }
 
-        Nitro.gameScheduler.saveBot(this);
+        if(schedule) Nitro.gameScheduler.saveBot(this);
     }
 
     public async saveNow(): Promise<void>
     {
         Nitro.gameScheduler.removeBot(this);
 
-        if(this._unit && this._unit.location.position)
-        {
-            this._entity.x          = this._unit.location.position.x + 0;
-            this._entity.y          = this._unit.location.position.y + 0;
-            this._entity.z          = this._unit.location.position.z.toFixed();
-            this._entity.direction  = this._unit.location.position.direction;
-        }
+        this.save(false);
 
         await getManager().save(this._entity);
     }

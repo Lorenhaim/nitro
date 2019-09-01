@@ -56,41 +56,39 @@ export class BaseItem
     private loadMultiHeights(): void
     {
         this._multiHeights = [];
+
+        if(!this.hasInteraction(InteractionMultiHeight)) return;
         
-        if(this.hasInteraction(InteractionMultiHeight))
-        {
-            if(!this._entity.multiHeights) return;
+        if(!this._entity.multiHeights) return;
             
-            const parts = this._entity.multiHeights.split(',');
+        const parts = this._entity.multiHeights.split(',');
 
-            if(!parts) return;
+        if(!parts) return;
             
-            const totalParts = parts.length;
+        const totalParts = parts.length;
 
-            if(!totalParts) return;
+        if(!totalParts) return;
             
-            for(let i = 0; i < totalParts; i++) this._multiHeights[i.toString()] = parseFloat(parts[i]);
-        }
+        for(let i = 0; i < totalParts; i++) this._multiHeights[i.toString()] = parseFloat(parts[i]);
     }
 
     private loadVendingIds(): void
     {
         this._vendingIds = [];
 
-        if(this.hasInteraction(InteractionVendingMachine))
-        {
-            if(this._entity.vendingIds)
-            {
-                const parts = this._entity.vendingIds.split(',');
+        if(!this.hasInteraction(InteractionVendingMachine)) return;
 
-                if(parts)
-                {
-                    const totalParts = parts.length;
+        if(!this._entity.vendingIds) return;
+        
+        const parts = this._entity.vendingIds.split(',');
 
-                    for(let i = 0; i < totalParts; i++) this._vendingIds.push(parseInt(parts[i]));
-                }
-            }
-        }
+        if(!parts) return;
+        
+        const totalParts = parts.length;
+
+        if(!totalParts) return;
+
+        for(let i = 0; i < totalParts; i++) this._vendingIds.push(parseInt(parts[i]));
     }
 
     private loadEffectIds(): void
@@ -99,56 +97,53 @@ export class BaseItem
         this._maleEffects       = [];
         this._femaleEffects     = [];
 
-        if(this._entity.effectIds)
+        if(!this._entity.effectIds) return;
+        
+        const parts = this._entity.effectIds.split(',');
+
+        if(!parts) return;
+
+        const totalParts = parts.length;
+
+        if(!totalParts) return;
+        
+        const neutralIds: UnitEffect[]  = [];
+        const maleIds: UnitEffect[]     = [];
+        const femaleIds: UnitEffect[]   = [];
+        
+        let currentGender = null;
+
+        for(let i = 0; i < totalParts; i++)
         {
-            const parts = this._entity.effectIds.split(',');
-
-            if(parts)
+            const part = parts[i];
+            
+            if(part === 'M')
             {
-                const neutralIds: UnitEffect[]  = [];
-                const maleIds: UnitEffect[]     = [];
-                const femaleIds: UnitEffect[]   = [];
+                currentGender = 'M';
 
-                const totalParts = parts.length;
-
-                if(totalParts)
-                {
-                    let currentGender = null;
-
-                    for(let i = 0; i < totalParts; i++)
-                    {
-                        const part = parts[i];
-                        
-                        if(part === 'M')
-                        {
-                            currentGender = 'M';
-
-                            continue;
-                        }
-
-                        else if(part === 'F')
-                        {
-                            currentGender = 'F';
-
-                            continue;
-                        }
-
-                        if(currentGender === null) neutralIds.push(parseInt(part));
-                        else if(currentGender === 'M') maleIds.push(parseInt(part));
-                        else if(currentGender === 'F') femaleIds.push(parseInt(part))
-                    }
-
-                    if(neutralIds.length)
-                    {
-                        this._neutralEffects  = neutralIds;
-                    }
-                    else
-                    {
-                        if(maleIds.length) this._maleEffects        = maleIds;
-                        if(femaleIds.length) this._femaleEffects    = femaleIds;
-                    }
-                }
+                continue;
             }
+
+            else if(part === 'F')
+            {
+                currentGender = 'F';
+
+                continue;
+            }
+
+            if(currentGender === null) neutralIds.push(parseInt(part));
+            else if(currentGender === 'M') maleIds.push(parseInt(part));
+            else if(currentGender === 'F') femaleIds.push(parseInt(part))
+        }
+
+        if(neutralIds.length)
+        {
+            this._neutralEffects  = neutralIds;
+        }
+        else
+        {
+            if(maleIds.length) this._maleEffects        = maleIds;
+            if(femaleIds.length) this._femaleEffects    = femaleIds;
         }
     }
 
@@ -193,21 +188,18 @@ export class BaseItem
 
     public getRandomEffect(gender: 'M' | 'F' = null): UnitEffect
     {
-        if(gender)
+        if(gender === 'M')
         {
-            if(gender === 'M')
-            {
-                const totalMaleEffects = this._maleEffects.length;
+            const totalMaleEffects = this._maleEffects.length;
 
-                if(totalMaleEffects) return totalMaleEffects > 1 ? shuffleArray(this._maleEffects)[0] : this._maleEffects[0];
-            }
+            if(totalMaleEffects) return totalMaleEffects > 1 ? shuffleArray(this._maleEffects)[0] : this._maleEffects[0];
+        }
 
-            else if(gender === 'F')
-            {
-                const totalFemaleEffects = this._femaleEffects.length;
+        else if(gender === 'F')
+        {
+            const totalFemaleEffects = this._femaleEffects.length;
 
-                if(totalFemaleEffects) return totalFemaleEffects > 1 ? shuffleArray(this._femaleEffects)[0] : this._femaleEffects[0];
-            }
+            if(totalFemaleEffects) return totalFemaleEffects > 1 ? shuffleArray(this._femaleEffects)[0] : this._femaleEffects[0];
         }
         
         const totalNeutralEffects = this._neutralEffects.length;

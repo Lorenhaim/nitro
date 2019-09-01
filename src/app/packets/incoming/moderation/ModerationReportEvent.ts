@@ -18,15 +18,15 @@ export class ModerationReportEvent extends Incoming
 
             const totalMessages = this.packet.readInt();
 
-            console.log(totalMessages);
+            // console.log(totalMessages);
 
             if(totalMessages) for(let i = 0; i < totalMessages; i++) messages.push(this.packet.readInt());
 
-            console.log(`message: ${ message }`);
-            console.log(`topic: ${ topic }`);
-            console.log(`userId: ${ userId }`);
-            console.log(`roomId: ${ roomId }`);
-            console.log(`messages: ${ messages }`);
+            // console.log(`message: ${ message }`);
+            // console.log(`topic: ${ topic }`);
+            // console.log(`userId: ${ userId }`);
+            // console.log(`roomId: ${ roomId }`);
+            // console.log(`messages: ${ messages }`);
         }
 
         catch(err)

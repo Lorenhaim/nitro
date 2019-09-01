@@ -1,4 +1,4 @@
-export const enum UnitEffect
+export enum UnitEffect
 {
     NONE                = 0,
     SPOTLIGHT           = 1,

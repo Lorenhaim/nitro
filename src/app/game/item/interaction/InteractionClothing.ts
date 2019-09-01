@@ -1,14 +1,20 @@
 import { Nitro } from '../../../Nitro';
+import { Unit } from '../../unit';
 import { User } from '../../user';
 import { Item } from '../Item';
-import { OnRedeem } from './actions';
+import { OnClick, OnRedeem } from './actions';
 import { InteractionDefault } from './InteractionDefault';
 
-export class InteractionClothing extends InteractionDefault implements OnRedeem
+export class InteractionClothing extends InteractionDefault implements OnClick, OnRedeem
 {
     constructor()
     {
         super('clothing');
+    }
+
+    public onClick(unit: Unit, item: Item): void
+    {
+        super.onClick(unit, item, false);
     }
 
     public async onRedeem(user: User, item: Item): Promise<void>
@@ -23,13 +29,13 @@ export class InteractionClothing extends InteractionDefault implements OnRedeem
         {
             item.willRemove = true;
 
-            return item.room.itemManager.removeItem(user, item);
+            return item.room.itemManager.removeItem(user, true, item);
         }
 
         await user.inventory.clothing.addClothing(...clothingIds);
 
         item.willRemove = true;
 
-        item.room.itemManager.removeItem(user, item);
+        item.room.itemManager.removeItem(user, true, item);
     }
 }

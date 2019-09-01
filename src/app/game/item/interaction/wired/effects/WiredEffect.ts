@@ -23,6 +23,8 @@ export abstract class WiredEffect extends InteractionWired implements OnClick, O
         if(!unit.hasRights()) return;
         
         unit.user.connections.processOutgoing(new WiredEffectConfigComposer(item));
+
+        super.onClick(unit, item, false);
     }
 
     public onTriggered(item: Item, ...args: any[]): void

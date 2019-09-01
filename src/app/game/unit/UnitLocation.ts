@@ -4,7 +4,7 @@ import { Direction, PathFinder, Position } from '../pathfinder';
 import { RoomTile } from '../room';
 import { UnitStatus, UnitStatusType } from './status';
 import { Unit } from './Unit';
-import { UnitAction } from './UnitAction';
+import { UnitAction, VALID_ACTIONS } from './UnitAction';
 import { UnitDance } from './UnitDance';
 import { UnitEffect } from './UnitEffect';
 import { UnitHandItem } from './UnitHandItem';
@@ -76,8 +76,6 @@ export class UnitLocation
     public walkTo(position: Position, selfWalk: boolean = false, inform: boolean = true, path: Position[] = null, direct: boolean = false): void
     {
         if(!this._unit || !this._unit.room || !this._position) return;
-
-        if(this._position.compare(position)) return;
         
         if(this._unit.type === UnitType.USER) this._unit.timer.resetIdleTimer();
 
@@ -86,6 +84,10 @@ export class UnitLocation
         position = position.copy();
                 
         this.processNextPosition();
+
+        if(this._position.compare(position)) return;
+
+        if(!this._unit.room) return;
 
         const goalTile = this._unit.room.map.getValidTile(this._unit, position);
 
@@ -97,22 +99,29 @@ export class UnitLocation
         {
             if(goalItem.baseItem.canLay)
             {
-                const closestPillow = this._unit.room.map.getClosestValidPillow(this._unit, position);
+                const pillow = this._unit.room.map.convertToValidPillow(this._unit, position, goalItem);
 
-                if(closestPillow) if(!closestPillow.compare(position)) return this.walkTo(closestPillow);
+                if(!pillow) return this.stopWalking();
+                
+                if(!pillow.compare(position)) return this.walkTo(pillow);
             }
         }
 
-        const positions = path ? path : direct ? [ position ] : PathFinder.makePath(this._unit, position);
+        let positions = path ? path : direct ? [ position ] : null;
 
+        if(positions) return this.walkPositions(position, selfWalk, positions);
+
+        return this.walkPositions(position, selfWalk, PathFinder.makePath(this._unit, position));
+    }
+
+    private walkPositions(goal: Position, selfWalk: boolean, positions: Position[]): void
+    {
         if(!positions || !positions.length) return this.stopWalking();
         
-        this._positionGoal  = position;
+        this._positionGoal  = goal;
         this._currentPath   = positions;
         this._isWalking     = true;
         this._isWalkingSelf = selfWalk;
-
-        if(this._unit.connectedUnit && inform) this._unit.connectedUnit.location.walkTo(position, selfWalk, false, positions.slice(0));
     }
 
     public walkToUnit(unit: Unit, selfWalk: boolean = false): void
@@ -155,6 +164,7 @@ export class UnitLocation
             if(this._danceType) this.dance(UnitDance.NONE);
 
             this._position.setDirection(direction !== null ? direction : this._position.calculateSitDirection());
+            
             this.addStatus(new UnitStatus(UnitStatusType.SIT, height.toString()));
         }
         else
@@ -195,7 +205,7 @@ export class UnitLocation
         
         if(this.hasStatus(UnitStatusType.LAY)) return;
         
-        if(!sign || sign > 17) return;
+        if(sign === null || sign > 17) return;
             
         this.addStatus(new UnitStatus(UnitStatusType.SIGN, sign.toString()));
     }
@@ -204,18 +214,11 @@ export class UnitLocation
     {
         if(!this._unit || !this._unit.room) return;
 
-        if(!this._danceType && !dance) return;
-
-        if(this._unit.connectedUnit) return;
-
-        if(this.hasStatus(UnitStatusType.SIT, UnitStatusType.LAY)) return;
-
         if(this._danceType === dance) return;
 
-        if(this._unit.type === UnitType.USER)
-        {
-            if(this._danceType > UnitDance.NORMAL && !this._unit.user.details.clubActive) return;
-        }
+        if(this._unit.connectedUnit || this.hasStatus(UnitStatusType.SIT, UnitStatusType.LAY)) return;
+
+        if(this._unit.type === UnitType.USER && (this._danceType > UnitDance.NORMAL) && !this._unit.user.details.clubActive) return;
 
         this._danceType = dance;
 
@@ -241,7 +244,7 @@ export class UnitLocation
     {
         if(!this._unit || !this._unit.room) return;
 
-        if(!this._handType && !hand) return;
+        if(this._handType === hand) return;
 
         this._handType = hand;
 
@@ -266,13 +269,11 @@ export class UnitLocation
     {
         if(!this._unit || !this._unit.room) return;
 
-        if(this._unit.type === UnitType.USER)
-        {
-            if(action === UnitAction.BLOW_KISS || action === UnitAction.LAUGH)
-            {
-                if(!this._unit.user.details.clubActive) return;
-            }
-        }
+        if(this._unit.type !== UnitType.USER) return;
+
+        if(VALID_ACTIONS.indexOf(action) === -1) return;
+
+        if((action === UnitAction.BLOW_KISS || action === UnitAction.LAUGH) && !this._unit.user.details.clubActive) return;
 
         this._unit.room.unitManager.processOutgoing(new UnitActionComposer(this._unit, action));
     }
@@ -281,21 +282,8 @@ export class UnitLocation
     {
         if(!this._unit || !this._unit.room) return;
 
-        if(flag)
-        {
-            this._fastWalkingSpeed  = speed || 1;
-
-            if(this._isFastWalking) return;
-
-            this._isFastWalking     = true;
-        }
-        else
-        {
-            if(!this._isFastWalking) return;
-
-            this._isFastWalking     = false;
-            this._fastWalkingSpeed  = 0;
-        }
+        this._fastWalkingSpeed  = speed;
+        this._isFastWalking     = flag;
     }
 
     public getStatus(type: UnitStatusType): UnitStatus
@@ -412,7 +400,7 @@ export class UnitLocation
         return currentTile && currentTile.highestItem || null;
     }
 
-    public invokeCurrentItem(): void
+    public invokeCurrentItem(notify: boolean = false): void
     {
         if(!this._unit || !this._unit.room) return;
 
@@ -434,6 +422,8 @@ export class UnitLocation
         this.updateHeight(this._position);
         
         this._unit.needsInvoke = false;
+
+        if(notify) this._unit.updateNow();
     }
 
     public updateHeight(position: Position): void

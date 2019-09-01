@@ -1,6 +1,6 @@
 import { Unit, UnitEffect } from '../../../unit';
+import { GameType } from '../GameType';
 import { GameTeam } from './GameTeam';
-import { GameTeamIdentifier } from './GameTeamIdentifier';
 
 export class GamePlayer
 {
@@ -40,11 +40,29 @@ export class GamePlayer
         this._team.updateScore();
     }
 
+    public freeze(): void
+    {
+        this._unit.canLocate = false;
+
+        setTimeout(() => this.unfreeze(), 3000);
+
+        if(this._team.game.type !== GameType.FREEZE) return;
+
+        this._unit.location.effect(UnitEffect.ICE);
+    }
+
+    public unfreeze(): void
+    {
+        this._unit.canLocate = true;
+
+        this.setEffect();
+    }
+
     public setEffect(): void
     {
         if(!this._unit || !this._unit.room) return;
 
-        this._unit.location.effect(<any> GameTeamIdentifier[this.team.color]);
+        this._unit.location.effect(this._team.game.type + this.team.color);
     }
 
     public clearEffect(): void

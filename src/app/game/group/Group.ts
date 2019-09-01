@@ -54,8 +54,10 @@ export class Group extends Manager
         await this.saveNow();
     }
 
-    private updateLastAccess(): void
+    public updateLastAccess(): void
     {
+        this.cancelDispose();
+
         this._lastAccess = TimeHelper.currentTimestamp;
     }
 
@@ -227,13 +229,16 @@ export class Group extends Manager
 
         await GroupDao.removeMembership(this.id, target.id);
 
-        target.inventory.groups.removeMembership(membership);
-
-        if(target.unit && target.unit.room && target.unit.room.id === this._entity.roomId)
+        if(target.isLoaded)
         {
-            target.unit.loadRights();
+            target.inventory.groups.removeMembership(membership);
 
-            target.connections.processOutgoing(new GroupInfoComposer(this, false), new GroupMembersRefreshComposer(this.id));
+            if(target.unit && target.unit.room && target.unit.room.id === this._entity.roomId)
+            {
+                target.unit.loadRights();
+
+                target.connections.processOutgoing(new GroupInfoComposer(this, false), new GroupMembersRefreshComposer(this.id));
+            }
         }
 
         this.memberOutgoing(new GroupInfoComposer(this, false), new GroupMembersRefreshComposer(this.id));
@@ -246,7 +251,9 @@ export class Group extends Manager
 
         const items = room.itemManager.getItemsByUser(target);
 
-        if(items.length) room.itemManager.removeItem(target, ...items);
+        if(!items || !items.length) return;
+        
+        room.itemManager.removeItem(target, false, ...items);
     }
 
     public async makeAdmin(user: User, targetId: number): Promise<void>
@@ -370,20 +377,19 @@ export class Group extends Manager
     {
         const totalActiveMembers = this._activeMembers.length;
 
-        if(totalActiveMembers)
+        if(!totalActiveMembers) return;
+        
+        for(let i = 0; i < totalActiveMembers; i++)
         {
-            for(let i = 0; i < totalActiveMembers; i++)
-            {
-                const member = this._activeMembers[i];
+            const member = this._activeMembers[i];
 
-                if(!member) continue;
+            if(!member) continue;
 
-                if(member !== user) continue;
+            if(member !== user) continue;
 
-                this._activeMembers.splice(i, 1);
+            this._activeMembers.splice(i, 1);
 
-                return;
-            }
+            return;
         }
     }
 
@@ -432,25 +438,23 @@ export class Group extends Manager
     public setUser(user: User): void
     {
         if(!user) return;
-        
-        if(this.userId !== user.id)
-        {
-            this._entity.userId = user.id;
 
-            this.save();
-        }
+        if(this._entity.userId === user.id) return;
+        
+        this._entity.userId = user.id;
+
+        this.save();
     }
 
     public setRoom(room: Room): void
     {
         if(!room) return;
-        
-        if(this.roomId !== room.id)
-        {
-            this._entity.roomId = room.id;
 
-            this.save();
-        }
+        if(this._entity.roomId === room.id) return;
+        
+        this._entity.roomId = room.id;
+
+        this.save();
     }
 
     public clearRoom(): void

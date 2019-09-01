@@ -273,6 +273,8 @@ export class RollerTask extends Task
 
         if(!rollerData.roller || !rollerData.position || !rollerData.positionNext) return null;
 
+        if(!unit.location || !unit.location.position) return null;
+
         if(unit.location.isWalking) return null;
 
         if(!unit.location.position.compare(rollerData.roller.position)) return null;

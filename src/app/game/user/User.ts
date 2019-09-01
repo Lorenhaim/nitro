@@ -57,13 +57,18 @@ export class User extends Manager
         await this._details.saveNow();
     }
 
-    public loadRank(): void
+    private loadRank(): void
     {
         this._rank = null;
 
-        if(!this._details || !this._details.rankId) return;
-        
-        const rank = Nitro.gameManager.securityManager.rankManager.getRank(this._details.rankId);
+        let rank: Rank = null;
+
+        if(!this._details || !this._details.rankId)
+        {
+            rank = Nitro.gameManager.securityManager.rankManager.getRank(1);
+        }
+
+        if(!rank) rank = Nitro.gameManager.securityManager.rankManager.getRank(this._details.rankId);
 
         if(!rank) return;
 

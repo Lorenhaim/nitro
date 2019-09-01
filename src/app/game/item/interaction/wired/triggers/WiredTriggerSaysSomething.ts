@@ -14,6 +14,8 @@ export class WiredTriggerSaysSomething extends WiredTrigger
 
     public canTrigger(item: Item, ...args: any[]): boolean
     {
+        if(!item || !item.room || !item.wiredData) return false;
+
         const user = args[0];
 
         if(!user || !(user instanceof User)) return false;
@@ -24,29 +26,20 @@ export class WiredTriggerSaysSomething extends WiredTrigger
 
         const wiredData = item.wiredData.split(':');
 
-        if(wiredData.length > 2) return false;
+        if(!wiredData) return false;
 
-        let ownerOnly   = 0;
-        let message     = null;
+        if(wiredData.length !== 2) return false;
 
-        if(wiredData.length === 2)
-        {
-            ownerOnly   = wiredData[0] === '1' ? 1 : 0;
-            message     = wiredData[1];
-        }
+        const ownerOnly = wiredData[0] === '1';
+        const message   = wiredData[1];
 
-        if(!message) return true;
+        if(!message) return false;
 
         if(chat.indexOf(message) === -1) return false;
 
-        if(ownerOnly === 1)
-        {
-            const room = item.room;
-
-            if(!room) return false;
-
-            if(!room.securityManager.isOwner(user)) return false;
-        }
+        if(!ownerOnly) return true;
+        
+        if(!item.room.securityManager.isOwner(user)) return false;
 
         return true;
     }
@@ -66,23 +59,24 @@ export class WiredTriggerSaysSomething extends WiredTrigger
     {
         if(!item || !packet) return null;
 
-        const wiredData = item.wiredData.split(':');
+        let ownerOnly: boolean  = false;
+        let message: string     = null;
 
-        if(wiredData.length > 2) return;
-
-        let ownerOnly   = 0;
-        let message     = null;
-
-        if(wiredData.length === 2)
+        if(item.wiredData)
         {
-            ownerOnly   = wiredData[0] === '1' ? 1 : 0;
-            message     = wiredData[1];
+            const wiredData = item.wiredData.split(':');
+
+            if(wiredData.length === 2)
+            {
+                ownerOnly   = wiredData[0] === '1';
+                message     = wiredData[1];
+            }
         }
         
         return packet
             .writeBoolean(false)
             .writeInt(Nitro.config.game.furni.wired.maxItems, 0, item.baseItem.spriteId, item.id)
             .writeString(message)
-            .writeInt(ownerOnly, 1, this.triggerType, 0, 0);
+            .writeInt(ownerOnly ? 1 : 0, 1, this.triggerType, 0, 0);
     }
 }

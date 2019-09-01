@@ -18,7 +18,7 @@ export class ItemWallUpdateComposer extends Outgoing
 
     public compose(): OutgoingPacket
     {
-        this._item.parseWallData(this.packet);
+        this._item.parseItem(this.packet);
 
         return this.packet.writeString(this._item.userId.toString()).prepare();
     }

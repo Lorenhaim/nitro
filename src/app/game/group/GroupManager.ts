@@ -54,6 +54,8 @@ export class GroupManager extends Manager
 
             if(group.id !== groupId) continue;
 
+            group.updateLastAccess();
+
             return group;
         }
 

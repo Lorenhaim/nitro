@@ -60,5 +60,7 @@ export class InteractionVendingMachine extends InteractionDefault implements OnC
     
             setTimeout(() => item.setExtraData(0), 1000);
         }
+
+        super.onClick(unit, item, false);
     }
 }

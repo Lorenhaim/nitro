@@ -1,4 +1,4 @@
-export const enum NavigatorSearchType
+export enum NavigatorSearchType
 {
     CATEGORY    = 1,
     QUERY       = 2

@@ -15,30 +15,7 @@ export class RoomWiredManager
 
     public getItemsByTrigger(trigger: typeof WiredTrigger): Item[]
     {
-        if(!trigger) return null;
-
-        const results: Item[] = [];
-
-        const totalItems = this._room.itemManager.items.length;
-
-        if(!totalItems) return null;
-
-        for(let i = 0; i < totalItems; i++)
-        {
-            const item = this._room.itemManager.items[i];
-
-            if(!item) continue;
-
-            const interaction = item.baseItem.interaction;
-
-            if(!(interaction instanceof trigger)) continue;
-
-            results.push(item);
-        }
-
-        if(results.length) return results;
-
-        return null;
+        return this._room.itemManager.getItemsByInteraction(<any> trigger);
     }
 
     public getEffectsByTile(tile: RoomTile): Item[]
@@ -78,6 +55,8 @@ export class RoomWiredManager
         if(!triggers) return;
 
         const totalTriggers = triggers.length;
+
+        if(!totalTriggers) return;
 
         for(let i = 0; i < totalTriggers; i++)
         {

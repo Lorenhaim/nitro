@@ -1,6 +1,6 @@
 import { Manager } from '../../common';
 import { Unit } from '../unit';
-import { BattleBanzaiGame, RoomGame } from './games';
+import { BattleBanzaiGame, FreezeGame, GamePlayer, GameTeam, GameType, RoomGame } from './games';
 import { Room } from './Room';
 
 export class RoomGameManager extends Manager
@@ -40,7 +40,7 @@ export class RoomGameManager extends Manager
         }
     }
 
-    public getGame(type: typeof RoomGame): RoomGame
+    public getGame(type: GameType): RoomGame
     {
         if(!type) return null;
 
@@ -51,7 +51,7 @@ export class RoomGameManager extends Manager
         return this.createGame(type);
     }
 
-    public getActiveGame(type: typeof RoomGame): RoomGame
+    public getActiveGame(type: GameType): RoomGame
     {
         if(!type) return null;
 
@@ -65,7 +65,7 @@ export class RoomGameManager extends Manager
 
             if(!game) continue;
 
-            if(!(game instanceof type)) continue;
+            if(game.type !== type) continue;
 
             return game;
         }
@@ -73,12 +73,12 @@ export class RoomGameManager extends Manager
         return null;
     }
 
-    public hasGame(type: typeof RoomGame): boolean
+    public hasGame(type: GameType): boolean
     {
         return this.getGame(type) !== null;
     }
 
-    private createGame(type: typeof RoomGame): RoomGame
+    private createGame(type: GameType): RoomGame
     {
         if(!type) return null;
 
@@ -88,13 +88,63 @@ export class RoomGameManager extends Manager
 
         let game: RoomGame = null;
 
-        if(type === BattleBanzaiGame) game = new BattleBanzaiGame(this._room);
+        if(type === GameType.BATTLE_BANZAI) game = new BattleBanzaiGame(this._room);
+
+        else if(type === GameType.FREEZE) game = new FreezeGame(this._room);
 
         if(!game) return null;
 
         this._games.push(game);
 
         return game;
+    }
+
+    public getPlayer(unit: Unit): GamePlayer
+    {
+        if(!unit) return null;
+
+        const totalGames = this._games.length;
+
+        if(!totalGames) return null;
+
+        for(let i = 0; i < totalGames; i++)
+        {
+            const game = this._games[i];
+
+            if(!game) continue;
+
+            const player = game.getPlayerForTeam(unit);
+
+            if(!player) continue;
+
+            return player;
+        }
+
+        return null;
+    }
+
+    public getTeam(unit: Unit): GameTeam
+    {
+        if(!unit) return null;
+
+        const totalGames = this._games.length;
+
+        if(!totalGames) return null;
+
+        for(let i = 0; i < totalGames; i++)
+        {
+            const game = this._games[i];
+
+            if(!game) continue;
+
+            const team = game.getTeamForUnit(unit);
+
+            if(!team) continue;
+
+            return team;
+        }
+
+        return null;
     }
 
     public removeUnitFromGames(unit: Unit): void

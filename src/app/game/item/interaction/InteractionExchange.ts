@@ -1,13 +1,19 @@
+import { Unit } from '../../unit';
 import { CurrencyType, User } from '../../user';
 import { Item } from '../Item';
-import { OnRedeem } from './actions';
+import { OnClick, OnRedeem } from './actions';
 import { InteractionDefault } from './InteractionDefault';
 
-export class InteractionExchange extends InteractionDefault implements OnRedeem
+export class InteractionExchange extends InteractionDefault implements OnRedeem, OnClick
 {
     constructor()
     {
         super('exchange');
+    }
+
+    public onClick(unit: Unit, item: Item): void
+    {
+        super.onClick(unit, item, false);
     }
 
     public async onRedeem(user: User, item: Item): Promise<void>
@@ -29,7 +35,7 @@ export class InteractionExchange extends InteractionDefault implements OnRedeem
 
             item.willRemove = true;
 
-            item.room.itemManager.removeItem(user, item);
+            item.room.itemManager.removeItem(user, true, item);
         }
     }
 }

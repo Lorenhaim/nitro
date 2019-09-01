@@ -1,20 +1,26 @@
 import { Manager } from '../../common';
 import { User } from '../user';
 import { AboutCommand } from './AboutCommand';
+import { ActionCommand } from './ActionCommand';
 import { Command } from './Command';
 import { CommandsListCommand } from './CommandsListCommand';
 import { CoordinatesCommand } from './CoordinatesCommand';
 import { CreditsCommand } from './CreditsCommand';
+import { DanceCommand } from './DanceCommand';
+import { EffectCommand } from './EffectCommand';
 import { EjectAllCommand } from './EjectAllCommand';
 import { FastWalkCommand } from './FastWalkCommand';
 import { GiveBadgeCommand } from './GiveBadgeCommand';
+import { HandItemCommand } from './HandItemCommand';
 import { HotelAlertCommand } from './HotelAlertCommand';
 import { PickupAllCommand } from './PickupAllCommand';
 import { PullCommand } from './PullCommand';
+import { PullFurniCommand } from './PullFurniCommand';
 import { RebootCommand } from './RebootCommand';
 import { ReloadRoomCommand } from './ReloadRoomCommand';
 import { RollDiceCommand } from './RollDiceCommand';
 import { RoomSpectateCommand } from './RoomSpectateCommand';
+import { SetFigureCommand } from './SetFigureCommand';
 import { ShutdownCommand } from './ShutdownCommand';
 import { SitCommand } from './SitCommand';
 import { SummonCommand } from './SummonCommand';
@@ -66,6 +72,8 @@ export class CommandManager extends Manager
 
     public async processMessageAsCommand(user: User, message: string): Promise<boolean>
     {
+        if(!user) return false;
+
         if(!message) return false;
 
         if(message.charAt(0) !== ':') return false;
@@ -77,6 +85,8 @@ export class CommandManager extends Manager
         const command = this.getCommand(parts[0]);
 
         if(!command) return false;
+
+        if(command.permission &&!user.hasPermission(command.permission)) return false;
         
         parts.splice(0, 1);
 
@@ -130,19 +140,25 @@ export class CommandManager extends Manager
     private loadCommands(): void
     {
         this.registerCommand(new AboutCommand());
+        this.registerCommand(new ActionCommand());
         this.registerCommand(new CommandsListCommand());
         this.registerCommand(new CoordinatesCommand());
         this.registerCommand(new CreditsCommand());
+        this.registerCommand(new DanceCommand());
+        this.registerCommand(new EffectCommand());
         this.registerCommand(new EjectAllCommand());
         this.registerCommand(new FastWalkCommand());
         this.registerCommand(new GiveBadgeCommand());
+        this.registerCommand(new HandItemCommand());
         this.registerCommand(new HotelAlertCommand());
         this.registerCommand(new PickupAllCommand());
         this.registerCommand(new PullCommand());
+        this.registerCommand(new PullFurniCommand());
         this.registerCommand(new RebootCommand());
         this.registerCommand(new ReloadRoomCommand());
         this.registerCommand(new RollDiceCommand());
         this.registerCommand(new RoomSpectateCommand());
+        this.registerCommand(new SetFigureCommand());
         this.registerCommand(new ShutdownCommand());
         this.registerCommand(new SitCommand());
         this.registerCommand(new SummonCommand());

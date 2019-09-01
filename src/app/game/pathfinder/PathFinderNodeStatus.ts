@@ -1,4 +1,4 @@
-export const enum PathFinderNodeStatus
+export enum PathFinderNodeStatus
 {
     OPENED  = 1,
     CLOSED  = 2

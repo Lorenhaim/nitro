@@ -171,5 +171,13 @@ export enum OutgoingHeader
     USER_SETTINGS                = 513,
     WIRED_EFFECT_CONFIG          = 1434,
     WIRED_SAVE                   = 1155,
-    WIRED_TRIGGER_CONFIG         = 383
+    WIRED_TRIGGER_CONFIG         = 383,
+    TRADE                        = 2505,
+    TRADE_ERROR                  = 217,
+    TRADE_CLOSED                 = 1373,
+    TRADE_UPDATE                 = 2024,
+    TRADE_ACCEPTED               = 2568,
+    TRADE_CONFIRM                = 2720,
+    TRADE_COMPLETE               = 3128,
+    TRADE_CLOSE                  = 1001
 }

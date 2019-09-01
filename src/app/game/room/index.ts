@@ -12,3 +12,4 @@ export * from './RoomPetManager';
 export * from './RoomSecurityManager';
 export * from './RoomWiredManager';
 export * from './tasks';
+export * from './trading';

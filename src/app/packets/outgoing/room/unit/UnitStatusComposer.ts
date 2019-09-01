@@ -25,8 +25,6 @@ export class UnitStatusComposer extends Outgoing
         for(let i = 0; i < totalUnits; i++)
         {
             const unit = this._units[i];
-
-            if(!unit || !unit.location.position) continue;
             
             this.packet
                 .writeInt(unit.id)
@@ -40,31 +38,37 @@ export class UnitStatusComposer extends Outgoing
 
             const statuses = unit.location.statuses;
 
-            if(statuses !== null)
+            if(!statuses)
             {
-                const totalStatuses = statuses.length;
+                this.packet.writeString(actions);
 
-                if(totalStatuses > 0)
-                {
-                    for(let i = 0; i < totalStatuses; i++)
-                    {
-                        const status = statuses[i];
+                continue;
+            }
 
-                        if(status !== undefined)
-                        {
-                            if(status.key !== null)
-                            {
-                                actions += `${ status.key }`
+            const totalStatuses = statuses.length;
 
-                                if(status.value) actions += ` ${ status.value }`;
-                            }
+            if(!totalStatuses)
+            {
+                this.packet.writeString(actions);
 
-                            actions += '/';
+                continue;
+            }
+            
+            for(let i = 0; i < totalStatuses; i++)
+            {
+                const status = statuses[i];
 
-                            if(status.key === UnitStatusType.SIGN) unit.location.statuses.splice(i, 1);
-                        }
-                    }
-                }
+                if(!status) continue;
+
+                if(!status.key) continue;
+                
+                actions += `${ status.key }`
+                
+                if(status.value) actions += ` ${ status.value }`;
+                
+                actions += '/';
+
+                if(status.key === UnitStatusType.SIGN) unit.location.statuses.splice(i, 1);
             }
                 
             this.packet.writeString(actions);

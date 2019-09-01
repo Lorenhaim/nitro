@@ -23,3 +23,5 @@ src/Config.ts
 src/plugins
 src/ssl
 plugins
+public/assets
+public/dev.html

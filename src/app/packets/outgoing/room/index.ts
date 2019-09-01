@@ -15,5 +15,5 @@ export * from './RoomSettingsSaveComposer';
 export * from './RoomSettingsSaveErrorComposer';
 export * from './RoomSettingsUpdatedComposer';
 export * from './RoomSpectatorComposer';
+export * from './trading';
 export * from './unit';
-

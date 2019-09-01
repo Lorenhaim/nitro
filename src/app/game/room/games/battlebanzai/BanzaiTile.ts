@@ -1,12 +1,11 @@
-import { InteractionBattleBanzaiTile, Item } from '../../item';
-import { FloodFill, Position } from '../../pathfinder';
+import { InteractionBattleBanzaiTile, Item } from '../../../item';
+import { FloodFill } from '../../../pathfinder';
+import { GameTile } from '../GameTile';
+import { GamePlayer } from '../teams';
 import { BanzaiTileColor } from './BanzaiTileColor';
-import { GamePlayer } from './teams';
 
-export class BanzaiTile
+export class BanzaiTile extends GameTile
 {
-    private _item: Item;
-
     private _color: BanzaiTileColor;
     private _isLocked: boolean;
 
@@ -16,7 +15,7 @@ export class BanzaiTile
 
         if(!(item.baseItem.interaction instanceof InteractionBattleBanzaiTile)) throw new Error('invalid_interaction');
 
-        this._item = item;
+        super(item);
 
         this.resetTile();
     }
@@ -25,14 +24,14 @@ export class BanzaiTile
     {
         this.resetTile();
 
-        this._item.setExtraData(1);
+        this.item.setExtraData(1);
     }
 
     public resetTileAndClose(): void
     {
         this.resetTile();
 
-        if(parseInt(this._item.extraData) <= 2) this._item.setExtraData(0);
+        if(parseInt(this.item.extraData) <= 2) this.item.setExtraData(0);
     }
 
     public resetTile(): void
@@ -47,7 +46,7 @@ export class BanzaiTile
 
         if(this._isLocked) return;
 
-        let state = parseInt(this._item.extraData);
+        let state = parseInt(this.item.extraData);
 
         this.setColor(player);
 
@@ -64,7 +63,7 @@ export class BanzaiTile
             state = (player.team.color * 3) + 3;
         }
         
-        this._item.setExtraData(state);
+        this.item.setExtraData(state);
     }
 
     private lockTile(player: GamePlayer, checkFill: boolean = true): void
@@ -77,7 +76,7 @@ export class BanzaiTile
 
         this._isLocked = true;
 
-        this._item.setExtraData(2 + (this._color * 3) + 3);
+        this.item.setExtraData(2 + (this._color * 3) + 3);
 
         player.team.lockedTiles.push(this);
 
@@ -100,7 +99,7 @@ export class BanzaiTile
 
         for(let i = 0; i < totalNeighbours; i++)
         {
-            const neighbour = neighbours[i];
+            const neighbour = <BanzaiTile> neighbours[i];
 
             if(!neighbour) continue;
 
@@ -116,7 +115,7 @@ export class BanzaiTile
 
             for(let j = 0; j < totalFilled; j++)
             {
-                const filled = filledTiles[j];
+                const filled = <BanzaiTile> filledTiles[j];
 
                 if(!filled) continue;
 
@@ -132,16 +131,6 @@ export class BanzaiTile
         this._color = <any> player.team.color;
     }
 
-    public get position(): Position
-    {
-        return this._item.position;
-    }
-
-    public get item(): Item
-    {
-        return this._item;
-    }
-
     public get color(): BanzaiTileColor
     {
         return this._color;
@@ -149,7 +138,7 @@ export class BanzaiTile
 
     public get isClear(): boolean
     {
-        return this._item.extraData === '1';
+        return this.item.extraData === '1';
     }
 
     public get isLocked(): boolean
@@ -159,6 +148,6 @@ export class BanzaiTile
 
     public get isDisabled(): boolean
     {
-        return this._item.extraData === '0';
+        return this.item.extraData === '0';
     }
 }

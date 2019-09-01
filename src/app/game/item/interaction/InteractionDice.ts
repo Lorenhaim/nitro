@@ -3,10 +3,12 @@ import { Unit } from '../../unit';
 import { User } from '../../user';
 import { BaseItemType } from '../base';
 import { Item } from '../Item';
-import { OnClick, OnClickAlternative, OnPickup } from './actions';
+import { OnPickup } from './actions';
+import { OnDiceClick } from './actions/OnDiceClick';
+import { OnDiceClose } from './actions/OnDiceClose';
 import { InteractionDefault } from './InteractionDefault';
 
-export class InteractionDice extends InteractionDefault implements OnClick, OnPickup, OnClickAlternative
+export class InteractionDice extends InteractionDefault implements OnPickup, OnDiceClick, OnDiceClose
 {
     constructor()
     {
@@ -15,10 +17,10 @@ export class InteractionDice extends InteractionDefault implements OnClick, OnPi
 
     public onPickup(user: User, item: Item): void
     {
-        if(user && item) item.setExtraData(0);
+        if(item) item.setExtraData(0);
     }
 
-    public onClick(unit: Unit, item: Item): void
+    public onDiceClick(unit: Unit, item: Item): void
     {
         if(!unit || !item) return;
 
@@ -38,9 +40,11 @@ export class InteractionDice extends InteractionDefault implements OnClick, OnPi
 
             setTimeout(() => item.extraData !== '0' && item.setExtraData(randomNumber), item.baseItem.type === BaseItemType.FLOOR ? 1500 : 3000);
         }
+
+        super.onClick(unit, item, false);
     }
 
-    public onClickAlternative(unit: Unit, item: Item): void
+    public onDiceClose(unit: Unit, item: Item): void
     {
         if(!unit || !item) return;
 
@@ -51,5 +55,7 @@ export class InteractionDice extends InteractionDefault implements OnClick, OnPi
         if(!unit.hasRights() || !unit.location.position.isNear(item.position)) return;
 
         item.setExtraData(0);
+
+        super.onClick(unit, item, false);
     }
 }

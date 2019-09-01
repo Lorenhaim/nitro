@@ -21,7 +21,7 @@ export class ItemDiceCloseEvent extends Incoming
 
             if(!(interaction instanceof InteractionDice)) return;
 
-            interaction.onClickAlternative(this.client.user.unit, item);
+            interaction.onDiceClose(this.client.user.unit, item);
         }
 
         catch(err)

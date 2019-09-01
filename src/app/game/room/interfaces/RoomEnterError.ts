@@ -1,4 +1,4 @@
-export const enum RoomEnterError
+export enum RoomEnterError
 {
     ROOM_FULL       = 1,
     NO_ENTRY        = 2,

@@ -1,14 +1,13 @@
 import { getManager } from 'typeorm';
-import { NumberHelper } from '../../common';
 import { ItemEntity } from '../../database';
 import { Nitro } from '../../Nitro';
 import { ItemExtraDataComposer, ItemStateComposer, ItemWallUpdateComposer, OutgoingPacket } from '../../packets';
 import { AffectedPositions, Direction, Position } from '../pathfinder';
-import { BattleBanzaiGame, Room, RoomTile } from '../room';
+import { GameType, Room, RoomTile } from '../room';
 import { Unit, UnitType } from '../unit';
 import { User } from '../user';
 import { BaseItem, BaseItemType } from './base';
-import { InteractionBattleBanzaiGate, InteractionGate, InteractionGroupGate, InteractionRoller, InteractionTeleport } from './interaction';
+import { InteractionBattleBanzaiGate, InteractionFreezeGate, InteractionGate, InteractionGroupGate, InteractionRoller, InteractionTeleport } from './interaction';
 import { ItemRolling } from './ItemRolling';
 
 export class Item
@@ -18,7 +17,6 @@ export class Item
     private _room: Room;
 
     private _baseItem: BaseItem;
-    private _itemBelow: Item;
     
     private _position: Position;
     private _rolling: ItemRolling;
@@ -29,17 +27,16 @@ export class Item
     {
         if(!(entity instanceof ItemEntity)) throw new Error('invalid_entity');
 
-        this._entity            = entity;
+        this._entity        = entity;
 
-        this._room              = null;
+        this._room          = null;
 
-        this._baseItem          = null;
-        this._itemBelow         = null;
+        this._baseItem      = null;
 
-        this._position          = null;
-        this._rolling           = null;
+        this._position      = null;
+        this._rolling       = null;
 
-        this._willRemove        = false;
+        this._willRemove    = false;
 
         if(entity.roomId) this._position = new Position(this._entity.x, this._entity.y, parseFloat(this._entity.z), parseInt(<any> this._entity.direction));
 
@@ -47,16 +44,14 @@ export class Item
         {
             const baseItem = Nitro.gameManager.itemManager.getBaseItem(this._entity.baseId);
 
-            if(baseItem) this._baseItem = baseItem;
-            else throw new Error('invalid_base_id');
+            if(!baseItem) throw new Error('invalid_base_id');
+
+            this._baseItem = baseItem;
         }
-        else
-        {
-            throw new Error('invalid_base');
-        }
+        else throw new Error('invalid_base');
     }
 
-    public save(): void
+    public save(schedule: boolean = true): void
     {
         if(this._baseItem.type === BaseItemType.FLOOR)
         {
@@ -69,32 +64,23 @@ export class Item
             }
         }
         
-        Nitro.gameScheduler.saveItem(this);
+        if(schedule) Nitro.gameScheduler.saveItem(this);
     }
 
     public async saveNow(): Promise<void>
     {
         Nitro.gameScheduler.removeItem(this);
 
-        if(this._baseItem.type === BaseItemType.FLOOR)
-        {
-            if(this._entity.roomId)
-            {
-                this._entity.x          = this._position.x || 0;
-                this._entity.y          = this._position.y || 0;
-                this._entity.z          = this._position.z.toString() || '0.00';
-                this._entity.direction  = this._position.direction || 0;
-            }
-        }
+        this.save(false);
 
         await getManager().save(this._entity);
     }
 
     public getTile(): RoomTile
     {
-        if(this._room) return this._room.map.getTile(this._position);
-
-        return null;
+        if(!this._room) return null;
+        
+        return this._room.map.getTile(this._position);
     }
 
     public canPlaceOnTop(item: Item, rolling: boolean = false): boolean
@@ -141,8 +127,6 @@ export class Item
         const goalTile = room.map.getTile(position);
 
         if(!goalTile) return false;
-        
-        const goalHeight = goalTile.tileHeight;
 
         const affectedPositions = AffectedPositions.getPositions(this, position);
 
@@ -160,18 +144,23 @@ export class Item
 
             if(tile.isDoor) return false;
 
-            //if(tile.tileHeight !== goalHeight) return false;
+            //if((tile.tileHeight !== goalTile.tileHeight) && Nitro.config.game.furni.placement.forceMatchingTileHeights) return false;
+
+            if((tile.tileHeight + this._baseItem.stackHeight) > Nitro.config.game.furni.placement.maxZ) return false;
 
             if(tile.units.length > 0)
             {
-                if(this._baseItem.canLay) return false;
-                
-                if(!this._baseItem.canWalk) return false;
+                if(!this._baseItem.canWalk || this._baseItem.canLay) return false;
+
+                if(!Nitro.config.game.furni.placement.onUnit)
+                {
+                    if(!isRotating) return false;
+                }
             }
 
             const highestItem = tile.highestItem;
 
-            if(isRotating && highestItem === this) return true;
+            if(isRotating && highestItem === this) continue;
 
             if(highestItem && highestItem.id !== this._entity.id && !this.canPlaceOnTop(highestItem, rolling)) return false;
 
@@ -217,24 +206,6 @@ export class Item
         this.setExtraData(nextState);
     }
 
-    public toggleRandomState(): void
-    {
-        const totalStates = this._baseItem.totalStates;
-
-        if(!totalStates) return;
-
-        let state = 0;
-        
-        for(let i = 0; i < 2; i++)
-        {
-            state = NumberHelper.randomNumber(0, this._baseItem.totalStates) + 1;
-
-            if(state === 4) break;
-        }
-
-        this.setExtraData(state);
-    }
-
     public setExtraData(extraData: string | number, send: boolean = true): void
     {
         extraData = extraData === null ? null : extraData.toString();
@@ -247,20 +218,8 @@ export class Item
 
         if(!this._room || !send) return;
         
-        if(this._baseItem.type === BaseItemType.WALL)
-        {
-            this._room.unitManager.processOutgoing(new ItemWallUpdateComposer(this));
-        }
-        else
-        {
-            if(this.isLimited) this._room.unitManager.processOutgoing(new ItemExtraDataComposer(this));
-            else this._room.unitManager.processOutgoing(new ItemStateComposer(this));
-        }
-    }
-
-    private loadDimmerData(): void
-    {
-        
+        if(this._baseItem.type === BaseItemType.WALL) this._room.unitManager.processOutgoing(new ItemWallUpdateComposer(this));
+        else this._room.unitManager.processOutgoing(this.isLimited ? new ItemExtraDataComposer(this) : new ItemStateComposer(this));
     }
 
     public isGroupItemOpen(unit: Unit): boolean
@@ -322,16 +281,20 @@ export class Item
     {
         if(!packet) return null;
 
-        if(this._baseItem.type === BaseItemType.FLOOR) this.parseFloorData(packet);
+        if(this._baseItem.type === BaseItemType.FLOOR)
+        {
+            this.parseFloorData(packet);
 
-        packet.writeInt(type);
+            packet.writeInt(type);
 
-        this.parseExtraData(packet);
+            this.parseExtraData(packet);
+        }
+        else if(this._baseItem.type === BaseItemType.WALL) this.parseWallData(packet);
 
         return packet.writeInt(-1, this._baseItem.canToggle ? 1 : 0, this._entity.userId);
     }
 
-    public parseFloorData(packet: OutgoingPacket): OutgoingPacket
+    private parseFloorData(packet: OutgoingPacket): OutgoingPacket
     {
         if(!packet) return;
         
@@ -340,11 +303,11 @@ export class Item
             .writeInt(this._baseItem.spriteId)
             .writeInt(this._position.x, this._position.y)
             .writeInt(this._position.direction)
-            .writeString(this._position.z.toFixed(2))
-            .writeString(this._baseItem.canWalk || this._baseItem.canSit ? this._baseItem.stackHeight.toFixed(2) : null);
+            .writeString(this._position.z.toFixed(5))
+            .writeString(this._baseItem.canWalk || this._baseItem.canSit ? this._baseItem.stackHeight.toFixed(5) : null);
     }
 
-    public parseWallData(packet: OutgoingPacket): OutgoingPacket
+    private parseWallData(packet: OutgoingPacket): OutgoingPacket
     {
         if(!packet) return;
         
@@ -352,8 +315,7 @@ export class Item
             .writeString(this._entity.id.toString())
             .writeInt(this._baseItem.spriteId)
             .writeString(this._entity.wallPosition)
-            .writeString(this._entity.extraData)
-            .writeInt(-1, this._baseItem.canToggle ? 1 : 0, this._entity.userId);
+            .writeString(this._entity.extraData);
     }
 
     public parseInventoryData(packet: OutgoingPacket): OutgoingPacket
@@ -382,6 +344,26 @@ export class Item
             .writeInt(-1);
             
         if(this._baseItem.type === BaseItemType.FLOOR) packet.writeString(null).writeInt(1);
+
+        return packet;
+    }
+
+    public parseTradeData(packet: OutgoingPacket): OutgoingPacket
+    {
+        if(!packet) return;
+        
+        packet
+            .writeInt(this._entity.id)
+            .writeString(this._baseItem.type)
+            .writeInt(this._entity.id, this._baseItem.spriteId)
+            .writeInt(0)
+            .writeBoolean(this._entity.limitedData !== '0:0' ? false : this._baseItem.canInventoryStack);
+            
+        this.parseExtraData(packet);
+
+        packet.writeInt(0, 0, 0);
+            
+        if(this._baseItem.type === BaseItemType.FLOOR) packet.writeInt(0);
 
         return packet;
     }
@@ -446,16 +428,6 @@ export class Item
     public get baseItem(): BaseItem
     {
         return this._baseItem;
-    }
-
-    public get itemBelow(): Item
-    {
-        return this._itemBelow;
-    }
-
-    public set itemBelow(item: Item)
-    {
-        this._itemBelow = item;
     }
 
     public get position(): Position
@@ -546,7 +518,20 @@ export class Item
         {
             if(!this._room) return false;
 
-            const game = this._room.gameManager.getActiveGame(BattleBanzaiGame);
+            const game = this._room.gameManager.getActiveGame(GameType.BATTLE_BANZAI);
+
+            if(!game) return true;
+
+            if(game.isStarted) return false;
+
+            return true;
+        }
+
+        if(this._baseItem.hasInteraction(InteractionFreezeGate))
+        {
+            if(!this._room) return false;
+
+            const game = this._room.gameManager.getActiveGame(GameType.FREEZE);
 
             if(!game) return true;
 

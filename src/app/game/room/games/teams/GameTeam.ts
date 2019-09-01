@@ -1,7 +1,8 @@
-import { Interaction, InteractionBattleBanzaiGateBlue, InteractionBattleBanzaiGateGreen, InteractionBattleBanzaiGateRed, InteractionBattleBanzaiGateYellow, InteractionBattleBanzaiScoreboardBlue, InteractionBattleBanzaiScoreboardGreen, InteractionBattleBanzaiScoreboardRed, InteractionBattleBanzaiScoreboardYellow, Item } from '../../../item';
+import { Interaction, InteractionBattleBanzaiGateBlue, InteractionBattleBanzaiGateGreen, InteractionBattleBanzaiGateRed, InteractionBattleBanzaiGateYellow, InteractionBattleBanzaiScoreboardBlue, InteractionBattleBanzaiScoreboardGreen, InteractionBattleBanzaiScoreboardRed, InteractionBattleBanzaiScoreboardYellow, InteractionFreezeGateBlue, InteractionFreezeGateGreen, InteractionFreezeGateRed, InteractionFreezeGateYellow, InteractionFreezeScoreboardBlue, InteractionFreezeScoreboardGreen, InteractionFreezeScoreboardRed, InteractionFreezeScoreboardYellow, Item } from '../../../item';
 import { Unit, UnitAction, UnitEffect } from '../../../unit';
-import { BanzaiTile } from '../BanzaiTile';
-import { BattleBanzaiGame } from '../BattleBanzaiGame';
+import { BattleBanzaiGame } from '../battlebanzai';
+import { GameTile } from '../GameTile';
+import { GameType } from '../GameType';
 import { RoomGame } from '../RoomGame';
 import { GamePlayer } from './GamePlayer';
 import { GameTeamColor } from './GameTeamIdentifier';
@@ -12,7 +13,7 @@ export class GameTeam
     private _color: GameTeamColor;
     private _score: number;
 
-    private _lockedTiles: BanzaiTile[];
+    private _lockedTiles: GameTile[];
 
     private _flickerActive: boolean;
     private _flickerCount: number;
@@ -105,9 +106,14 @@ export class GameTeam
 
         if(this._players.length === this._maxPlayers) return;
 
-        const activeTeam = this.game.getTeamForUnit(unit);
+        const activeTeam = this._game.room.gameManager.getTeam(unit);
 
-        if(activeTeam) return activeTeam.removePlayer(unit);
+        if(activeTeam)
+        {
+            if(activeTeam.game === this._game) return activeTeam.removePlayer(unit);
+            
+            activeTeam.removePlayer(unit);
+        }
 
         const activePlayer = this.getPlayer(unit);
 
@@ -140,7 +146,7 @@ export class GameTeam
 
             if(player.unit !== unit) continue;
 
-            this.removePlayerAtIndex(i);
+            return this.removePlayerAtIndex(i);
         }
     }
 
@@ -205,8 +211,6 @@ export class GameTeam
 
     private updateGate(): void
     {
-        if(!(this._game instanceof BattleBanzaiGame)) return;
-
         if(!this._gate) return;
 
         this._gate.setExtraData(this._players.length);
@@ -214,8 +218,6 @@ export class GameTeam
 
     private updateScoreboard(): void
     {
-        if(!(this._game instanceof BattleBanzaiGame)) return;
-
         if(!this._scoreboard) return;
 
         this._scoreboard.setExtraData(this._score);
@@ -243,6 +245,8 @@ export class GameTeam
 
     public startFlickering(): void
     {
+        if(!(this._game instanceof BattleBanzaiGame)) return;
+        
         this.resetFlickering();
 
         this._flickerInterval = setInterval(() => this.flickerLockedTiles(), 500);
@@ -287,14 +291,23 @@ export class GameTeam
     {
         this._gate = null;
 
-        if(!(this._game instanceof BattleBanzaiGame)) return;
-
         let interaction: typeof Interaction = null;
 
-        if(this._color === GameTeamColor.BLUE) interaction = InteractionBattleBanzaiGateBlue;
-        else if(this._color === GameTeamColor.GREEN) interaction = InteractionBattleBanzaiGateGreen;
-        else if(this._color === GameTeamColor.RED) interaction = InteractionBattleBanzaiGateRed;
-        else if(this._color === GameTeamColor.YELLOW) interaction = InteractionBattleBanzaiGateYellow;
+        if(this._game.type === GameType.BATTLE_BANZAI)
+        {
+            if(this._color === GameTeamColor.BLUE) interaction = InteractionBattleBanzaiGateBlue;
+            else if(this._color === GameTeamColor.GREEN) interaction = InteractionBattleBanzaiGateGreen;
+            else if(this._color === GameTeamColor.RED) interaction = InteractionBattleBanzaiGateRed;
+            else if(this._color === GameTeamColor.YELLOW) interaction = InteractionBattleBanzaiGateYellow;
+        }
+
+        if(this._game.type === GameType.FREEZE)
+        {
+            if(this._color === GameTeamColor.BLUE) interaction = InteractionFreezeGateBlue;
+            else if(this._color === GameTeamColor.GREEN) interaction = InteractionFreezeGateGreen;
+            else if(this._color === GameTeamColor.RED) interaction = InteractionFreezeGateRed;
+            else if(this._color === GameTeamColor.YELLOW) interaction = InteractionFreezeGateYellow;
+        }
 
         if(!interaction) return;
 
@@ -311,14 +324,23 @@ export class GameTeam
     {
         this._scoreboard = null;
 
-        if(!(this._game instanceof BattleBanzaiGame)) return;
-
         let interaction: typeof Interaction = null;
 
-        if(this._color === GameTeamColor.BLUE) interaction = InteractionBattleBanzaiScoreboardBlue;
-        else if(this._color === GameTeamColor.GREEN) interaction = InteractionBattleBanzaiScoreboardGreen;
-        else if(this._color === GameTeamColor.RED) interaction = InteractionBattleBanzaiScoreboardRed;
-        else if(this._color === GameTeamColor.YELLOW) interaction = InteractionBattleBanzaiScoreboardYellow;
+        if(this._game.type === GameType.BATTLE_BANZAI)
+        {
+            if(this._color === GameTeamColor.BLUE) interaction = InteractionBattleBanzaiScoreboardBlue;
+            else if(this._color === GameTeamColor.GREEN) interaction = InteractionBattleBanzaiScoreboardGreen;
+            else if(this._color === GameTeamColor.RED) interaction = InteractionBattleBanzaiScoreboardRed;
+            else if(this._color === GameTeamColor.YELLOW) interaction = InteractionBattleBanzaiScoreboardYellow;
+        }
+
+        if(this._game.type === GameType.FREEZE)
+        {
+            if(this._color === GameTeamColor.BLUE) interaction = InteractionFreezeScoreboardBlue;
+            else if(this._color === GameTeamColor.GREEN) interaction = InteractionFreezeScoreboardGreen;
+            else if(this._color === GameTeamColor.RED) interaction = InteractionFreezeScoreboardRed;
+            else if(this._color === GameTeamColor.YELLOW) interaction = InteractionFreezeScoreboardYellow;
+        }
 
         if(!interaction) return;
 
@@ -346,7 +368,7 @@ export class GameTeam
         return this._score;
     }
 
-    public get lockedTiles(): BanzaiTile[]
+    public get lockedTiles(): GameTile[]
     {
         return this._lockedTiles;
     }

@@ -13,6 +13,8 @@ export class InteractionGroupGate extends InteractionGroupFurni implements OnCli
     public beforeStep(unit: Unit, item: Item): void
     {
         item.setExtraData(1);
+
+        super.beforeStep(unit, item);
     }
 
     public onLeave(unit: Unit, item: Item): void
@@ -24,6 +26,6 @@ export class InteractionGroupGate extends InteractionGroupFurni implements OnCli
 
     public onClick(unit: Unit, item: Item): void
     {
-        return;
+        super.onClick(unit, item, false);
     }
 }

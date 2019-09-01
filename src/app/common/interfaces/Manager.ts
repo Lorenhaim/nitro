@@ -23,34 +23,32 @@ export abstract class Manager
 
     public async init(): Promise<void>
     {
-        if(!this._isLoaded && !this._isLoading && !this._isDisposing)
-        {
-            this._isLoading     = true;
+        if(this._isLoaded || this._isLoading || this._isDisposing) return;
+        
+        this._isLoading     = true;
+        
+        await this.onInit();
 
-            await this.onInit();
+        this._isLoaded      = true;
+        this._isLoading     = false;
+        this._isDisposed    = false;
 
-            this._isLoaded      = true;
-            this._isLoading     = false;
-            this._isDisposed    = false;
-
-            this._logger.log(`Initalized`);
-        }
+        this._logger.log(`Initalized`);
     }
 
     public async dispose(): Promise<void>
     {
-        if(!this._isDisposed && !this._isDisposing && !this._isLoading)
-        {
-            this._isDisposing   = true;
+        if(this._isDisposed || this._isDisposing || this._isLoading) return;
+        
+        this._isDisposing   = true;
 
-            await this.onDispose();
+        await this.onDispose();
 
-            this._isDisposed    = true;
-            this._isDisposing   = false;
-            this._isLoaded      = false;
+        this._isDisposed    = true;
+        this._isDisposing   = false;
+        this._isLoaded      = false;
 
-            this._logger.error(`Disposed`);
-        }
+        this._logger.error(`Disposed`);
     }
 
     public async reload(): Promise<void>

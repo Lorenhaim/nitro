@@ -253,25 +253,13 @@ export class CatalogItem
                 {
                     packet.writeInt(baseItem.spriteId);
 
-                    if(baseItem.type === BaseItemType.ROBOT)
-                    {
-                        packet.writeString(this._entity.extraData);
-                    }
+                    if(baseItem.type === BaseItemType.ROBOT) packet.writeString(this._entity.extraData);
 
-                    else if(baseItem.productName === 'landscape' || baseItem.productName === 'wallpaper' || baseItem.productName === 'floor')
-                    {
-                        packet.writeString(this._entity.productName.split('_')[2]);
-                    }
+                    else if(baseItem.productName === 'landscape' || baseItem.productName === 'wallpaper' || baseItem.productName === 'floor') packet.writeString(this._entity.productName.split('_')[2]);
 
-                    else if(baseItem.productName === 'poster')
-                    {
-                        packet.writeString(this._entity.extraData);
-                    }
+                    else if(baseItem.productName === 'poster') packet.writeString(this._entity.extraData);
 
-                    else if(baseItem.productName.startsWith('sound_set_'))
-                    {
-                        packet.writeString(this._entity.extraData);
-                    }
+                    else if(baseItem.productName.startsWith('sound_set_')) packet.writeString(this._entity.extraData);
 
                     else packet.writeString(null);
 

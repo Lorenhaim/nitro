@@ -1,4 +1,4 @@
-export const enum UnitStatusType
+export enum UnitStatusType
 {
     MOVE            = 'mv',
     SLIDE           = 'sld',

@@ -17,41 +17,20 @@ export class WiredEffectUnitTeleport extends WiredEffect implements ParseWiredDa
 
     public onTriggered(item: Item, ...args: any[]): void
     {
-        const room = item.room;
-        
-        if(!room) return;
+        if(!item || !item.room || !item.wiredData) return;
 
-        let user = args[0];
+        const user = args[0];
 
-        if(user)
-        {
-            if(!(user instanceof User))
-            {
-                user = args[1];
-
-                if(!user || !(user instanceof User)) return;
-            }
-        }
+        if(!user || !(user instanceof User)) return;
 
         const wiredData = item.wiredData.split(':');
 
-        if(wiredData.length > 2) return;
+        if(wiredData.length !== 2) return;
 
-        let delay               = 0;
-        let itemString: string  = null;
+        const delayNumber = parseInt(wiredData[0]);
 
-        if(wiredData.length === 1)
-        {
-            itemString = wiredData[0];
-        }
-
-        else if(wiredData.length === 2)
-        {
-            const number = parseInt(wiredData[0]);
-
-            delay       = number > 0 ? parseInt(wiredData[0]) * 500 : 0;
-            itemString  = wiredData[1];
-        }
+        const delay         = delayNumber > 0 && delayNumber <= 20 ? delayNumber * 500 : 0;
+        const itemString    = wiredData[1];
 
         if(!itemString) return;
         
@@ -69,23 +48,39 @@ export class WiredEffectUnitTeleport extends WiredEffect implements ParseWiredDa
 
         if(!itemId) return;
 
+        const activeItem = item.room.itemManager.getItem(itemId);
+
+        if(!activeItem) return;
+
+        super.onTriggered(item, ...args);
+
         setTimeout(() =>
         {
-            super.onTriggered(item, ...args);
-            
-            const activeItem = room.itemManager.getItem(itemId);
+            if(!activeItem || !activeItem.room) return;
 
-            if(!activeItem) return;
-    
+            if(!user || !user.unit || user.unit.room !== activeItem.room) return;
+
             user.unit.location.effect(UnitEffect.SPARKLES);
+
+            setTimeout(() =>
+            {
+                user.unit.location.stopWalking();
+
+                user.unit.canLocate = false;
+        
+                setTimeout(() =>
+                {
+                    if(!user || !user.unit || !user.unit.location) return;
+                    
+                    user.unit.location.position.x = activeItem.position.x;
+                    user.unit.location.position.y = activeItem.position.y;
     
-            user.unit.location.position.x = activeItem.position.x;
-            user.unit.location.position.y = activeItem.position.y;
-    
-            user.unit.needsInvoke = true;
-            user.unit.needsUpdate = true;
-    
-            setTimeout(() => user.unit.location.effect(UnitEffect.NONE), 1000);
+                    user.unit.location.invokeCurrentItem(true);
+
+                    user.unit.canLocate = true;
+                    setTimeout(() => user.unit.location.effect(UnitEffect.NONE), 2000);
+                }, 1000);
+            }, 1000);
         }, delay);
     }
 
@@ -100,8 +95,7 @@ export class WiredEffectUnitTeleport extends WiredEffect implements ParseWiredDa
         packet.readInt();
         packet.readString();
 
-        const totalItems = packet.readInt();
-
+        const totalItems                = packet.readInt();
         const ids: number[]             = [];
         const validatedIds: number[]    = [];
 
@@ -140,11 +134,12 @@ export class WiredEffectUnitTeleport extends WiredEffect implements ParseWiredDa
         let delay       = 0;
         let itemString  = null;
 
-        const wiredData                 = item.wiredData.split(':');
-        const validatedIds: number[]    = [];
+        const validatedIds: number[] = [];
 
-        if(wiredData.length === 2)
+        if(item.wiredData)
         {
+            const wiredData = item.wiredData.split(':');
+
             delay       = parseInt(wiredData[0]);
             itemString  = wiredData[1];
 

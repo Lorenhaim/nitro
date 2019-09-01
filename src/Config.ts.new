@@ -1,11 +1,11 @@
-import { ConfigOptions } from './common';
+import { ConfigOptions } from './app/common';
 
 export const Config: ConfigOptions = {
     general: {
         siteName: 'Nitro',
-        siteUrl: 'https://website.com',
+        siteUrl: 'http://website.com',
         production: 'PRODUCTION-201611291003-338511768',
-        environment: 'production'
+        environment: 'development'
     },
     database: {
         type: 'mysql',
@@ -13,22 +13,17 @@ export const Config: ConfigOptions = {
         port: 3306,
         username: 'root',
         password: '',
-        database: '',
+        database: 'nitro',
         entities: [],
-        synchronize: false, // always leave false unless you want to generate a clean database
+        synchronize: false, // always leave false
         logging: false,
         logger: 'file'
-    },
-    captcha: {
-        enabled: false,
-        publicKey: '',
-        secretKey: ''
     },
     logging: {
         enabled: true,
         packets: {
-            incoming: true,
-            outgoing: true,
+            incoming: false,
+            outgoing: false,
             unknown: true,
             unprepared: true,
             invalid: true
@@ -36,21 +31,6 @@ export const Config: ConfigOptions = {
         connections: {
             game: true,
             web: true
-        }
-    },
-    client: {
-        ip: '',
-        port: 1242,
-        enabled: true,
-        url: {
-            figureData: '',
-            furniData: '',
-            productData: '',
-            swf: '',
-            swfBase: '',
-            texts: '',
-            variables: '',
-            avatarUrl: ''
         }
     },
     game: {
@@ -65,8 +45,7 @@ export const Config: ConfigOptions = {
         },
         login: {
             security: {
-                validateProduction: false,
-                validateVariables: false
+                validateProduction: false
             },
             alert: {
                 enabled: false,
@@ -75,12 +54,8 @@ export const Config: ConfigOptions = {
             }
         },
         camera: {
-            savePath: "C:/camerapath/",
-            saveUrl: "https://website.com/camera/"
-        },
-        plugins: {
-            enabled: true,
-            path: "C:/mypluginpath/"
+            savePath: "C:/path/",
+            saveUrl: "http://website.com/camera/"
         },
         catalog: {
             maxPurchaseStack: 50
@@ -89,7 +64,14 @@ export const Config: ConfigOptions = {
             maxFriends: 300,
             maxFriendsHabboClub: 500
         },
-        rollerTick: 2000,
+        tasks: {
+            roller: {
+                tick: 2000
+            },
+            unit: {
+                tick: 500
+            }
+        },
         pathfinder: {
             steps: {
                 ignoreDoorTile: true,
@@ -99,7 +81,15 @@ export const Config: ConfigOptions = {
             }
         },
         rooms: {
-            maxUnitsPerRoom: 75
+            maxUnitsPerRoom: 75,
+            games: {
+                freeze: {
+                    geyserRandomMs: 20000
+                }
+            }
+        },
+        newUser: {
+            homeRoom: 1
         },
         unit: {
             idleTimerMs: 600000,
@@ -109,20 +99,29 @@ export const Config: ConfigOptions = {
             idleKickMs: 600000
         },
         furni: {
+            placement: {
+                onUnit: false,
+                maxZ: 40,
+                forceMatchingTileHeights: false
+            },
             wired: {
                 maxItems: 5
             }
         }
     },
     web: {
-        enabled: false,
+        enabled: true,
         ip: '0.0.0.0',
-        port: 443,
+        port: 80,
         ticket: {
             enabled: true,
             maxLength: 1,
             maxLengthType: 'day',
             validateIp: false
+        },
+        express: {
+            cors: true,
+            allowedUrl: 'http://website.com'
         }
     }
 }

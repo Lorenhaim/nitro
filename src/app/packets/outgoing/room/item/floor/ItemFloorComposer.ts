@@ -53,7 +53,7 @@ export class ItemFloorComposer extends Outgoing
         {
             const item = items[i];
 
-            item.parseItem(this.packet);
+            item.parseItem(this.packet, 1);
         }
         
         return this.packet.prepare();

@@ -37,7 +37,7 @@ export class UnitActionTask extends Task
 
             if(!unit) continue;
 
-            if(unit.isIdle)
+            if(unit.isIdle && !unit.isOwner)
             {
                 if(unit.idleStart < (TimeHelper.currentTimestamp - Nitro.config.game.unit.idleKickMs))
                 {
@@ -89,7 +89,7 @@ export class UnitActionTask extends Task
 
         if(!unit.location.isFastWalking || !unit.location.fastWalkingSpeed) return;
 
-        if(!unit.location.currentPath.length) return;
+        if(!unit.location.positionNext) return;
 
         for(let i = 0; i < unit.location.fastWalkingSpeed; i++)
         {
@@ -97,20 +97,32 @@ export class UnitActionTask extends Task
 
             if(unit.location.positionNext)
             {
-                const nextTile = unit.room.map.getTile(unit.location.positionNext);
+                const tile = this._room.map.getTile(unit.location.positionNext);
 
-                if(nextTile) nextTile.removeUnit(unit);
+                if(!tile) return this.processUnit(unit);
+
+                const nextItem = tile.highestItem;
+
+                if(!nextItem) continue;
+
+                const interaction: any = nextItem.baseItem.interaction;
+
+                if(!interaction) continue;
+        
+                if(interaction.onStep) interaction.onStep(unit, nextItem);
+
+                if(!unit.location.positionNext || !unit.location.currentPath.length) return this.processUnit(unit);
+
+                this.checkStep(unit, unit.location.positionNext.copy(), unit.location.currentPath.shift());
             }
-
-            this.checkStep(unit, unit.location.positionNext.copy(), unit.location.currentPath.shift());
         }
     }
 
     private checkStep(unit: Unit, position: Position, positionNext: Position): void
     {
-        if(!unit || !position) return;
+        if(!unit) return;
 
-        if(!positionNext) return unit.location.stopWalking();
+        if(!position || !positionNext) return unit.location.stopWalking();
 
         const currentTile   = unit.room.map.getTile(position);
         const nextTile      = unit.room.map.getValidTile(unit, positionNext, unit.location.currentPath.length === 0);

@@ -13,17 +13,27 @@ export class RollerData
     private _units: Unit[]
     private _items: Item[];
 
-    constructor(roller: Item)
+    constructor(roller: Item, position: Position = null, positionNext: Position = null)
     {
-        if(!(roller instanceof Item) || !(roller.room instanceof Room)) throw new Error('invalid_roller');
+        if(roller)
+        {
+            if(!(roller instanceof Item) || !(roller.room instanceof Room)) throw new Error('invalid_roller');
+            
+            this._roller = roller;
 
-        this._roller = roller;
+            this._position      = roller.position.copy();
+            this._positionNext  = roller.position.getPositionInfront();
+        }
+        else
+        {
+            if(!position || !positionNext) throw new Error('invalid_roll');
+
+            this._position      = position;
+            this._positionNext  = positionNext;
+        }
 
         this._units = [];
         this._items = [];
-
-        this._position      = roller.position.copy();
-        this._positionNext  = roller.position.getPositionInfront();
     }
 
     public getTile(): RoomTile

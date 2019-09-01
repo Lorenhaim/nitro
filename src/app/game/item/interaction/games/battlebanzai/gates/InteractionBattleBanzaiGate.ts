@@ -1,4 +1,4 @@
-import { BattleBanzaiGame, GameTeamColor } from '../../../../../room';
+import { GameTeamColor, GameType } from '../../../../../room';
 import { Unit } from '../../../../../unit';
 import { Item } from '../../../../Item';
 import { OnClick } from '../../../actions';
@@ -8,7 +8,7 @@ export class InteractionBattleBanzaiGate extends InteractionDefault implements O
 {
     constructor(name: string = null)
     {
-        super(name || 'bb_gate');
+        super(name || 'bb_g');
     }
 
     protected setTeam(unit: Unit, color: GameTeamColor): void
@@ -19,7 +19,7 @@ export class InteractionBattleBanzaiGate extends InteractionDefault implements O
 
         if(!currentRoom) return;
 
-        const game = currentRoom.gameManager.getGame(BattleBanzaiGame);
+        const game = currentRoom.gameManager.getGame(GameType.BATTLE_BANZAI);
 
         if(!game) return;
 
@@ -32,6 +32,6 @@ export class InteractionBattleBanzaiGate extends InteractionDefault implements O
 
     public onClick(unit: Unit, item: Item): void
     {
-        return;
+        super.onClick(unit, item, false);
     }
 }

@@ -24,7 +24,9 @@ export class OutgoingPacket
 
     public writeBytes(...bytes: number[]): this
     {
-        if(!this._isPrepared && !this._isCancelled) this._bytes.push(...bytes);
+        if(this._isPrepared || this._isCancelled) return this;
+        
+        this._bytes.push(...bytes);
 
         return this;
     }
@@ -52,6 +54,17 @@ export class OutgoingPacket
         return this;
     }
 
+    public writeBoolean(...flags: boolean[]): this
+    {
+        for(let flag of flags)
+        {
+            this.writeBytes(PacketEncoder.encodeBoolean(flag));
+            this._encoded.push({ type: 'boolean', value: flag });
+        }
+
+        return this;
+    }
+
     public writeString(...strings: string[]): this
     {
         for(let string of strings)
@@ -65,17 +78,6 @@ export class OutgoingPacket
             {
                 this.writeShort(0);
             }
-        }
-
-        return this;
-    }
-
-    public writeBoolean(...flags: boolean[]): this
-    {
-        for(let flag of flags)
-        {
-            this.writeBytes(PacketEncoder.encodeBoolean(flag));
-            this._encoded.push({ type: 'boolean', value: flag });
         }
 
         return this;

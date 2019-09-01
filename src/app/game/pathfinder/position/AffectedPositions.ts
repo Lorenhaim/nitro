@@ -37,32 +37,12 @@ export class AffectedPositions
 
         positions.push(new Position(item.position.x, item.position.y));
 
-        if(item.baseItem.width === 2)
-        {
-            if(item.position.direction === Direction.NORTH) positions.push(new Position(item.position.x + 1, item.position.y));
-            else if(item.position.direction === Direction.EAST) positions.push(new Position(item.position.x, item.position.y + 1));
-        }
+        if(item.baseItem.width !== 2) return positions;
 
-        if(!positions.length) return null;
+        const x = position.direction === 0 ? position.x + 1 : position.x;
+        const y = position.direction === 2 ? position.y + 1 : position.y;
 
-        return positions;
-    }
-
-    public static getFeetPositions(item: Item): Position[]
-    {
-        if(!item) return null;
-        
-        const positions: Position[] = [];
-
-        positions.push(new Position(item.position.x, item.position.y + item.baseItem.length - 1));
-
-        if(item.baseItem.width === 2)
-        {
-            if(item.position.direction === Direction.NORTH) positions.push(new Position(item.position.x + 1, item.position.y + item.baseItem.length - 1));
-            else if(item.position.direction === Direction.EAST) positions.push(new Position(item.position.x + item.baseItem.length - 1, item.position.y + 1));
-        }
-
-        if(!positions.length) return null;
+        positions.push(new Position(x, y));
 
         return positions;
     }

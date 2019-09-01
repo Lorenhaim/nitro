@@ -22,7 +22,7 @@ export class Pet
         this._unit = new Unit(UnitType.PET, this);
     }
 
-    public save(): void
+    public save(schedule: boolean = true): void
     {
         if(this._unit && this._unit.location.position)
         {
@@ -34,22 +34,14 @@ export class Pet
             this._entity.direction  = position.direction || 0;
         }
 
-        Nitro.gameScheduler.savePet(this);
+        if(schedule) Nitro.gameScheduler.savePet(this);
     }
 
     public async saveNow(): Promise<void>
     {
         Nitro.gameScheduler.removePet(this);
 
-        if(this._unit && this._unit.location.position)
-        {
-            const position = this._unit.location.position.copy();
-
-            this._entity.x          = position.x || 0;
-            this._entity.y          = position.y || 0;
-            this._entity.z          = position.z.toString() || '0.00';
-            this._entity.direction  = position.direction || 0;
-        }
+        this.save(false);
 
         await getManager().save(this._entity);
     }
@@ -131,25 +123,24 @@ export class Pet
     public setUser(user: User): void
     {
         if(!user) return;
-        
-        if(this._entity.userId !== user.id)
-        {
-            this._entity.userId = user.id;
 
-            this.save();
-        }
+        if(this._entity.userId === user.id) return;
+        
+        this._entity.userId = user.id;
+
+        this.save();
     }
 
     public setRoom(room: Room): void
     {
         if(!room) return;
         
-        if(this._entity.roomId !== room.id)
-        {
-            this._entity.roomId = room.id;
+        if(this._entity.roomId === room.id) return;
+        
+        
+        this._entity.roomId = room.id;
 
-            this.save();
-        }
+        this.save();
     }
 
     public clearRoom(): void

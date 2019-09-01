@@ -1,4 +1,4 @@
-export const enum NotificationKey
+export enum NotificationKey
 {
     DISPLAY     = 'display',
     MESSAGE     = 'message',

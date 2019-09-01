@@ -1,7 +1,7 @@
 import { WiredTriggerStateChanged } from '../../../../../game';
 import { Incoming } from '../../../Incoming';
 
-export class ItemFloorClickEvent extends Incoming
+export class ItemMultiStateEvent extends Incoming
 {
     public async process(): Promise<void>
     {

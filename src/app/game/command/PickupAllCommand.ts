@@ -19,7 +19,7 @@ export class PickupAllCommand extends Command
 
         if(!user.unit.isOwner()) return;
 
-        currentRoom.itemManager.removeItem(user, ...currentRoom.itemManager.items);
+        currentRoom.itemManager.removeItem(user, false, ...currentRoom.itemManager.items);
     }
 
     public get usage(): string

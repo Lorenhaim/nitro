@@ -8,7 +8,7 @@ export class InteractionBattleBanzaiGateRed extends InteractionBattleBanzaiGate 
 {
     constructor()
     {
-        super('bb_gate_red');
+        super('bb_g_red');
     }
 
     public onStep(unit: Unit, item: Item): void

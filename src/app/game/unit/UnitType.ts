@@ -1,4 +1,4 @@
-export const enum UnitType
+export enum UnitType
 {
     USER    = 1,
     BOT     = 2,

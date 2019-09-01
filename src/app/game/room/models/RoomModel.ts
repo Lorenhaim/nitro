@@ -17,6 +17,7 @@ export class RoomModel
     private _tileStates: RoomTileState[][];
     private _tileHeights: number[][];
 
+    private _isZoomed: boolean;
     private _didGenerate: boolean;
 
     constructor(entity: RoomModelEntity)
@@ -26,6 +27,8 @@ export class RoomModel
         this._entity        = entity;
         this._model         = this.cleanModel(this._entity.model);
         this._doorPosition  = null;
+
+        this._isZoomed      = true;
 
         if(!this._model) throw new Error('invalid_model');
 
@@ -222,6 +225,11 @@ export class RoomModel
     public get doorPosition(): Position
     {
         return this._doorPosition;
+    }
+
+    public get isZoomed(): boolean
+    {
+        return this._isZoomed;
     }
 
     public get didGenerate(): boolean

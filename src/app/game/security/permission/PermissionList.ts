@@ -17,11 +17,14 @@ export enum PermissionList
     REBOOT_SERVER           = 'rebootServer',
     SHUTDOWN_SERVER         = 'shutdownServer',
     PULL_UNIT               = 'pullUnit',
+    PULL_FURNI              = 'pullFurni',
     RELOAD_ROOM             = 'reloadRoom',
     ROOM_SPECTATE           = 'roomSpectate',
     SUMMON_USER             = 'summonUser',
     TOGGLE_LOCATION         = 'toggleLocation',
     UNLOAD_ROOM             = 'unloadRoom',
     UPDATE_CATALOG          = 'updateCatalog',
-    UPDATE_ITEMS            = 'updateItems'
+    UPDATE_ITEMS            = 'updateItems',
+    MODIFY_CREDITS          = 'modifyCredits',
+    FAST_WALK               = 'fastWalk'
 }

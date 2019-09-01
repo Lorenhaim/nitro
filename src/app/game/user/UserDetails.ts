@@ -38,7 +38,7 @@ export class UserDetails
         await getManager().save(this._entity);
     }
 
-    public updateFigure(figure: string, gender: UnitGender, processPending: boolean = false): void
+    public updateFigure(figure: string, gender: UnitGender): void
     {
         if(!figure || !gender) return;
 

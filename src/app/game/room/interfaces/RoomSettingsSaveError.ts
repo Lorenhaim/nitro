@@ -1,4 +1,4 @@
-export const enum RoomSettingsSaveError
+export enum RoomSettingsSaveError
 {
     INVALID_PASSWORD   = 5,
     INVALID_NAME       = 7,

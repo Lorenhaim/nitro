@@ -1,10 +1,6 @@
-import { existsSync, lstatSync, readdirSync } from 'fs';
-import { join } from 'path';
 import { Manager } from '../common';
-import { Nitro } from '../Nitro';
 import { PluginEvent } from './events';
 import { NitroPlugin } from './NitroPlugin';
-import { PluginConfig } from './PluginConfig';
 
 export class PluginManager extends Manager
 {
@@ -17,22 +13,32 @@ export class PluginManager extends Manager
         super('PluginManager');
 
         this._plugins   = [];
+
         this._events    = [];
     }
 
     protected async onInit(): Promise<void>
     {
-        await this.loadPlugins();
+
     }
 
     protected async onDispose(): Promise<void>
     {
+        while(this._plugins.length)
+        {
+            const plugin = this._plugins.shift();
 
+            if(!plugin) continue;
+
+            await plugin.dispose();
+        }
+
+        this._events = [];
     }
 
-    public getPlugin(name: string): NitroPlugin
+    public getPlugin<T extends NitroPlugin>(plugin: { new(): T }): T
     {
-        if(!name) return null;
+        if(!plugin) return;
 
         const totalPlugins = this._plugins.length;
 
@@ -40,41 +46,55 @@ export class PluginManager extends Manager
 
         for(let i = 0; i < totalPlugins; i++)
         {
-            const plugin = this._plugins[i];
+            const activePlugin = this._plugins[i];
 
-            if(!plugin) continue;
+            if(!activePlugin) continue;
 
-            if(plugin.name !== name) continue;
+            if(!(activePlugin instanceof plugin)) continue;
 
-            return plugin;
+            return activePlugin;
         }
 
         return null;
     }
 
-    public hasPlugin(name: string): boolean
+    public hasPlugin<T extends NitroPlugin>(plugin: { new(): T }): boolean
     {
-        return this.getPlugin(name) !== null;
+        return this.getPlugin(plugin) !== null;
     }
 
-    public addPlugin(plugin: NitroPlugin): NitroPlugin
+    public async registerPlugin<T extends NitroPlugin>(plugin: { new(): T }): Promise<T>
     {
-        if(!(plugin instanceof NitroPlugin)) return;
+        if(!plugin) return null;
 
-        if(this.hasPlugin(plugin.name)) return;
+        const activePlugin = this.getPlugin(plugin);
 
-        this._plugins.push(plugin);
+        if(activePlugin) return activePlugin;
 
-        return plugin;
+        const instance: T = new plugin();
+
+        if(!(instance instanceof NitroPlugin)) return null;
+
+        await instance.init();
+
+        this._plugins.push(instance);
+
+        return instance;
     }
 
-    public registerEvent(event: typeof PluginEvent, handler: Function): void
+    public registerEvent(event: Function, handler: Function): void
     {
-        this._events.push({ event, handler });
+        if(!event || !handler) return null;
+
+        this._events.push({ event: <any> event, handler });
+
+        this.logger.log(`Registered: ${ event.name } => ${ handler.name }`);
     }
 
-    public async processEvent(event: PluginEvent): Promise<PluginEvent>
+    public async processEvent<T>(event: T): Promise<T>
     {
+        if(!(event instanceof PluginEvent)) return null;
+
         const totalEvents = this._events.length;
 
         if(!totalEvents) return null;
@@ -95,60 +115,5 @@ export class PluginManager extends Manager
         }
 
         return event;
-    }
-
-    private async loadPlugins(): Promise<void>
-    {
-        this._plugins = [];
-
-        if(!existsSync(Nitro.config.game.plugins.path))
-        {
-            this.logger.error('Invalid plugin directory');
-
-            return;
-        }
-
-        const files = readdirSync(Nitro.config.game.plugins.path);
-
-        if(!files) return;
-
-        const totalFiles = files.length;
-
-        if(!totalFiles) return;
-
-        for(let i = 0; i < totalFiles; i++)
-        {
-            const fileName = files[i];
-
-            if(!fileName) continue;
-
-            const path = join(Nitro.config.game.plugins.path, files[i]);
-
-            if(!path) continue;
-
-            const stat = lstatSync(path);
-
-            if(!stat.isDirectory()) continue;
-
-            const pluginConfigPath = join(path, 'NitroConfig.ts');
-
-            if(!existsSync(pluginConfigPath)) continue;
-
-            const pluginConfig: PluginConfig = require(pluginConfigPath).default;
-
-            if(!pluginConfig) continue;
-
-            const mainClass: any = pluginConfig.mainClass;
-
-            if(!mainClass) continue;
-
-            const instance: NitroPlugin = new mainClass();
-
-            if(!instance) continue;
-
-            await instance.init();
-
-            if(instance.isLoaded) this._plugins.push(instance);
-        }
     }
 }

@@ -10,8 +10,19 @@ export class ValidatorEvent extends Incoming
         {
             const validatorType = this.packet.readInt();
 
-            if(validatorType === 1) return this.client.processOutgoing(new ValidatorComposer(await UserDao.validateUsername(this.packet.readString())));
-            else if(validatorType === 2) return this.client.processOutgoing(new ValidatorComposer(await UserDao.validateEmail(this.packet.readString())));
+            if(validatorType === 1)
+            {
+                const result = await UserDao.validateUsername(this.packet.readString());
+
+                return this.client.processOutgoing(new ValidatorComposer(result));
+            }
+
+            else if(validatorType === 2)
+            {
+                const result = await UserDao.validateEmail(this.packet.readString());
+
+                return this.client.processOutgoing(new ValidatorComposer(result));
+            }
         }
 
         catch(err)

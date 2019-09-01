@@ -1,7 +1,5 @@
 import * as express from 'express';
-import { readFileSync } from 'fs';
-import { IncomingMessage } from 'http';
-import { createServer as createHttpsServer, Server as HttpsServer } from 'https';
+import { createServer as createHttpServer, IncomingMessage, Server as HttpServer } from 'http';
 import * as ws from 'ws';
 import { Nitro } from '../Nitro';
 import { IncomingPacket } from '../packets';
@@ -11,7 +9,7 @@ import { SocketClient } from './SocketClient';
 export class SocketServer extends Server<ws.Server>
 {
     private _expressApp: any;
-    private _webServer: HttpsServer;
+    private _webServer: HttpServer;
 
     constructor()
     {
@@ -22,14 +20,19 @@ export class SocketServer extends Server<ws.Server>
     {
         this._expressApp = express();
 
-        this._expressApp.use(express.static('./public'))
+        if(Nitro.config.web.express.cors)
+        {
+            this._expressApp.use((req: any, res: any, next: any) =>
+            {
+                res.header("Access-Control-Allow-Origin", Nitro.config.web.express.allowedUrl);
+                res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+                next();
+            });
+        }
 
-        const options = {
-            key: readFileSync('./src/ssl/private.pem'),
-            cert: readFileSync('./src/ssl/public.pem')
-        };
+        this._expressApp.use(express.static('./public'));
 
-        this._webServer = createHttpsServer(options, this._expressApp);
+        this._webServer = createHttpServer(this._expressApp);
         
         this._server = new ws.Server({ server: this._webServer });
 
@@ -108,10 +111,7 @@ export class SocketServer extends Server<ws.Server>
 
                 if(completedLength === originalPacketLength) await client.processIncoming(...packets);
             }
-            else
-            {
-                await client.processIncoming(originalPacket);
-            }
+            else await client.processIncoming(originalPacket);
         }
 
         catch(err)

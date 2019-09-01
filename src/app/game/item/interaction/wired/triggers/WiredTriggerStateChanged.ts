@@ -13,7 +13,7 @@ export class WiredTriggerStateChanged extends WiredTrigger
 
     public canTrigger(item: Item, ...args: any[]): boolean
     {
-        if(!item) return false;
+        if(!item || !item.room || !item.wiredData) return false;
 
         const clickedItem = args[0];
 
@@ -69,17 +69,13 @@ export class WiredTriggerStateChanged extends WiredTrigger
     {
         if(!item || !packet) return null;
 
-        const room = item.room;
-
-        if(!room) return;
-
         const validatedIds: number[] = [];
 
-        let itemString  = item.wiredData;
+        let itemString = item.wiredData;
 
         if(itemString)
         {
-            const items = room.itemManager.getItemsByString(itemString);
+            const items = item.room.itemManager.getItemsByString(itemString);
 
             if(items)
             {

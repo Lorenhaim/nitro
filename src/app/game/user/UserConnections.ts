@@ -36,31 +36,31 @@ export class UserConnections extends Manager
     {
         if(this._gameClient) this._gameClient.processOutgoing(...outgoing);
 
-        if(this._socketClient)
-        {
-            const allowedOutgoing: Outgoing[] = [];
+        if(this._socketClient) this._socketClient.processOutgoing(...outgoing);
+        // {
+        //     const allowedOutgoing: Outgoing[] = [];
 
-            const totalOutgoing = outgoing.length;
+        //     const totalOutgoing = outgoing.length;
 
-            if(totalOutgoing)
-            {
-                for(let i = 0; i < totalOutgoing; i++)
-                {
-                    const packet = outgoing[i];
+        //     if(totalOutgoing)
+        //     {
+        //         for(let i = 0; i < totalOutgoing; i++)
+        //         {
+        //             const packet = outgoing[i];
 
-                    if(!packet) continue;
+        //             if(!packet) continue;
 
-                    if(this._socketHeaders.indexOf(packet.header) !== -1) continue;
+        //             if(this._socketHeaders.indexOf(packet.header) !== -1) continue;
 
-                    allowedOutgoing.push(packet);
-                }
-            }
+        //             allowedOutgoing.push(packet);
+        //         }
+        //     }
 
-            if(allowedOutgoing.length) this._socketClient.processOutgoing(...allowedOutgoing);
-        }
+        //     if(allowedOutgoing.length) this._socketClient.processOutgoing(...allowedOutgoing);
+        // }
     }
 
-    public async setGameClient(client: GameClient)
+    public async setGameClient(client: GameClient): Promise<void>
     {
         if(this._gameClient)
         {
@@ -80,7 +80,7 @@ export class UserConnections extends Manager
         client.setUser(this._user);
     }
 
-    public async disposeGameClient(runDisposer: boolean = true)
+    public async disposeGameClient(runDisposer: boolean = true): Promise<void>
     {
         if(this._gameClient)
         {
@@ -94,7 +94,7 @@ export class UserConnections extends Manager
         }
     }
 
-    public async setSocketClient(client: SocketClient)
+    public async setSocketClient(client: SocketClient): Promise<void>
     {
         if(this._socketClient)
         {
@@ -114,7 +114,7 @@ export class UserConnections extends Manager
         client.setUser(this._user);
     }
 
-    public async disposeSocketClient(runDisposer: boolean = true)
+    public async disposeSocketClient(runDisposer: boolean = true): Promise<void>
     {
         if(this._socketClient)
         {

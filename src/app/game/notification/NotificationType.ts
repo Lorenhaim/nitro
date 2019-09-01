@@ -1,4 +1,4 @@
-export const enum NotificationType
+export enum NotificationType
 {
     FURNI_PLACEMENT_ERROR   = 'furni_placement_error',
     CLOTHING_REDEEMED       = 'figureset.redeemed.success',

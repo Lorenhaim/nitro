@@ -1,4 +1,4 @@
-export const enum NotificationDisplay
+export enum NotificationDisplay
 {
     BUBBLE  = 'BUBBLE',
     POPUP   = 'POP_UP'

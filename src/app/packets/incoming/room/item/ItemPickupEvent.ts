@@ -16,7 +16,7 @@ export class ItemPickupEvent extends Incoming
 
             if(!item) return;
 
-            currentRoom.itemManager.removeItem(this.client.user, item);
+            currentRoom.itemManager.removeItem(this.client.user, true, item);
         }
 
         catch(err)

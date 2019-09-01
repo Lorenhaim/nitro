@@ -8,7 +8,7 @@ export class HotelAlertCommand extends Command
 {
     constructor()
     {
-        super(PermissionList.NONE, 'hotel_alert', 'ha');
+        super(PermissionList.ALL_PERMISSIONS, 'hotel_alert', 'ha');
     }
 
     public async process(user: User, parts: string[]): Promise<void>

@@ -4,6 +4,6 @@ export class InteractionBattleBanzaiScoreboardRed extends InteractionBattleBanza
 {
     constructor()
     {
-        super('bb_scoreboard_red');
+        super('bb_s_red');
     }
 }

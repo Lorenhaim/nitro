@@ -1,4 +1,4 @@
-export const enum UnitSign
+export enum UnitSign
 {
     ZERO        = 0,
     ONE         = 1,

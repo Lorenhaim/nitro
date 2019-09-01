@@ -12,14 +12,14 @@ export class InteractionPetJump extends InteractionDefault implements OnStop, On
         super('pet_jump');
     }
 
+    public onClick(unit: Unit, item: Item): void
+    {
+        super.onClick(unit, item, false);
+    }
+
     public onPickup(user: User, item: Item): void
     {
         if(user && item) item.setExtraData(0);
-    }
-
-    public onEnter(unit: Unit, item: Item): void
-    {
-        super.onEnter(unit, item);
     }
 
     public beforeStep(unit: Unit, item: Item): void
