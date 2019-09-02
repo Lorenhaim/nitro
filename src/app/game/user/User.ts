@@ -41,6 +41,8 @@ export class User extends Manager
     {
         await this._inventory.init();
         await this._messenger.init();
+
+        this.logger.log(`Initialized`);
     }
 
     protected async onDispose(): Promise<void>

@@ -1,4 +1,4 @@
-import { Manager } from '../common/interfaces/Manager';
+import { Manager } from '../common';
 import { Nitro } from '../Nitro';
 import { GameServer } from './GameServer';
 import { SocketServer } from './SocketServer';

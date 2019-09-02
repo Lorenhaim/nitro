@@ -64,6 +64,9 @@ export interface ConfigOptions
             }
         },
         pathfinder: {
+            node: {
+                cost: number
+            },
             steps: {
                 ignoreDoorTile: boolean,
                 maxWalkingHeight: number,
@@ -92,8 +95,7 @@ export interface ConfigOptions
         furni: {
             placement: {
                 onUnit: boolean,
-                maxZ: number,
-                forceMatchingTileHeights: boolean
+                maxZ: number
             },
             wired: {
                 maxItems: number

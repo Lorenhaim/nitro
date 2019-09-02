@@ -49,7 +49,7 @@ export class SocketServer extends Server<ws.Server>
 
     private onServerListening()
     {
-        this.logger().log(`Listening ${ this._ip }:${ this._port }`);
+        this.logger.log(`Listening ${ this._ip }:${ this._port }`);
     }
 
     protected onServerConnection(socket: ws, request: IncomingMessage)
@@ -71,7 +71,7 @@ export class SocketServer extends Server<ws.Server>
             {
                 const client = new SocketClient(socket, ip);
 
-                if(Nitro.config.logging.enabled && Nitro.config.logging.connections.web) this.logger().log(`New Connection => ${ client.uniqueId }`);
+                if(Nitro.config.logging.enabled && Nitro.config.logging.connections.web) this.logger.log(`New Connection => ${ client.uniqueId }`);
 
                 socket.on('message', async data => await this.onSocketData(client, data));
                 socket.on('close', async code => await this.onSocketClose(client, code));
@@ -82,7 +82,7 @@ export class SocketServer extends Server<ws.Server>
 
     private onServerError(err: Error)
     {
-        this.logger().error(err.message || err, err.stack);
+        this.logger.error(err.message || err, err.stack);
     }
 
     private async onSocketData(client: SocketClient, data: ws.Data)
@@ -126,7 +126,7 @@ export class SocketServer extends Server<ws.Server>
         {
             await client.dispose();
 
-            if(Nitro.config.logging.enabled && Nitro.config.logging.connections.web) this.logger().log(`Closed Connection => ${ client.uniqueId }`);
+            if(Nitro.config.logging.enabled && Nitro.config.logging.connections.web) this.logger.log(`Closed Connection => ${ client.uniqueId }`);
         }
 
         catch(err)

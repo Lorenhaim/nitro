@@ -1,7 +1,7 @@
 import { Nitro } from '../../Nitro';
 import { Unit } from '../unit';
-import { PathFinderNode } from './PathFinderNode';
-import { movePoints, Position, standardPoints } from './position';
+import { Node } from './node/Node';
+import { MovePoints, Position } from './position';
 
 export class PathFinder
 {
@@ -63,7 +63,7 @@ export class PathFinder
         return positions.reverse();
     }
 
-    private static calculateWalkingNode(unit: Unit, position: Position): PathFinderNode
+    private static calculateWalkingNode(unit: Unit, position: Position): Node
     {
         if(!unit || !position) return null;
 
@@ -75,23 +75,21 @@ export class PathFinder
 
         if(!currentRoom.map.getValidTile(unit, position)) return null;
         
-        const nodes: PathFinderNode[]       = [];
-        const nodeMap: PathFinderNode[][]   = [];
+        const nodes: Node[]     = [];
+        const nodeMap: Node[][] = [];
+        const nodeGoal: Node    = new Node(position);
 
-        let currentNode: PathFinderNode = null;
-        let goalNode: PathFinderNode    = null;
-        let tempNode: PathFinderNode    = null;
-        let tempPosition: Position      = null;
+        let currentNode: Node       = null;
+        let tempNode: Node          = null;
+        let tempPosition: Position  = null;
 
         let cost        = 0;
         let difference  = 0;
         
-        currentNode         = new PathFinderNode(unit.location.position);
+        currentNode         = new Node(unit.location.position);
         currentNode.cost    = 0;
 
-        goalNode = new PathFinderNode(position);
-
-        if(!currentNode || !goalNode) return null;
+        if(!currentNode || !nodeGoal) return null;
         
         if(nodeMap[currentNode.position.x] === undefined) nodeMap[currentNode.position.x] = [];
                     
@@ -100,10 +98,12 @@ export class PathFinder
 
         let walkingPoints: Position[] = [];
 
-        if(Nitro.config.game.pathfinder.steps.allowDiagonals) walkingPoints = movePoints;
-        else walkingPoints = standardPoints;
+        if(Nitro.config.game.pathfinder.steps.allowDiagonals) walkingPoints = MovePoints.MOVE_POINTS;
+        else walkingPoints = MovePoints.STANDARD_POINTS;
 
         const totalWalkingPoints = walkingPoints.length;
+
+        if(!totalWalkingPoints) return null;
 
         while(nodes.length)
         {
@@ -116,13 +116,13 @@ export class PathFinder
 
                 tempPosition = currentNode.position.addPosition(walkingPoint);
 
-                if(!this.isValidStep(unit, currentNode.position, tempPosition, goalNode.position)) continue;
+                if(!this.isValidStep(unit, currentNode.position, tempPosition, nodeGoal.position)) continue;
                 
                 if(nodeMap[tempPosition.x] === undefined) nodeMap[tempPosition.x] = [];
                 
                 if(nodeMap[tempPosition.x][tempPosition.y] === undefined)
                 {
-                    tempNode = new PathFinderNode(tempPosition);
+                    tempNode = new Node(tempPosition);
                     nodeMap[tempPosition.x][tempPosition.y] = tempNode;
                 }
                 else tempNode = nodeMap[tempPosition.x][tempPosition.y];
@@ -134,7 +134,7 @@ export class PathFinder
                 if(currentNode.position.x !== tempNode.position.x) difference += 2;
                 if(currentNode.position.y !== tempNode.position.y) difference += 2;
                     
-                cost = currentNode.cost + difference + tempNode.position.getDistanceAround(goalNode.position);
+                cost = currentNode.cost + difference + tempNode.position.getDistanceAround(nodeGoal.position);
 
                 if(tempNode.isOpen) continue;
 
@@ -144,7 +144,7 @@ export class PathFinder
                     tempNode.nextNode   = currentNode;
                 }
 
-                if(tempNode.position.compare(goalNode.position))
+                if(tempNode.position.compare(nodeGoal.position))
                 {
                     tempNode.nextNode = currentNode;
 

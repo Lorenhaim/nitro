@@ -1,9 +1,10 @@
-import { Position } from './Position';
+import { Nitro } from '../../../Nitro';
+import { Position } from '../Position';
 
-export class PathFinderNode
+export class Node
 {
     private _position: Position;
-    private _nextNode: PathFinderNode;
+    private _nextNode: Node;
 
     private _cost: number;
     private _isOpen: boolean;
@@ -14,7 +15,7 @@ export class PathFinderNode
         this._position  = position;
         this._nextNode  = null;
 
-        this._cost      = 2147483647;
+        this._cost      = Nitro.config.game.pathfinder.node.cost;
         this._isOpen    = false;
         this._isClosed  = false;
     }
@@ -29,12 +30,12 @@ export class PathFinderNode
         this._position = position;
     }
 
-    public get nextNode(): PathFinderNode
+    public get nextNode(): Node
     {
         return this._nextNode;
     }
 
-    public set nextNode(node: PathFinderNode)
+    public set nextNode(node: Node)
     {
         this._nextNode = node;
     }

@@ -28,7 +28,7 @@ export class GameServer extends Server<net.Server>
 
     private onServerListening(): void
     {
-        this.logger().log(`Listening ${ this._ip }:${ this._port }`);
+        this.logger.log(`Listening ${ this._ip }:${ this._port }`);
     }
 
     private onServerConnection(socket: net.Socket): void
@@ -37,7 +37,7 @@ export class GameServer extends Server<net.Server>
         {
             const client = new GameClient(socket);
 
-            if(Nitro.config.logging.enabled && Nitro.config.logging.connections.game) this.logger().log(`New Connection => ${ client.uniqueId }`);
+            if(Nitro.config.logging.enabled && Nitro.config.logging.connections.game) this.logger.log(`New Connection => ${ client.uniqueId }`);
 
             socket.on('data', async data => await this.onSocketData(client, data));
             socket.on('close', async hadError => await this.onSocketClose(client, hadError));
@@ -47,12 +47,12 @@ export class GameServer extends Server<net.Server>
 
     private async onServerClose(): Promise<void>
     {
-        this.logger().warn(`Server Closed`);
+        this.logger.warn(`Server Closed`);
     }
 
     private onServerError(err: Error): void
     {
-        this.logger().error(err.message || err, err.stack);
+        this.logger.error(err.message || err, err.stack);
     }
 
     private async onSocketData(client: GameClient, data: Buffer): Promise<void>
@@ -99,7 +99,7 @@ export class GameServer extends Server<net.Server>
         {
             await client.dispose();
 
-            if(Nitro.config.logging.enabled && Nitro.config.logging.connections.game) this.logger().log(`Closed Connection => ${ client.uniqueId }`);
+            if(Nitro.config.logging.enabled && Nitro.config.logging.connections.game) this.logger.log(`Closed Connection => ${ client.uniqueId }`);
         }
 
         catch(err)

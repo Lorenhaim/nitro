@@ -144,10 +144,6 @@ export class Item
 
             if(tile.isDoor) return false;
 
-            //if((tile.tileHeight !== goalTile.tileHeight) && Nitro.config.game.furni.placement.forceMatchingTileHeights) return false;
-
-            if((tile.tileHeight + this._baseItem.stackHeight) > Nitro.config.game.furni.placement.maxZ) return false;
-
             if(tile.units.length > 0)
             {
                 if(!this._baseItem.canWalk || this._baseItem.canLay) return false;
@@ -162,7 +158,9 @@ export class Item
 
             if(isRotating && highestItem === this) continue;
 
-            if(highestItem && highestItem.id !== this._entity.id && !this.canPlaceOnTop(highestItem, rolling)) return false;
+            if((tile.tileHeight + this._baseItem.stackHeight) > Nitro.config.game.furni.placement.maxZ) return false;
+
+            if(highestItem && highestItem !== this && !this.canPlaceOnTop(highestItem, rolling)) return false;
 
             const items = tile.items;
 

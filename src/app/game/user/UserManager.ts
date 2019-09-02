@@ -1,4 +1,4 @@
-import { Manager } from '../../common/interfaces/Manager';
+import { Manager } from '../../common';
 import { UserDao, UserEntity } from '../../database';
 import { Outgoing } from '../../packets';
 import { User } from './User';

@@ -87,6 +87,8 @@ export class Room extends Manager
         this._map.generateMap();
 
         this.cancelDispose();
+
+        this.logger.log(`Initialized`);
     }
 
     protected async onDispose(): Promise<void>

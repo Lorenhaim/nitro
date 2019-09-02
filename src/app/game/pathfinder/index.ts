@@ -1,5 +1,4 @@
 export * from './FloodFill';
+export * from './node';
 export * from './PathFinder';
-export * from './PathFinderNode';
-export * from './PathFinderNodeStatus';
 export * from './position';

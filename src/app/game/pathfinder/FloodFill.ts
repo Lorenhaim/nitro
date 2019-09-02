@@ -1,5 +1,5 @@
 import { BanzaiTile, GamePlayer, GameTile, RoomGame } from '../room';
-import { Position, standardPoints } from './position';
+import { MovePoints, Position } from './position';
 
 export class FloodFill
 {
@@ -47,13 +47,15 @@ export class FloodFill
     {
         const tiles: GameTile[] = [];
 
-        const totalPoints = standardPoints.length;
+        const movePoints = MovePoints.STANDARD_POINTS;
+
+        const totalPoints = movePoints.length;
 
         if(!totalPoints) return null;
 
         for(let i = 0; i < totalPoints; i++)
         {
-            const point = standardPoints[i];
+            const point = movePoints[i];
 
             if(!point) continue;
 
